@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Docs — Paws</title>
+<meta name="description" content="Install Paws, pair your phone, and control the AI coding agents on your computer from anywhere. Quick start, guides and self-hosting." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E0D0C; --bg-elev:#18150F; --bg-elev-2:#201c14;
+    --text:#F5F1E8; --muted:#9C958A;
+    --accent:#FFA31A; --accent-ink:#161206;
+    --border:rgba(255,255,255,.09); --border-strong:rgba(255,255,255,.14);
+    --green:#4ADE80; --blue:#56B6F7; --pink:#E06C9F;
+    --font-display:'Bricolage Grotesque',sans-serif;
+    --font-body:'DM Sans',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --sidebar-w:250px; --topbar-h:58px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:calc(var(--topbar-h) + 24px)}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;height:var(--topbar-h);z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;background:rgba(14,13,12,.85);backdrop-filter:blur(14px) saturate(1.4);
+    border-bottom:1px solid var(--border);
+  }
+  .crumb{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:18px}
+  .crumb img{width:26px;height:26px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--border-strong)}
+  .crumb .sep{color:var(--muted);font-weight:400}
+  .crumb .page{font-family:var(--font-mono);font-weight:500;font-size:13px;color:var(--muted)}
+  .top-links{display:flex;align-items:center;gap:22px}
+  .top-links a{color:var(--muted);font-size:14px;transition:color .2s}
+  .top-links a:hover{color:var(--text)}
+  .top-links a.gh{display:inline-flex;align-items:center;color:var(--text)}
+  .top-links a.gh:hover{color:var(--accent)}
+
+  /* ---------- LAYOUT ---------- */
+  .layout{display:flex;min-height:100vh;padding-top:var(--topbar-h)}
+
+  /* sidebar */
+  aside{
+    width:var(--sidebar-w);flex:0 0 auto;border-right:1px solid var(--border);
+    position:sticky;top:var(--topbar-h);height:calc(100vh - var(--topbar-h));
+    overflow-y:auto;padding:28px 16px 40px;
+  }
+  .sb-group{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--muted);margin:22px 10px 10px}
+  .sb-group:first-child{margin-top:0}
+  aside nav a{
+    display:block;font-size:14.5px;color:var(--muted);padding:8px 12px;border-radius:9px;
+    transition:color .15s, background .15s;margin-bottom:2px;
+  }
+  aside nav a:hover{color:var(--text)}
+  aside nav a.active{
+    color:var(--accent);background:rgba(255,163,26,.10);
+    box-shadow:inset 0 0 0 1px rgba(255,163,26,.22);font-weight:600;
+  }
+
+  /* content */
+  main{flex:1;min-width:0;padding:44px 56px 110px;max-width:860px}
+  .kicker{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--accent)}
+  h1{font-family:var(--font-display);font-weight:800;font-size:clamp(32px,4.4vw,46px);letter-spacing:-.02em;margin:10px 0 14px}
+  .intro{color:var(--muted);font-size:17px;max-width:60ch}
+  hr{border:none;border-top:1px solid var(--border);margin:34px 0}
+
+  section.doc{padding-top:8px;margin-bottom:52px}
+  .step-head{display:flex;align-items:center;gap:14px;margin:0 0 12px}
+  .step-num{
+    width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-family:var(--font-mono);font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;
+  }
+  h2{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:-.01em}
+  h3{font-family:var(--font-display);font-weight:600;font-size:19px;margin:26px 0 8px}
+  section.doc p{color:var(--muted);font-size:15.5px;margin:10px 0;max-width:66ch}
+  section.doc p strong{color:var(--text)}
+  section.doc ul{color:var(--muted);font-size:15.5px;margin:10px 0 10px 22px}
+  section.doc li{margin:6px 0}
+  section.doc li::marker{color:var(--accent)}
+  section.doc a:not(.btn){color:var(--blue);border-bottom:1px solid rgba(86,182,247,.3);transition:border-color .15s}
+  section.doc a:not(.btn):hover{border-color:var(--blue)}
+  code.inline{font-family:var(--font-mono);font-size:.88em;background:var(--bg-elev);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--text)}
+
+  /* terminal-style code block */
+  .codeblock{
+    background:#101013;border:1px solid var(--border);border-radius:13px;
+    padding:16px 18px;margin:16px 0;font-family:var(--font-mono);font-size:13.5px;line-height:1.8;
+    overflow-x:auto;position:relative;
+  }
+  .codeblock .p{color:var(--accent);font-weight:600;user-select:none}
+  .codeblock .c-green{color:var(--green)} .codeblock .c-blue{color:var(--blue)}
+  .codeblock .c-pink{color:var(--pink)} .codeblock .c-mut{color:var(--muted)}
+  .codeblock .ln{display:block;white-space:pre}
+
+  /* callout */
+  .callout{
+    display:flex;gap:14px;align-items:flex-start;background:rgba(255,163,26,.07);
+    border:1px solid rgba(255,163,26,.3);border-radius:13px;padding:16px 18px;margin:20px 0;
+  }
+  .callout svg{width:20px;height:20px;flex:0 0 auto;color:var(--accent);margin-top:2px}
+  .callout p{margin:0;color:var(--text);font-size:14.5px}
+  .callout.note{background:rgba(86,182,247,.06);border-color:rgba(86,182,247,.3)}
+  .callout.note svg{color:var(--blue)}
+
+  /* button */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;border-radius:11px;
+    padding:10px 16px;border:1px solid transparent;transition:transform .18s, box-shadow .25s;margin:8px 10px 0 0;
+  }
+  .btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 20px -6px rgba(255,163,26,.5)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(255,163,26,.7)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--border-strong)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+
+  /* footer */
+  .doc-foot{border-top:1px solid var(--border);margin-top:60px;padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13.5px}
+  .doc-foot a{color:var(--muted);border-bottom:1px solid transparent}
+  .doc-foot a:hover{color:var(--text)}
+
+  @media (max-width:900px){
+    aside{display:none}
+    main{padding:34px 24px 90px}
+    .top-links a.link{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="crumb" href="index.html">
+    <img src="assets/mascot-avatar.png" alt="Paws logo" />
+    Paws <span class="sep">/</span> <span class="page">docs</span>
+  </a>
+  <div class="top-links">
+    <a class="link" href="index.html">Home</a>
+    <a class="link" href="#quick-start">Quick Start</a>
+    <a class="link" href="#self-hosting">Self-hosting</a>
+    <a class="gh" href="https://github.com/wangjs-jacky/happy" aria-label="GitHub repository">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.8 18.3 5.1 18.3 5.1c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="layout">
+  <aside>
+    <nav id="sbnav">
+      <div class="sb-group">GETTING STARTED</div>
+      <a href="#introduction">Introduction</a>
+      <a href="#quick-start">Installation</a>
+      <a href="#connect">Connect your computer</a>
+      <a href="#first-session">Your first session</a>
+      <div class="sb-group">GUIDES</div>
+      <a href="#sessions">Sessions</a>
+      <a href="#notifications">Notifications</a>
+      <a href="#self-hosting">Self-hosting</a>
+      <div class="sb-group">MORE</div>
+      <a href="#full-docs">Full documentation</a>
+    </nav>
+  </aside>
+
+  <main>
+    <span class="kicker">GETTING STARTED</span>
+    <h1>Installation &amp; Quick Start</h1>
+    <p class="intro">Get Paws running in a few minutes. Install the CLI on the computer where your
+    coding agents run, install the app on your phone, then pair the two.</p>
+    <hr />
+
+    <section class="doc" id="introduction">
+      <div class="step-head"><h2>Introduction</h2></div>
+      <p><strong>Paws</strong> lets you control AI coding agents — Claude Code, Codex, Gemini,
+      OpenCode and other ACP-compatible agents — from another device. The <code class="inline">paws</code>
+      CLI wraps the agent's terminal session on your computer; the mobile or web app mirrors it,
+      lets you send instructions, and handles permission prompts.</p>
+      <div class="codeblock" aria-label="architecture">
+<span class="ln c-mut">Mobile / Web App</span>
+<span class="ln c-mut">    │  HTTP + WebSocket · end-to-end encrypted</span>
+<span class="ln c-mut">    ▼</span>
+<span class="ln c-blue">Sync Server  (self-hosted or upstream)</span>
+<span class="ln c-mut">    │  encrypted sync · machine presence · session state</span>
+<span class="ln c-mut">    ▼</span>
+<span class="ln c-green">paws CLI / daemon on your computer</span>
+<span class="ln c-mut">    ▼</span>
+<span class="ln c-pink">Claude Code · Codex · Gemini · OpenCode · ACP agents</span>
+      </div>
+      <p>Everything the server relays is ciphertext — your code and conversations never leave your
+      devices unencrypted.</p>
+    </section>
+
+    <section class="doc" id="quick-start">
+      <div class="step-head"><span class="step-num">1</span><h2>Install the CLI</h2></div>
+      <p>Paws ships as a single npm package. Install it globally on the machine where your agents run:</p>
+      <div class="codeblock"><span class="ln"><span class="p">$</span> npm i -g @wangjs-jacky/paws</span></div>
+      <p>This provides the <code class="inline">paws</code> and <code class="inline">happy</code> commands
+      (plus <code class="inline">paws-mcp</code> for MCP integration).</p>
+
+      <h3>Get the app</h3>
+      <p>Download the latest <strong>Android APK</strong> from GitHub Releases (arm64, sideload install).
+      A web app is also bundled with the self-hosted server.</p>
+      <a class="btn btn-primary" href="https://github.com/wangjs-jacky/happy/releases">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download Android APK
+      </a>
+    </section>
+
+    <section class="doc" id="connect">
+      <div class="step-head"><span class="step-num">2</span><h2>Connect your computer</h2></div>
+      <p>Run your agent through Paws instead of launching it directly:</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws claude   <span class="c-mut"># instead of claude</span></span>
+<span class="ln"><span class="p">$</span> paws codex    <span class="c-mut"># instead of codex</span></span>
+      </div>
+      <p>The first run prints a QR code. Scan it with the Paws app to pair — pairing exchanges
+      encryption keys directly between your devices, so the server never sees them.</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws claude</span>
+<span class="ln c-mut">→ relay started on this machine</span>
+<span class="ln c-green">✔ scan the QR code with the Paws app to pair…</span>
+      </div>
+    </section>
+
+    <section class="doc" id="first-session">
+      <div class="step-head"><span class="step-num">3</span><h2>Your first session</h2></div>
+      <p>Once paired, the running session is mirrored to your phone in real time. To let your phone
+      <strong>spawn new sessions</strong> on this machine — even when nothing is running — keep the
+      daemon alive:</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws daemon start</span>
+<span class="ln c-mut"># in the app: tap ＋ → New Session</span>
+<span class="ln c-green">✔ agent running · your-macbook</span>
+<span class="ln c-blue">◍ streaming terminal to your phone</span>
+      </div>
+      <div class="callout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+        <p>You're all set. Read on to learn how to steer sessions, get notified, and self-host the whole stack.</p>
+      </div>
+    </section>
+
+    <section class="doc" id="sessions">
+      <div class="step-head"><h2>Sessions</h2></div>
+      <p>A session belongs to whichever device is driving it — and switching is instant:</p>
+      <ul>
+        <li><strong>Take over from your phone</strong> — open the session in the app and start typing; the terminal on your computer hands control over.</li>
+        <li><strong>Take it back at your desk</strong> — press any key in the terminal and the session returns to local mode.</li>
+        <li><strong>Approve permissions anywhere</strong> — when the agent asks to run a command or edit a file, the prompt appears on your phone.</li>
+        <li><strong>Attach images</strong> — add screenshots or photos when creating a session; HEIC photos are converted automatically so vision models can read them.</li>
+      </ul>
+    </section>
+
+    <section class="doc" id="notifications">
+      <div class="step-head"><h2>Notifications</h2></div>
+      <p>Paws pushes a notification when an agent <strong>needs permission</strong>, <strong>hits an
+      error</strong>, or <strong>finishes its task</strong> — so long runs don't chain you to your desk.</p>
+      <ul>
+        <li>On Android, push is delivered via <strong>direct FCM</strong> for reliability.</li>
+        <li>Notifications also fire while the app is in the <strong>foreground</strong>; tapping one jumps straight into the session.</li>
+      </ul>
+    </section>
+
+    <section class="doc" id="self-hosting">
+      <div class="step-head"><h2>Self-hosting</h2></div>
+      <p>The sync server is a single Docker container with zero-config embedded PGlite (or an
+      external PostgreSQL). Run it anywhere — a home server, a VPS, or an intranet host — and point
+      the CLI at it:</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> export HAPPY_SERVER_URL=http://your-server:3005</span>
+<span class="ln"><span class="p">$</span> paws claude</span>
+      </div>
+      <p>In the app, set the same server URL in Settings. The server also serves the bundled
+      <strong>web app</strong>, so browsers on your network get a client for free.</p>
+      <div class="callout note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p>Even self-hosted, the server only ever stores ciphertext — end-to-end encryption is part of the protocol, not a hosting option.</p>
+      </div>
+      <p>Full walkthroughs:
+      <a href="https://github.com/wangjs-jacky/happy/blob/main/docs/getting-started.md">server options &amp; source installs</a> ·
+      <a href="https://github.com/wangjs-jacky/happy/blob/main/docs/selfhost-intranet-deploy.md">intranet deployment manual</a></p>
+    </section>
+
+    <section class="doc" id="full-docs">
+      <div class="step-head"><h2>Full documentation</h2></div>
+      <p>This page covers the essentials. The complete guides — source installs, app builds,
+      OTA updates and troubleshooting — live in the repository:</p>
+      <a class="btn btn-primary" href="https://github.com/wangjs-jacky/happy/blob/main/docs/getting-started.md">Getting Started (English)</a>
+      <a class="btn btn-ghost" href="https://github.com/wangjs-jacky/happy/blob/main/docs/getting-started.zh-CN.md">从零上手（中文）</a>
+      <a class="btn btn-ghost" href="https://github.com/wangjs-jacky/happy">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.8 18.3 5.1 18.3 5.1c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
+        GitHub Repository
+      </a>
+    </section>
+
+    <div class="doc-foot">
+      <span>© 2026 Paws · MIT License · fork of <a href="https://github.com/slopus/happy">slopus/happy</a></span>
+      <span><a href="index.html">← Back to home</a></span>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  /* sidebar scrollspy */
+  var links = Array.prototype.slice.call(document.querySelectorAll('#sbnav a'));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+  var current = null;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        if(current) current.classList.remove('active');
+        current = map[e.target.id];
+        if(current) current.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('section.doc').forEach(function(s){ io.observe(s); });
+})();
+</script>
+</body>
+</html>

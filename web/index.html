@@ -217,7 +217,7 @@
       <div class="nav-right">
         <a class="link" href="#features">Features</a>
         <a class="link" href="#loved">Testimonials</a>
-        <a class="link" href="#">Docs</a>
+        <a class="link" href="docs.html">Docs</a>
         <a class="btn btn-primary" href="#get-started">Download</a>
       </div>
     </nav>
@@ -234,13 +234,13 @@
         <p class="lead">Spawn and control the AI coding agents running on your computer — right from your phone. Paws runs on your hardware, works from anywhere, and costs nothing.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#get-started">Get Started</a>
-          <a class="btn btn-ghost" href="#" aria-label="View on GitHub">
+          <a class="btn btn-ghost" href="https://github.com/wangjs-jacky/happy" aria-label="View on GitHub">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.8 18.3 5.1 18.3 5.1c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
             View on GitHub
           </a>
         </div>
         <div class="install" id="install-hero" role="button" tabindex="0" aria-label="Copy install command">
-          <span class="p">$</span><span class="cmd">npm i -g paws &amp;&amp; paws</span>
+          <span class="p">$</span><span class="cmd">npm i -g @wangjs-jacky/paws &amp;&amp; paws</span>
           <span class="copy" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </span>
@@ -311,11 +311,11 @@
       <h2>Get started in seconds</h2>
       <p>Install Paws on your computer, then connect from your phone. That's it.</p>
       <div class="install" id="install-cta" role="button" tabindex="0" aria-label="Copy install command">
-        <span class="p">$</span><span class="cmd">npm i -g paws &amp;&amp; paws</span>
+        <span class="p">$</span><span class="cmd">npm i -g @wangjs-jacky/paws &amp;&amp; paws</span>
         <span class="copy" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span>
       </div>
       <div class="cta-actions">
-        <a class="btn btn-primary" href="#">
+        <a class="btn btn-primary" href="docs.html">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
           Install Paws Now
         </a>
@@ -331,7 +331,7 @@
       <span class="cp">© 2026 · MIT License</span>
     </div>
     <div class="foot-links">
-      <a href="#">Docs</a><a href="#">GitHub</a><a href="#">Blog</a><a href="#">Privacy</a>
+      <a href="docs.html">Docs</a><a href="https://github.com/wangjs-jacky/happy">GitHub</a><a href="https://github.com/wangjs-jacky/happy/blob/main/PRIVACY.md">Privacy</a>
     </div>
   </div>
 </footer>
@@ -379,7 +379,7 @@
   function bindCopy(el){
     if(!el) return;
     function doCopy(){
-      var text = 'npm i -g paws && paws';
+      var text = 'npm i -g @wangjs-jacky/paws && paws';
       if(navigator.clipboard){ navigator.clipboard.writeText(text).catch(function(){}); }
       el.classList.add('copied'); showToast();
       setTimeout(function(){ el.classList.remove('copied'); }, 1400);
@@ -394,7 +394,7 @@
   var termEl = document.getElementById('term');
   var lines = [
     {t:"$ paws", c:"c-txt"},
-    {t:"→ relay started · Kirills-MacBook-Pro", c:"c-mut"},
+    {t:"→ relay started · Jackys-MacBook-Air", c:"c-mut"},
     {t:"✔ phone paired", c:"c-green"},
     {t:"◐ agent · refactor-auth", c:"c-blue"},
     {t:"  edit src/auth/session.ts (+42 −8)", c:"c-pink"},
