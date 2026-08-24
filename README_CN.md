@@ -4,6 +4,8 @@
 
 **🔗 线上地址：** https://paws-landing-eo4.pages.dev
 
+**📚 中文文档：** https://paws-landing-eo4.pages.dev/docs/zh-CN
+
 [English](./README.md) | 中文
 
 ![Paws 落地页 Hero](export/paws-rendered-fixed.png)

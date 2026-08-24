@@ -140,7 +140,7 @@
   <div class="top-links">
     <a class="link" href="index.html">Home</a>
     <a class="link" href="#quick-start">Quick Start</a>
-    <a class="link" href="#self-hosting">Self-hosting</a>
+    <a class="link" href="docs/zh-CN.html" lang="zh-CN">中文</a>
     <a class="gh" href="https://github.com/wangjs-jacky/happy" aria-label="GitHub repository">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.8 18.3 5.1 18.3 5.1c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
     </a>
@@ -153,8 +153,9 @@
       <div class="sb-group">GETTING STARTED</div>
       <a href="#introduction">Introduction</a>
       <a href="#quick-start">Installation</a>
-      <a href="#connect">Connect your computer</a>
-      <a href="#first-session">Your first session</a>
+      <a href="#connect">Pair your account</a>
+      <a href="#first-session">Start or attach a session</a>
+      <a href="#daemon">Remote sessions</a>
       <div class="sb-group">GUIDES</div>
       <a href="#sessions">Sessions</a>
       <a href="#notifications">Notifications</a>
@@ -168,7 +169,7 @@
     <span class="kicker">GETTING STARTED</span>
     <h1>Installation &amp; Quick Start</h1>
     <p class="intro">Get Paws running in a few minutes. Install the CLI on the computer where your
-    coding agents run, install the app on your phone, then pair the two.</p>
+    coding agents run, pair that computer with your Paws account, then start or attach a session.</p>
     <hr />
 
     <section class="doc" id="introduction">
@@ -190,14 +191,24 @@
       </div>
       <p>Everything the server relays is ciphertext — your code and conversations never leave your
       devices unencrypted.</p>
+      <div class="callout note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p>Paws pairs an <strong>account with a computer and its sessions</strong>. It does not add a user to a Git repository or create project-level members.</p>
+      </div>
     </section>
 
     <section class="doc" id="quick-start">
       <div class="step-head"><span class="step-num">1</span><h2>Install the CLI</h2></div>
-      <p>Paws ships as a single npm package. Install it globally on the machine where your agents run:</p>
+      <p>First install and sign in to the agent you want to use. Verify that it works on its own before adding Paws:</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> npm i -g @openai/codex</span>
+<span class="ln"><span class="p">$</span> codex <span class="c-mut"># sign in and verify Codex works</span></span>
+      </div>
+      <p>Then install Paws globally on the same computer:</p>
       <div class="codeblock"><span class="ln"><span class="p">$</span> npm i -g @wangjs-jacky/paws</span></div>
       <p>This provides the <code class="inline">paws</code> and <code class="inline">happy</code> commands
-      (plus <code class="inline">paws-mcp</code> for MCP integration).</p>
+      (plus <code class="inline">paws-mcp</code> for MCP integration). New users should use
+      <code class="inline">paws</code>; <code class="inline">happy</code> is a compatibility alias.</p>
 
       <h3>Get the app</h3>
       <p>Download the latest <strong>Android APK</strong> from GitHub Releases (arm64, sideload install).
@@ -209,36 +220,47 @@
     </section>
 
     <section class="doc" id="connect">
-      <div class="step-head"><span class="step-num">2</span><h2>Connect your computer</h2></div>
-      <p>Run your agent through Paws instead of launching it directly:</p>
+      <div class="step-head"><span class="step-num">2</span><h2>Pair your Paws account</h2></div>
+      <p>Pairing adds this computer to your encrypted Paws account. Run:</p>
       <div class="codeblock">
-<span class="ln"><span class="p">$</span> paws claude   <span class="c-mut"># instead of claude</span></span>
-<span class="ln"><span class="p">$</span> paws codex    <span class="c-mut"># instead of codex</span></span>
+<span class="ln"><span class="p">$</span> paws auth login --force</span>
       </div>
-      <p>The first run prints a QR code. Scan it with the Paws app to pair — pairing exchanges
+      <p>Select mobile app login, then scan the QR code and approve it in Paws. Pairing exchanges
       encryption keys directly between your devices, so the server never sees them.</p>
-      <div class="codeblock">
-<span class="ln"><span class="p">$</span> paws claude</span>
-<span class="ln c-mut">→ relay started on this machine</span>
-<span class="ln c-green">✔ scan the QR code with the Paws app to pair…</span>
+      <div class="callout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+        <p><code class="inline">--force</code> replaces this computer's existing Paws identity. Use it when pairing for the first time or intentionally switching accounts — not as a routine startup command.</p>
       </div>
     </section>
 
     <section class="doc" id="first-session">
-      <div class="step-head"><span class="step-num">3</span><h2>Your first session</h2></div>
-      <p>Once paired, the running session is mirrored to your phone in real time. To let your phone
-      <strong>spawn new sessions</strong> on this machine — even when nothing is running — keep the
-      daemon alive:</p>
+      <div class="step-head"><span class="step-num">3</span><h2>Start or attach a session</h2></div>
+      <p>From your project directory, start Codex through Paws:</p>
       <div class="codeblock">
-<span class="ln"><span class="p">$</span> paws daemon start</span>
-<span class="ln c-mut"># in the app: tap ＋ → New Session</span>
-<span class="ln c-green">✔ agent running · your-macbook</span>
-<span class="ln c-blue">◍ streaming terminal to your phone</span>
+<span class="ln"><span class="p">$</span> cd /path/to/your-project</span>
+<span class="ln"><span class="p">$</span> paws codex</span>
       </div>
+      <p>If Codex or Claude is <strong>already running</strong>, do not start a duplicate agent. Ask the current agent to run the attach command from inside that session, where its thread or session ID is available:</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws attach --agent codex --json</span>
+<span class="ln c-mut"># use --agent claude for Claude Code</span>
+      </div>
+      <p>Running the command in an unrelated terminal cannot discover the active Codex thread. Advanced users can pass <code class="inline">--codex-thread-id &lt;id&gt;</code> explicitly.</p>
+      <p>Open the session in Paws and send a short test message. Confirm that output streams back and that permission prompts appear on the remote device.</p>
       <div class="callout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
-        <p>You're all set. Read on to learn how to steer sessions, get notified, and self-host the whole stack.</p>
+        <p>Use <code class="inline">paws codex</code> to start a new wrapped session and <code class="inline">paws attach</code> to connect an existing one. Running bare <code class="inline">paws</code> starts the default Claude agent.</p>
       </div>
+    </section>
+
+    <section class="doc" id="daemon">
+      <div class="step-head"><span class="step-num">4</span><h2>Enable remote session creation</h2></div>
+      <p>The daemon keeps the computer available so the app can create a new session even when no agent terminal is open. It normally starts automatically when you run Paws.</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws daemon status</span>
+<span class="ln"><span class="p">$</span> paws daemon start <span class="c-mut"># only if it is not running</span></span>
+      </div>
+      <p>A normal installation does not require a custom restart script or a <code class="inline">~/.local/bin</code> directory. Machine-specific wrappers are only for maintainers who must pin a particular Node version, proxy, working directory, or self-hosted server.</p>
     </section>
 
     <section class="doc" id="sessions">
