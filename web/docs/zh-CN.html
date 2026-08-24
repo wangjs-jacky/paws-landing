@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paws 文档 — 安装与快速上手</title>
+<meta name="description" content="安装 Paws、绑定账号、接入 Codex 或 Claude 会话，并通过手机或网页远程控制电脑上的编程智能体。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Noto+Sans+SC:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0e0d0c;--elev:#18150f;--text:#f5f1e8;--muted:#a8a096;--accent:#ffa31a;
+    --accent-ink:#161206;--border:rgba(255,255,255,.09);--strong:rgba(255,255,255,.14);
+    --green:#4ade80;--blue:#56b6f7;--mono:'JetBrains Mono',monospace;
+    --body:'Noto Sans SC','DM Sans',sans-serif;--sidebar:250px;--topbar:58px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:calc(var(--topbar) + 24px)}
+  body{background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.75;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .topbar{position:fixed;inset:0 0 auto;height:var(--topbar);z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(14,13,12,.86);backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--border)}
+  .crumb{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}.crumb img{width:26px;height:26px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--strong)}
+  .crumb .sep{color:var(--muted);font-weight:400}.crumb .page{font-family:var(--mono);font-weight:500;font-size:13px;color:var(--muted)}
+  .top-links{display:flex;align-items:center;gap:22px}.top-links a{color:var(--muted);font-size:14px;transition:color .2s}.top-links a:hover{color:var(--text)}
+  .top-links .gh{display:inline-flex;color:var(--text)}.top-links .gh:hover{color:var(--accent)}
+  .layout{display:flex;min-height:100vh;padding-top:var(--topbar)}
+  aside{width:var(--sidebar);flex:0 0 auto;border-right:1px solid var(--border);position:sticky;top:var(--topbar);height:calc(100vh - var(--topbar));overflow-y:auto;padding:28px 16px 40px}
+  .group{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--muted);margin:22px 10px 10px}.group:first-child{margin-top:0}
+  aside nav a{display:block;font-size:14px;color:var(--muted);padding:8px 12px;border-radius:9px;margin-bottom:2px;transition:.15s}aside nav a:hover{color:var(--text)}aside nav a.active{color:var(--accent);background:rgba(255,163,26,.1);box-shadow:inset 0 0 0 1px rgba(255,163,26,.22);font-weight:600}
+  main{flex:1;min-width:0;padding:44px 56px 110px;max-width:880px}.kicker{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--accent)}
+  h1{font-weight:800;font-size:clamp(32px,4.4vw,46px);letter-spacing:-.02em;line-height:1.25;margin:10px 0 14px}.intro{color:var(--muted);font-size:17px;max-width:62ch}hr{border:0;border-top:1px solid var(--border);margin:34px 0}
+  section.doc{padding-top:8px;margin-bottom:52px}.step-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}.step-num{width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center}
+  h2{font-weight:700;font-size:26px;letter-spacing:-.01em}h3{font-weight:600;font-size:19px;margin:26px 0 8px}section.doc p{color:var(--muted);font-size:15.5px;margin:10px 0;max-width:68ch}section.doc p strong{color:var(--text)}section.doc ul{color:var(--muted);font-size:15.5px;margin:10px 0 10px 22px}section.doc li{margin:6px 0}section.doc li::marker{color:var(--accent)}section.doc a:not(.btn){color:var(--blue);border-bottom:1px solid rgba(86,182,247,.3)}
+  code.inline{font-family:var(--mono);font-size:.88em;background:var(--elev);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--text)}
+  .codeblock{background:#101013;border:1px solid var(--border);border-radius:13px;padding:16px 18px;margin:16px 0;font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto}.codeblock .ln{display:block;white-space:pre}.p{color:var(--accent);font-weight:600;user-select:none}.mut{color:var(--muted)}.green{color:var(--green)}.blue{color:var(--blue)}
+  .callout{display:flex;gap:14px;align-items:flex-start;background:rgba(255,163,26,.07);border:1px solid rgba(255,163,26,.3);border-radius:13px;padding:16px 18px;margin:20px 0}.callout.note{background:rgba(86,182,247,.06);border-color:rgba(86,182,247,.3)}.callout svg{width:20px;height:20px;flex:0 0 auto;color:var(--accent);margin-top:3px}.callout.note svg{color:var(--blue)}.callout p{margin:0;color:var(--text);font-size:14.5px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;border-radius:11px;padding:10px 16px;border:1px solid transparent;transition:.2s;margin:8px 10px 0 0}.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 20px -6px rgba(255,163,26,.5)}.primary:hover{transform:translateY(-2px)}.ghost{border-color:var(--strong)}.ghost:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+  .doc-foot{border-top:1px solid var(--border);margin-top:60px;padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13.5px}.doc-foot a:hover{color:var(--text)}
+  @media(max-width:900px){aside{display:none}main{padding:34px 24px 90px}.top-links .hide-mobile{display:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="crumb" href="../index.html"><img src="../assets/mascot-avatar.png" alt="Paws 标志" />Paws <span class="sep">/</span> <span class="page">文档</span></a>
+  <div class="top-links">
+    <a class="hide-mobile" href="../index.html">首页</a>
+    <a class="hide-mobile" href="#quick-start">快速开始</a>
+    <a href="../docs.html" lang="en">English</a>
+    <a class="gh" href="https://github.com/wangjs-jacky/happy" aria-label="GitHub 仓库"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.8 18.3 5.1 18.3 5.1c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg></a>
+  </div>
+</div>
+
+<div class="layout">
+  <aside><nav id="sbnav">
+    <div class="group">开始使用</div>
+    <a href="#introduction">先理解绑定关系</a>
+    <a href="#quick-start">安装 Agent 与 CLI</a>
+    <a href="#connect">绑定 Paws 账号</a>
+    <a href="#first-session">启动或接入会话</a>
+    <a href="#daemon">启用远程新建</a>
+    <div class="group">使用指南</div>
+    <a href="#account-switch">切换用户</a>
+    <a href="#sessions">控制会话</a>
+    <a href="#self-hosting">自托管</a>
+    <div class="group">更多</div>
+    <a href="#full-docs">完整文档</a>
+  </nav></aside>
+
+  <main>
+    <span class="kicker">GETTING STARTED</span>
+    <h1>安装与快速上手</h1>
+    <p class="intro">在运行编程智能体的电脑上安装 Paws，把电脑与 Paws 账号配对，然后启动新会话或接入已有会话。</p>
+    <hr />
+
+    <section class="doc" id="introduction">
+      <div class="step-head"><h2>先理解 Paws 绑定了什么</h2></div>
+      <p>Paws 让你从手机或网页控制电脑上的 Claude Code、Codex、Gemini、OpenCode 等编程智能体。</p>
+      <div class="codeblock" aria-label="Paws 架构">
+<span class="ln mut">手机 / Web App</span>
+<span class="ln mut">    │  HTTP + WebSocket · 端到端加密</span>
+<span class="ln mut">    ▼</span>
+<span class="ln blue">同步中继 Server</span>
+<span class="ln mut">    │  加密同步 · 机器在线状态 · 会话状态</span>
+<span class="ln mut">    ▼</span>
+<span class="ln green">电脑上的 paws CLI / daemon</span>
+<span class="ln mut">    ▼</span>
+<span class="ln">Claude Code · Codex · Gemini · OpenCode</span>
+      </div>
+      <div class="callout note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p>Paws 建立的是“<strong>账号 ↔ 电脑 ↔ Agent 会话</strong>”的配对关系，不是在 Git 仓库中添加项目成员。</p>
+      </div>
+    </section>
+
+    <section class="doc" id="quick-start">
+      <div class="step-head"><span class="step-num">1</span><h2>安装 Agent 与 Paws CLI</h2></div>
+      <p>先安装并登录你要使用的编程智能体。以 Codex 为例：</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> npm i -g @openai/codex</span>
+<span class="ln"><span class="p">$</span> codex <span class="mut"># 登录并确认 Codex 可以独立运行</span></span>
+      </div>
+      <p>然后在同一台电脑安装 Paws：</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> npm i -g @wangjs-jacky/paws</span>
+<span class="ln"><span class="p">$</span> paws --version</span>
+      </div>
+      <p>请优先使用 <code class="inline">paws</code> 命令；<code class="inline">happy</code> 只是为了兼容旧版本而保留的别名。</p>
+      <h3>获取客户端</h3>
+      <p>从 GitHub Releases 下载最新 Android APK，或者使用 Paws Web App。自托管用户要确保 App 和 CLI 指向同一个 Server。</p>
+      <a class="btn primary" href="https://github.com/wangjs-jacky/happy/releases">下载 Android APK</a>
+      <a class="btn ghost" href="https://47.115.228.20:8443/">打开 Web App</a>
+    </section>
+
+    <section class="doc" id="connect">
+      <div class="step-head"><span class="step-num">2</span><h2>绑定 Paws 账号</h2></div>
+      <p>在电脑终端执行：</p>
+      <div class="codeblock"><span class="ln"><span class="p">$</span> paws auth login --force</span></div>
+      <p>选择手机 App 登录方式，用 Paws 扫描终端二维码并确认。这一步会把电脑加入你的加密账号。</p>
+      <div class="callout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+        <p><code class="inline">--force</code> 会替换这台电脑原有的 Paws 身份。它用于首次配对或有意切换账号，不是每次启动都要执行的命令。</p>
+      </div>
+    </section>
+
+    <section class="doc" id="first-session">
+      <div class="step-head"><span class="step-num">3</span><h2>启动或接入 Agent 会话</h2></div>
+      <h3>启动一个新 Codex 会话</h3>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> cd /你的/项目目录</span>
+<span class="ln"><span class="p">$</span> paws codex</span>
+      </div>
+      <p>Paws 会启动 Codex、创建远程会话并让手机或网页端看到它。直接执行裸 <code class="inline">paws</code> 会启动默认的 Claude 会话。</p>
+      <h3>接入已经运行的 Codex</h3>
+      <p>如果 Codex 已经启动，不要再开一个重复会话。请让<strong>当前 Codex 会话</strong>从项目目录执行：</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws attach --agent codex --json</span>
+<span class="ln mut"># Claude Code 使用 --agent claude</span>
+      </div>
+      <p>不要在一个无关的新终端里执行，否则命令无法取得当前 Codex 的 Thread ID。高级用户也可以显式传入 <code class="inline">--codex-thread-id &lt;id&gt;</code>。</p>
+      <p>随后在 Paws 中打开该会话，发送一条测试消息，确认输出和权限请求都能正常同步。</p>
+    </section>
+
+    <section class="doc" id="daemon">
+      <div class="step-head"><span class="step-num">4</span><h2>启用手机远程新建会话</h2></div>
+      <p>daemon 是电脑上的后台进程。它让你在没有打开 Agent 终端时，也能从 App 新建会话。运行 Paws 时通常会自动启动 daemon。</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> paws daemon status</span>
+<span class="ln"><span class="p">$</span> paws daemon start <span class="mut"># 仅在未运行时需要</span></span>
+      </div>
+      <div class="callout note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p>普通用户不需要 <code class="inline">happy-daemon-rc</code>，也不需要手工创建 <code class="inline">~/.local/bin</code>。这类脚本只用于固定某台维护机器的 Node、代理、工作目录或自托管 Server。</p>
+      </div>
+    </section>
+
+    <section class="doc" id="account-switch">
+      <div class="step-head"><h2>切换用户与多人使用</h2></div>
+      <p>在同一个操作系统用户下再次执行 <code class="inline">paws auth login --force</code>，表示把原账号替换成新账号，不是邀请一位新的项目协作者。</p>
+      <ul>
+        <li><strong>一个人换账号：</strong>使用 <code class="inline">paws auth login --force</code> 重新扫码。</li>
+        <li><strong>多人共用一台电脑：</strong>建议使用不同的 macOS、Linux 或 Windows 系统用户，隔离各自的凭据与 <code class="inline">~/.happy</code> 数据。</li>
+        <li><strong>团队共享 Git 项目：</strong>项目成员权限仍由 GitHub、GitLab 或仓库自身管理，Paws 配对不能替代项目权限。</li>
+      </ul>
+    </section>
+
+    <section class="doc" id="sessions">
+      <div class="step-head"><h2>控制会话</h2></div>
+      <ul>
+        <li><strong>手机接管：</strong>在 App 中打开会话并输入指令。</li>
+        <li><strong>电脑收回：</strong>回到终端按键即可恢复本地控制。</li>
+        <li><strong>远程授权：</strong>Agent 请求运行命令或修改文件时，可在手机上处理权限。</li>
+        <li><strong>发送图片：</strong>新建会话时可附加截图或照片，支持的视觉模型可以读取。</li>
+      </ul>
+    </section>
+
+    <section class="doc" id="self-hosting">
+      <div class="step-head"><h2>自托管</h2></div>
+      <p>使用自托管 Server 时，CLI 与 App 必须指向完全一致的地址：</p>
+      <div class="codeblock">
+<span class="ln"><span class="p">$</span> export HAPPY_SERVER_URL=https://your-server.example.com</span>
+<span class="ln"><span class="p">$</span> export HAPPY_WEBAPP_URL=https://your-server.example.com</span>
+<span class="ln"><span class="p">$</span> paws codex</span>
+      </div>
+      <p>手机端也要在设置中填写同一个 Server。生产或团队环境建议使用 HTTPS。</p>
+    </section>
+
+    <section class="doc" id="full-docs">
+      <div class="step-head"><h2>完整文档</h2></div>
+      <p>更完整的源码安装、Server 配置、App 构建与排障说明位于 Paws 主仓库：</p>
+      <a class="btn primary" href="https://github.com/wangjs-jacky/happy/blob/main/docs/getting-started.zh-CN.md">从零上手（中文）</a>
+      <a class="btn ghost" href="../docs.html">English docs</a>
+      <a class="btn ghost" href="https://github.com/wangjs-jacky/happy">GitHub 仓库</a>
+    </section>
+
+    <div class="doc-foot"><span>© 2026 Paws · MIT License</span><span><a href="../index.html">← 返回首页</a></span></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll('#sbnav a'));var map={};var current=null;
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){if(current)current.classList.remove('active');current=map[e.target.id];if(current)current.classList.add('active');}});},{rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('section.doc').forEach(function(s){io.observe(s);});
+})();
+</script>
+</body>
+</html>

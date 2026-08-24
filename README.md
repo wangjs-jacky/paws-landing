@@ -4,6 +4,8 @@
 
 **🔗 Live:** https://paws-landing-eo4.pages.dev
 
+**📚 Docs:** [English](https://paws-landing-eo4.pages.dev/docs) · [中文](https://paws-landing-eo4.pages.dev/docs/zh-CN)
+
 English | [中文](./README_CN.md)
 
 ![Paws landing hero](export/paws-rendered-fixed.png)
