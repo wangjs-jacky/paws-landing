@@ -175,7 +175,7 @@ Vite builds to `dist/`, which becomes the only Cloudflare Pages upload directory
 
 ### React Bits source policy
 
-React Bits is a copy-and-customize collection rather than a required monolithic runtime dependency. Copy only the free components needed for this page, retain source attribution in component comments, and record the upstream React Bits MIT license where required.
+React Bits is a copy-and-customize collection rather than a required monolithic runtime dependency. Copy only the free components needed for this page and retain source attribution in component comments. The current upstream license is “MIT + Commons Clause License Condition v1.0”: it permits use as part of an application, website, or product, but prohibits selling, sublicensing, or redistributing the components themselves. Include the upstream copyright and full license condition in `THIRD_PARTY_NOTICES.md`; do not expose the adapted components as a standalone library or registry.
 
 `DotField` will be adapted from the official landing-page implementation, with Paws tokens, simpler render gating, and mobile/reduced-motion behavior. `SpotlightCard` will be adapted from the official free component. Avoid React Bits Pro code and unnecessary animation dependencies.
 
