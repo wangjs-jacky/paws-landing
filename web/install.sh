@@ -159,7 +159,11 @@ success "Installed Paws CLI${installed_version:+ $installed_version}"
 if $pair_after_install; then
   printf '\nPair this computer with the Paws app\n\n'
   info "Scan the QR code shown below. Existing pairings are preserved."
-  "$paws_bin" auth login
+  if [[ -t 1 && -r /dev/tty ]]; then
+    "$paws_bin" auth login </dev/tty
+  else
+    info "No interactive terminal detected. Run this command to pair later: paws auth login"
+  fi
 fi
 
 printf '\n'
