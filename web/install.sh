@@ -149,8 +149,12 @@ if [[ ! -x "$paws_bin" ]]; then
 fi
 [[ -n "$paws_bin" && -x "$paws_bin" ]] || fail "Paws was installed, but the paws executable could not be found."
 
-installed_version="$($paws_bin --version 2>/dev/null | sed -n '1p')"
-success "Installed ${installed_version:-Paws CLI}"
+package_json="$install_prefix/lib/node_modules/@wangjs-jacky/paws/package.json"
+installed_version=""
+if [[ -f "$package_json" ]]; then
+  installed_version="$(node -e 'process.stdout.write(require(process.argv[1]).version)' "$package_json")"
+fi
+success "Installed Paws CLI${installed_version:+ $installed_version}"
 
 if $pair_after_install; then
   printf '\nPair this computer with the Paws app\n\n'
