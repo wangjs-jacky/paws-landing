@@ -84,22 +84,37 @@ test('Chinese documentation route keeps its existing heading', async ({ page }, 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('安装与快速上手');
 });
 
-test('captures both themes at the approved viewport', async ({ page }, testInfo) => {
+test('captures both themes at the approved viewport', async ({ browser }, testInfo) => {
+  const viewport = testInfo.project.name === 'desktop'
+    ? { width: 1440, height: 1000 }
+    : { width: 390, height: 844 };
+
   for (const theme of ['dark', 'light']) {
-    await page.addInitScript(
-      ({ languageKey, themeKey, selectedTheme }) => {
-        localStorage.setItem(languageKey, 'en');
-        localStorage.setItem(themeKey, selectedTheme);
-      },
-      { languageKey: LANGUAGE_KEY, themeKey: THEME_KEY, selectedTheme: theme }
-    );
-    await page.goto('/');
-    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.locator('.mascot-stage img')).toBeVisible();
-    await page.screenshot({
-      path: testInfo.outputPath(`homepage-${testInfo.project.name}-${theme}.png`),
-      fullPage: true
+    const context = await browser.newContext({
+      baseURL: 'http://127.0.0.1:4173',
+      locale: 'en-US',
+      viewport
     });
+
+    try {
+      await context.addInitScript(
+        ({ languageKey, themeKey, selectedTheme }) => {
+          localStorage.setItem(languageKey, 'en');
+          localStorage.setItem(themeKey, selectedTheme);
+        },
+        { languageKey: LANGUAGE_KEY, themeKey: THEME_KEY, selectedTheme: theme }
+      );
+      const page = await context.newPage();
+      await page.goto('/');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expect(page.locator('.mascot-stage img')).toBeVisible();
+      await page.screenshot({
+        path: testInfo.outputPath(`homepage-${testInfo.project.name}-${theme}.png`),
+        fullPage: true
+      });
+    } finally {
+      await context.close();
+    }
   }
 });
