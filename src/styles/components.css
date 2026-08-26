@@ -117,6 +117,128 @@
 .primary-action:hover { background: var(--color-accent-hover); }
 .menu-toggle { display: none; }
 
+.install-command {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  width: min(100%, 42rem);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+}
+
+.install-command:hover {
+  border-color: var(--color-accent);
+}
+
+.install-command:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.install-command:focus-within {
+  border-color: var(--color-focus);
+}
+
+.install-command__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  user-select: text;
+}
+
+.install-command__button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.install-command__button:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.install-command__button:active {
+  color: var(--color-action-text);
+  background: var(--color-accent-hover);
+}
+
+.install-command__button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.install-command__button svg {
+  width: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.install-command__status {
+  grid-column: 1 / -1;
+  min-height: 1.25em;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.install-command[data-state='copied'] {
+  border-color: var(--color-accent);
+}
+
+.install-command[data-state='copied'] .install-command__button {
+  color: var(--color-action-text);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.install-command[data-state='copied'] .install-command__status {
+  color: var(--color-accent);
+}
+
+.install-command[data-state='error'] {
+  border-color: var(--color-focus);
+}
+
+.install-command[data-state='error'] .install-command__button,
+.install-command[data-state='error'] .install-command__status {
+  color: var(--color-focus);
+}
+
+.install-command[data-compact='true'] {
+  width: min(100%, 34rem);
+  padding: var(--space-2);
+}
+
+@media (max-width: 390px) {
+  .install-command {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    width: 100%;
+  }
+
+  .install-command__text {
+    white-space: normal;
+  }
+}
+
 @media (max-width: 800px) {
   .site-header { grid-template-columns: auto 1fr auto; }
 
