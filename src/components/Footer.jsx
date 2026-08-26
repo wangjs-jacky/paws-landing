@@ -2,7 +2,7 @@ export default function Footer({ copy, language }) {
   return (
     <footer className="site-footer">
       <div className="page-shell site-footer__grid">
-        <a className="footer-brand" href="#top" aria-label="Paws home">
+        <a className="footer-brand" href="#top" aria-label={copy.labels.home}>
           <img src="/assets/mascot-avatar.png" alt="" />
           <span>Paws</span>
         </a>

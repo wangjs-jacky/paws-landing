@@ -5,6 +5,7 @@ export const content = {
       description: 'Start, attach and control AI coding agents running on your computer from your phone.'
     },
     nav: { product: 'Product', how: 'How it works', openSource: 'Open source', docs: 'Docs', getPaws: 'Get Paws' },
+    sectionLabels: { capabilities: 'PAWS / CAPABILITIES' },
     hero: {
       eyebrow: 'OPEN SOURCE · RUNS ON YOUR HARDWARE',
       title: 'Your coding agents. Within reach.',
@@ -35,7 +36,9 @@ export const content = {
     footer: { privacy: 'Privacy', docs: 'Documentation', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
       language: 'Switch to Chinese', themeLight: 'Switch to light theme', themeDark: 'Switch to dark theme',
-      menuOpen: 'Open navigation', menuClose: 'Close navigation', copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually'
+      menuOpen: 'Open navigation', menuClose: 'Close navigation', home: 'Paws home',
+      pauseAgents: 'Pause supported-agent animation', resumeAgents: 'Resume supported-agent animation',
+      copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually'
     }
   },
   zh: {
@@ -44,6 +47,7 @@ export const content = {
       description: '通过手机启动、接入和控制电脑上运行的 AI 编程智能体。'
     },
     nav: { product: '产品能力', how: '工作方式', openSource: '开源与自托管', docs: '文档', getPaws: '开始使用' },
+    sectionLabels: { capabilities: 'PAWS / 产品能力' },
     hero: {
       eyebrow: '开源 · 运行在你的电脑上',
       title: '让你的编程智能体，随时触手可及。',
@@ -74,7 +78,9 @@ export const content = {
     footer: { privacy: '隐私', docs: '文档', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
       language: 'Switch to English', themeLight: '切换到亮色主题', themeDark: '切换到深色主题',
-      menuOpen: '打开导航', menuClose: '关闭导航', copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令'
+      menuOpen: '打开导航', menuClose: '关闭导航', home: 'Paws 首页',
+      pauseAgents: '暂停智能体兼容列表动画', resumeAgents: '继续智能体兼容列表动画',
+      copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令'
     }
   }
 };

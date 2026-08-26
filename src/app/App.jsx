@@ -46,7 +46,7 @@ export default function App() {
       />
       <main id="top">
         <Hero copy={copy} language={language} theme={theme} />
-        <AgentStrip agents={copy.agents} />
+        <AgentStrip agents={copy.agents} labels={copy.labels} />
         <HowItWorks copy={copy} />
         <FeatureGrid copy={copy} />
         <OpenSource copy={copy} language={language} />

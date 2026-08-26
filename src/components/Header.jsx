@@ -14,7 +14,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
 
   return (
     <header className="site-header" data-open={menuOpen || undefined}>
-      <a className="brand" href="#top" aria-label="Paws home" onClick={closeMenu}>
+      <a className="brand" href="#top" aria-label={copy.labels.home} onClick={closeMenu}>
         <img src="/assets/mascot-avatar.png" alt="" />
         <span>Paws</span>
       </a>

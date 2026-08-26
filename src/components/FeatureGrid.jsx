@@ -14,7 +14,7 @@ export default function FeatureGrid({ copy }) {
   return (
     <section id="product" className="shell-section feature-section" aria-labelledby="feature-title">
       <div className="section-heading feature-section__heading">
-        <p className="eyebrow">PAWS / CAPABILITIES</p>
+        <p className="eyebrow">{copy.sectionLabels.capabilities}</p>
         <h2 id="feature-title">{copy.nav.product}</h2>
       </div>
       <div className="feature-grid">

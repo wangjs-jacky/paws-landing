@@ -397,6 +397,38 @@
   animation: agent-loop 28s linear infinite;
 }
 
+.agent-strip[data-paused='true'] .agent-strip__track { animation-play-state: paused; }
+
+.agent-strip__control {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  right: max(var(--space-4), calc((100vw - var(--content-width)) / 2));
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.agent-strip__control:hover { border-color: var(--color-accent); }
+.agent-strip__control svg {
+  width: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+.agent-strip__control svg path[d^='m'] { fill: currentColor; stroke: none; }
+
 .agent-strip__list {
   display: flex;
   gap: clamp(var(--space-6), 5vw, var(--space-8));
@@ -649,6 +681,8 @@
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
+  min-width: 44px;
+  min-height: 44px;
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 800;
@@ -663,6 +697,14 @@
   justify-content: center;
   color: var(--color-muted);
   font-size: 0.9rem;
+}
+
+.site-footer nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .site-footer nav a:hover { color: var(--color-text); }
@@ -728,7 +770,7 @@
     padding-right: var(--space-2);
   }
 
-  .primary-action { display: none; }
+  .preference-controls > .primary-action { display: none; }
 
   .hero {
     min-height: 100svh;
@@ -808,11 +850,13 @@
   .mascot-stage img { transform: none; transition: none; }
   .agent-strip__track { animation: none; }
   .agent-strip__duplicate { display: none; }
+  .agent-strip__control { display: none; }
   .spotlight-card::before { display: none; }
 }
 
 @media (hover: none), (pointer: coarse) {
   .agent-strip__track { animation: none; }
   .agent-strip__duplicate { display: none; }
+  .agent-strip__control { display: none; }
   .spotlight-card::before { display: none; }
 }

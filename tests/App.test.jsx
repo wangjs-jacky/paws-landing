@@ -7,12 +7,28 @@ beforeEach(() => localStorage.clear());
 
 it('switches all visible copy and document metadata to Chinese', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  const { container } = render(<App />);
   await user.click(screen.getByRole('button', { name: /Switch to Chinese/i }));
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('让你的编程智能体');
+  expect(screen.getByText('PAWS / 产品能力')).toBeInTheDocument();
+  expect(container.querySelector('.footer-brand')).toHaveAttribute('aria-label', 'Paws 首页');
+  expect(screen.getByRole('button', { name: '暂停智能体兼容列表动画' })).toBeInTheDocument();
   expect(document.documentElement.lang).toBe('zh-CN');
   expect(document.title).toContain('随时控制');
   expect(document.querySelector('meta[name="description"]').content).toContain('通过手机');
+});
+
+it('lets users pause and resume the supported-agent animation', async () => {
+  const user = userEvent.setup();
+  const { container } = render(<App />);
+  const strip = container.querySelector('.agent-strip');
+  const pause = screen.getByRole('button', { name: 'Pause supported-agent animation' });
+
+  expect(pause).toHaveAttribute('aria-pressed', 'false');
+  expect(strip).toHaveAttribute('data-paused', 'false');
+  await user.click(pause);
+  expect(screen.getByRole('button', { name: 'Resume supported-agent animation' })).toHaveAttribute('aria-pressed', 'true');
+  expect(strip).toHaveAttribute('data-paused', 'true');
 });
 
 it('toggles theme and persists it', async () => {
