@@ -1,0 +1,62 @@
+import { useEffect, useState } from 'react';
+
+export default function Header({ copy, language, theme, onLanguageChange, onThemeChange }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setMenuOpen(false);
+    }
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, []);
+
+  return (
+    <header className="site-header" data-open={menuOpen || undefined}>
+      <a className="brand" href="#top" aria-label="Paws home" onClick={closeMenu}>
+        <img src="/assets/mascot-avatar.png" alt="" />
+        <span>Paws</span>
+      </a>
+      <button
+        className="menu-toggle"
+        type="button"
+        aria-expanded={menuOpen}
+        aria-controls="primary-navigation"
+        aria-label={menuOpen ? copy.labels.menuClose : copy.labels.menuOpen}
+        onClick={() => setMenuOpen(value => !value)}
+      >
+        <span /><span /><span />
+      </button>
+      <nav id="primary-navigation" aria-label="Primary navigation">
+        <a href="#product" onClick={closeMenu}>{copy.nav.product}</a>
+        <a href="#how-it-works" onClick={closeMenu}>{copy.nav.how}</a>
+        <a href="#open-source" onClick={closeMenu}>{copy.nav.openSource}</a>
+        <a href={language === 'zh' ? '/docs/zh-CN' : '/docs'} onClick={closeMenu}>{copy.nav.docs}</a>
+        <a href="https://github.com/wangjs-jacky/happy" onClick={closeMenu}>GitHub</a>
+      </nav>
+      <div className="preference-controls">
+        <button
+          className="language-toggle"
+          type="button"
+          aria-label={copy.labels.language}
+          data-language={language}
+          onClick={() => onLanguageChange(language === 'en' ? 'zh' : 'en')}
+        >
+          <span>EN</span><span lang="zh-CN">中文</span>
+        </button>
+        <button
+          className="theme-toggle"
+          type="button"
+          aria-label={theme === 'dark' ? copy.labels.themeLight : copy.labels.themeDark}
+          onClick={onThemeChange}
+        >
+          <span aria-hidden="true" className={theme === 'dark' ? 'icon-sun' : 'icon-moon'} />
+        </button>
+        <a className="primary-action" href={language === 'zh' ? '/docs/zh-CN#quick-start' : '/docs#quick-start'}>
+          {copy.nav.getPaws}
+        </a>
+      </div>
+    </header>
+  );
+}
