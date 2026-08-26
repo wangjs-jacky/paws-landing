@@ -9,6 +9,20 @@
     />
     <meta name="theme-color" content="#1d1713" />
     <title>Paws — Control your AI coding agents from anywhere</title>
+    <script>
+      (() => {
+        let theme = null;
+        try {
+          const saved = window.localStorage.getItem('paws-home-theme-v1');
+          if (saved === 'light' || saved === 'dark') theme = saved;
+        } catch {}
+        if (!theme) {
+          theme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <style>
       html { background: #1d1713; color: #fff7ed; }
       body { margin: 0; }
