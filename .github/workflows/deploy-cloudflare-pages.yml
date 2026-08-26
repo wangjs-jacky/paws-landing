@@ -5,7 +5,14 @@ on:
     branches:
       - main
     paths:
-      - "web/**"
+      - "src/**"
+      - "public/**"
+      - "tests/**"
+      - "scripts/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.js"
       - ".github/workflows/deploy-cloudflare-pages.yml"
   workflow_dispatch:
 
@@ -34,6 +41,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test and build
+        run: npm run check
+
       - name: Check deployment credentials
         shell: bash
         run: |
@@ -44,14 +57,14 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         run: |
-          npx --yes wrangler@4.105.0 pages deploy web \
+          npx --yes wrangler@4.105.0 pages deploy dist \
             --project-name paws-landing \
             --branch main \
             --commit-hash "$GITHUB_SHA" \
             --commit-message "GitHub Actions deployment" \
             --commit-dirty=false
 
-      - name: Verify production documentation
+      - name: Verify production site
         shell: bash
         run: |
           verify_page() {
@@ -75,5 +88,6 @@ jobs:
             return 1
           }
 
+          verify_page "https://paws-landing-eo4.pages.dev/" "Paws — Control your AI coding agents from anywhere"
           verify_page "https://paws-landing-eo4.pages.dev/docs" "Pair your Paws account"
           verify_page "https://paws-landing-eo4.pages.dev/docs/zh-CN" "安装与快速上手"
