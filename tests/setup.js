@@ -18,6 +18,8 @@ Object.defineProperty(window, 'matchMedia', {
   }))
 });
 
+vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+
 const storedValues = new Map();
 
 Object.defineProperty(window, 'localStorage', {

@@ -228,6 +228,137 @@
   padding: var(--space-2);
 }
 
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: min(900px, 100svh);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 42%, rgb(239 108 62 / 18%), transparent 32rem),
+    var(--color-bg);
+}
+
+.page-shell {
+  width: min(calc(100% - 2 * var(--space-5)), var(--content-width));
+  margin-inline: auto;
+}
+
+.hero-grid {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  gap: clamp(var(--space-6), 5vw, var(--space-8));
+  align-items: center;
+  padding-block: calc(var(--header-height) + var(--space-8)) var(--space-7);
+}
+
+.hero-copy { min-width: 0; }
+
+.hero-copy .eyebrow {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  text-shadow: 0 1px 18px var(--color-bg);
+}
+
+.hero-copy h1 {
+  max-width: 12ch;
+  margin-bottom: var(--space-5);
+  text-wrap: balance;
+  text-shadow: 0 2px 30px var(--color-bg), 0 1px 4px var(--color-bg);
+}
+
+.hero-lead {
+  max-width: 38rem;
+  margin: 0 0 var(--space-6);
+  color: var(--color-muted);
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  text-shadow: 0 1px 16px var(--color-bg);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.hero-actions .primary-action,
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+}
+
+.secondary-action {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-translucent);
+  backdrop-filter: blur(12px);
+}
+
+.secondary-action:hover { border-color: var(--color-accent); }
+
+.mascot-stage {
+  --mascot-x: 0px;
+  --mascot-y: 0px;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.mascot-stage img {
+  width: min(100%, 32rem);
+  max-height: 36rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2rem 3rem rgb(0 0 0 / 20%));
+  transform: translate3d(var(--mascot-x), var(--mascot-y), 0);
+  transition: transform 120ms ease-out;
+}
+
+.dot-field,
+.hero-ambient {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dot-field canvas,
+.dot-field-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dot-field-fallback {
+  opacity: 0.75;
+  background-image:
+    radial-gradient(circle at center, rgb(255 145 55 / 35%) 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 68% 45%, rgb(255 130 52 / 18%), transparent 28rem);
+  background-size: 26px 26px, 100% 100%;
+}
+
+:root[data-theme='light'] .dot-field-fallback {
+  background-image:
+    radial-gradient(circle at center, rgb(164 79 10 / 28%) 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 68% 45%, rgb(185 91 0 / 12%), transparent 28rem);
+}
+
+.dot-field[data-canvas='ready'] .dot-field-fallback { opacity: 0; }
+.dot-field canvas { opacity: 0; }
+.dot-field[data-canvas='ready'] canvas { opacity: 1; }
+
+.hero-ambient {
+  z-index: 1;
+  background: radial-gradient(circle at 62% 45%, transparent 0 15rem, var(--color-bg) 57rem);
+}
+
 @media (max-width: 390px) {
   .install-command {
     grid-template-columns: minmax(0, 1fr) 44px;
@@ -289,9 +420,53 @@
   }
 
   .primary-action { display: none; }
+
+  .hero {
+    min-height: 100svh;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    align-content: start;
+    padding-top: calc(var(--header-height) + var(--space-6));
+  }
+
+  .mascot-stage {
+    grid-row: 1;
+    min-height: 180px;
+  }
+
+  .mascot-stage img {
+    width: clamp(180px, 46vw, 220px);
+    max-height: 220px;
+  }
+
+  .hero-copy {
+    grid-row: 2;
+    padding-bottom: var(--space-6);
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.55rem, 11vw, 4.5rem);
+  }
+
+  .hero-actions .primary-action { display: inline-flex; }
 }
 
 @media (max-width: 500px) {
   .site-header { inset-inline: var(--space-2); }
   .brand span { display: none; }
+
+  .hero-grid {
+    width: min(calc(100% - 2 * var(--space-4)), var(--content-width));
+    padding-top: calc(var(--header-height) + var(--space-5));
+  }
+
+  .hero-copy .eyebrow { font-size: 0.76rem; }
+  .hero-lead { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-stage img { transform: none; transition: none; }
 }

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Header from '../components/Header';
+import Hero from '../components/Hero';
 import { content } from './content';
 import { usePreferences } from './usePreferences';
 
@@ -38,11 +39,7 @@ export default function App() {
         onThemeChange={toggleTheme}
       />
       <main id="top">
-        <section id="product" className="shell-section hero-placeholder" aria-labelledby="hero-title">
-          <p className="eyebrow">{copy.hero.eyebrow}</p>
-          <h1 id="hero-title">{copy.hero.title}</h1>
-          <p>{copy.hero.body}</p>
-        </section>
+        <Hero copy={copy} language={language} theme={theme} />
         <section id="how-it-works" className="shell-section" aria-labelledby="how-title">
           <h2 id="how-title">{copy.nav.how}</h2>
           {copy.steps.map(step => (
