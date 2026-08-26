@@ -1,3 +1,5 @@
+import { docsHref } from '../app/siteConstants';
+
 function Arrow() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -7,7 +9,7 @@ function Arrow() {
 }
 
 export default function OpenSource({ copy, language }) {
-  const selfHostingHref = language === 'zh' ? '/docs/zh-CN#self-hosting' : '/docs#self-hosting';
+  const selfHostingHref = docsHref(language, '#self-hosting');
 
   return (
     <section id="open-source" className="open-source-section" aria-labelledby="open-source-title">

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-
-const DEFAULT_COMMAND = 'npm i -g @wangjs-jacky/paws && paws';
+import { INSTALL_COMMAND } from '../app/siteConstants';
 
 export async function copyToClipboard(text, clipboard, targetDocument) {
   if (clipboard?.writeText) {
@@ -31,7 +30,7 @@ export async function copyToClipboard(text, clipboard, targetDocument) {
   }
 }
 
-export default function InstallCommand({ command = DEFAULT_COMMAND, labels, compact = false }) {
+export default function InstallCommand({ command = INSTALL_COMMAND, labels, compact = false }) {
   const [copyState, setCopyState] = useState('idle');
 
   async function handleCopy() {

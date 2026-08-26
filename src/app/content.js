@@ -37,6 +37,7 @@ export const content = {
     labels: {
       language: 'Switch to Chinese', themeLight: 'Switch to light theme', themeDark: 'Switch to dark theme',
       menuOpen: 'Open navigation', menuClose: 'Close navigation', home: 'Paws home',
+      primaryNavigation: 'Primary navigation',
       pauseAgents: 'Pause supported-agent animation', resumeAgents: 'Resume supported-agent animation',
       copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually'
     }
@@ -79,6 +80,7 @@ export const content = {
     labels: {
       language: 'Switch to English', themeLight: '切换到亮色主题', themeDark: '切换到深色主题',
       menuOpen: '打开导航', menuClose: '关闭导航', home: 'Paws 首页',
+      primaryNavigation: '主导航',
       pauseAgents: '暂停智能体兼容列表动画', resumeAgents: '继续智能体兼容列表动画',
       copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令'
     }

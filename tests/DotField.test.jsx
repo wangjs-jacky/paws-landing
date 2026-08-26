@@ -55,7 +55,7 @@ function installCapabilityHarness() {
 
   window.matchMedia = vi.fn(query => query.includes('prefers-reduced-motion') ? reducedMotion : coarsePointer);
   Object.defineProperty(navigator, 'connection', { configurable: true, value: connection });
-  HTMLCanvasElement.prototype.getContext.mockReturnValue({
+  const context = {
     arc: vi.fn(),
     beginPath: vi.fn(),
     clearRect: vi.fn(),
@@ -63,13 +63,15 @@ function installCapabilityHarness() {
     fill: vi.fn(),
     moveTo: vi.fn(),
     setTransform: vi.fn()
-  });
+  };
+  HTMLCanvasElement.prototype.getContext.mockReturnValue(context);
 
   return {
     reducedMotion,
     coarsePointer,
     connection,
     connectionListeners,
+    context,
     restore() {
       rectSpy.mockRestore();
       window.matchMedia = originalMatchMedia;
@@ -140,6 +142,45 @@ it('removes capability preference listeners on unmount', () => {
     expect(capabilities.coarsePointer.listeners).toHaveLength(0);
     expect(capabilities.connectionListeners).toHaveLength(0);
   } finally {
+    capabilities.restore();
+  }
+});
+
+it('does no pointer geometry work while offscreen and cleans up visibility tracking', () => {
+  const capabilities = installCapabilityHarness();
+  const observed = [];
+  const disconnect = vi.fn();
+  let visibilityCallback;
+  const originalObserver = window.IntersectionObserver;
+  window.IntersectionObserver = vi.fn(function MockIntersectionObserver(callback) {
+    visibilityCallback = callback;
+    this.observe = element => observed.push(element);
+    this.disconnect = disconnect;
+  });
+  const { container, unmount } = render(<DotField theme="dark" />);
+  const field = container.querySelector('.dot-field');
+  const fieldRect = vi.spyOn(field, 'getBoundingClientRect');
+
+  try {
+    expect(observed).toEqual([field]);
+    const callsBeforePointer = fieldRect.mock.calls.length;
+    container.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, clientY: 80 }));
+    expect(fieldRect).toHaveBeenCalledTimes(callsBeforePointer + 1);
+    const callsAfterBuild = fieldRect.mock.calls.length;
+
+    act(() => visibilityCallback([{ isIntersecting: false }]));
+    const drawsWhileVisible = capabilities.context.clearRect.mock.calls.length;
+    field.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 100, clientY: 100 }));
+
+    expect(fieldRect).toHaveBeenCalledTimes(callsAfterBuild);
+    expect(capabilities.context.clearRect).toHaveBeenCalledTimes(drawsWhileVisible);
+    unmount();
+    expect(disconnect).toHaveBeenCalledOnce();
+    field.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 120, clientY: 120 }));
+    expect(fieldRect).toHaveBeenCalledTimes(callsAfterBuild);
+  } finally {
+    if (field.isConnected) unmount();
+    window.IntersectionObserver = originalObserver;
     capabilities.restore();
   }
 });

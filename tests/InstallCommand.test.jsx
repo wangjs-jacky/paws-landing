@@ -52,6 +52,18 @@ it('returns false when both clipboard paths fail', async () => {
   await expect(copyToClipboard('paws', null, fakeDocument)).resolves.toBe(false);
 });
 
+it('removes the fallback textarea when execCommand throws', async () => {
+  const textarea = document.createElement('textarea');
+  const fakeDocument = {
+    body: document.body,
+    createElement: vi.fn(() => textarea),
+    execCommand: vi.fn(() => { throw new Error('copy blocked'); })
+  };
+
+  await expect(copyToClipboard('paws', null, fakeDocument)).resolves.toBe(false);
+  expect(textarea).not.toBeInTheDocument();
+});
+
 it('reports failure without hiding the selectable command', async () => {
   const user = userEvent.setup();
   Object.defineProperty(navigator, 'clipboard', {

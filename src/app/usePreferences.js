@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   LANGUAGE_KEY,
   THEME_KEY,
@@ -22,12 +22,19 @@ function themeMedia() {
 
 export function usePreferences() {
   const storage = browserStorage();
+  const initialTheme = useRef(null);
+  if (initialTheme.current === null) {
+    const savedTheme = readStored(storage, THEME_KEY);
+    initialTheme.current = {
+      explicit: savedTheme === 'light' || savedTheme === 'dark',
+      value: resolveTheme(savedTheme, themeMedia().matches)
+    };
+  }
+  const explicitTheme = useRef(initialTheme.current.explicit);
   const [language, updateLanguage] = useState(() =>
     resolveLanguage(readStored(storage, LANGUAGE_KEY), window.navigator.languages)
   );
-  const [theme, updateTheme] = useState(() =>
-    resolveTheme(readStored(storage, THEME_KEY), themeMedia().matches)
-  );
+  const [theme, updateTheme] = useState(initialTheme.current.value);
 
   const setLanguage = useCallback(value => {
     updateLanguage(value);
@@ -35,6 +42,7 @@ export function usePreferences() {
   }, []);
 
   const toggleTheme = useCallback(() => {
+    explicitTheme.current = true;
     updateTheme(current => {
       const next = current === 'dark' ? 'light' : 'dark';
       writeStored(browserStorage(), THEME_KEY, next);
@@ -52,7 +60,7 @@ export function usePreferences() {
   useEffect(() => {
     const media = themeMedia();
     function syncSystem(event) {
-      if (!readStored(browserStorage(), THEME_KEY)) updateTheme(event.matches ? 'dark' : 'light');
+      if (!explicitTheme.current) updateTheme(event.matches ? 'dark' : 'light');
     }
     media.addEventListener('change', syncSystem);
     return () => media.removeEventListener('change', syncSystem);

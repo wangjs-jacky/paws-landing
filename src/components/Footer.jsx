@@ -1,3 +1,5 @@
+import { DOCS_ROUTES } from '../app/siteConstants';
+
 export default function Footer({ copy, language }) {
   return (
     <footer className="site-footer">
@@ -7,8 +9,8 @@ export default function Footer({ copy, language }) {
           <span>Paws</span>
         </a>
         <nav aria-label={copy.footer.docs}>
-          <a href="/docs" lang="en">{copy.footer.englishDocs}</a>
-          <a href="/docs/zh-CN" lang="zh-CN">{copy.footer.chineseDocs}</a>
+          <a href={DOCS_ROUTES.en} lang="en">{copy.footer.englishDocs}</a>
+          <a href={DOCS_ROUTES.zh} lang="zh-CN">{copy.footer.chineseDocs}</a>
           <a href="https://github.com/wangjs-jacky/happy">{copy.footer.github}</a>
           <a href="https://github.com/wangjs-jacky/happy/blob/main/PRIVACY.md">{copy.footer.privacy}</a>
         </nav>

@@ -92,6 +92,37 @@ describe('usePreferences', () => {
     act(() => onChange({ matches: true }));
     expect(result.current.theme).toBe('light');
   });
+
+  it('keeps an explicit theme for the session when storage throws', () => {
+    let onChange;
+    const media = {
+      matches: false,
+      addEventListener: vi.fn((event, listener) => { if (event === 'change') onChange = listener; }),
+      removeEventListener: vi.fn()
+    };
+    const storageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: () => { throw new Error('blocked'); },
+        setItem: () => { throw new Error('blocked'); }
+      }
+    });
+    window.matchMedia = vi.fn(() => media);
+
+    const { result, unmount } = renderHook(() => usePreferences());
+
+    try {
+      act(() => result.current.toggleTheme());
+      expect(result.current.theme).toBe('dark');
+
+      act(() => onChange({ matches: false }));
+      expect(result.current.theme).toBe('dark');
+    } finally {
+      unmount();
+      Object.defineProperty(window, 'localStorage', storageDescriptor);
+    }
+  });
 });
 
 describe('theme bootstrap', () => {

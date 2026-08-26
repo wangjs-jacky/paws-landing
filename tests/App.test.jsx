@@ -13,6 +13,7 @@ it('switches all visible copy and document metadata to Chinese', async () => {
   expect(screen.getByText('PAWS / 产品能力')).toBeInTheDocument();
   expect(container.querySelector('.footer-brand')).toHaveAttribute('aria-label', 'Paws 首页');
   expect(screen.getByRole('button', { name: '暂停智能体兼容列表动画' })).toBeInTheDocument();
+  expect(screen.getByRole('navigation', { name: '主导航' })).toBeInTheDocument();
   expect(document.documentElement.lang).toBe('zh-CN');
   expect(document.title).toContain('随时控制');
   expect(document.querySelector('meta[name="description"]').content).toContain('通过手机');

@@ -45,6 +45,7 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
     const root = rootRef.current;
     const canvas = canvasRef.current;
     if (!root || !canvas) return undefined;
+    const pointerSurface = root.parentElement ?? root;
 
     let context;
     try {
@@ -74,14 +75,16 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
 
     function enablePointerTracking() {
       if (trackingPointer) return;
-      window.addEventListener('pointermove', handlePointerMove, { passive: true });
+      pointerSurface.addEventListener('pointermove', handlePointerMove, { passive: true });
+      pointerSurface.addEventListener('pointerleave', releasePointer, { passive: true });
       window.addEventListener('blur', releasePointer);
       trackingPointer = true;
     }
 
     function disablePointerTracking() {
       if (!trackingPointer) return;
-      window.removeEventListener('pointermove', handlePointerMove);
+      pointerSurface.removeEventListener('pointermove', handlePointerMove);
+      pointerSurface.removeEventListener('pointerleave', releasePointer);
       window.removeEventListener('blur', releasePointer);
       trackingPointer = false;
     }
@@ -205,7 +208,7 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
     }
 
     function handlePointerMove(event) {
-      if (mode !== 'interactive') return;
+      if (!visible || mode !== 'interactive') return;
       const rect = root.getBoundingClientRect();
       pointer.x = event.clientX - rect.left;
       pointer.y = event.clientY - rect.top;
@@ -237,6 +240,8 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
           draw();
           wake();
         } else {
+          pointer.energy = 0;
+          setEngaged(false);
           stop();
         }
       });

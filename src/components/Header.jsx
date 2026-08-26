@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { docsHref } from '../app/siteConstants';
 
 export default function Header({ copy, language, theme, onLanguageChange, onThemeChange }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,11 +29,11 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
       >
         <span /><span /><span />
       </button>
-      <nav id="primary-navigation" aria-label="Primary navigation">
+      <nav id="primary-navigation" aria-label={copy.labels.primaryNavigation}>
         <a href="#product" onClick={closeMenu}>{copy.nav.product}</a>
         <a href="#how-it-works" onClick={closeMenu}>{copy.nav.how}</a>
         <a href="#open-source" onClick={closeMenu}>{copy.nav.openSource}</a>
-        <a href={language === 'zh' ? '/docs/zh-CN' : '/docs'} onClick={closeMenu}>{copy.nav.docs}</a>
+        <a href={docsHref(language)} onClick={closeMenu}>{copy.nav.docs}</a>
         <a href="https://github.com/wangjs-jacky/happy" onClick={closeMenu}>GitHub</a>
       </nav>
       <div className="preference-controls">
@@ -53,7 +54,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
         >
           <span aria-hidden="true" className={theme === 'dark' ? 'icon-sun' : 'icon-moon'} />
         </button>
-        <a className="primary-action" href={language === 'zh' ? '/docs/zh-CN#quick-start' : '/docs#quick-start'}>
+        <a className="primary-action" href={docsHref(language, '#quick-start')}>
           {copy.nav.getPaws}
         </a>
       </div>
