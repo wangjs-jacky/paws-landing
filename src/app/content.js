@@ -27,10 +27,12 @@ export const content = {
     openSource: {
       eyebrow: 'OPEN BY DESIGN',
       title: 'Your machine stays the source of truth.',
-      body: 'Paws connects your devices to the agents already running on your computer. Self-host the relay when you need full infrastructure control.'
+      body: 'Paws connects your devices to the agents already running on your computer. Self-host the relay when you need full infrastructure control.',
+      topology: ['Phone / Web', 'Encrypted relay', 'Paws CLI', 'Coding agent'],
+      actions: { github: 'View on GitHub', selfHosting: 'Self-hosting guide' }
     },
     finalCta: { title: 'Take your agents with you.', body: 'Install Paws, pair your device and start with the guide.', action: 'Read the quick start' },
-    footer: { privacy: 'Privacy', docs: 'Documentation', github: 'GitHub' },
+    footer: { privacy: 'Privacy', docs: 'Documentation', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
       language: 'Switch to Chinese', themeLight: 'Switch to light theme', themeDark: 'Switch to dark theme',
       menuOpen: 'Open navigation', menuClose: 'Close navigation', copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually'
@@ -64,10 +66,12 @@ export const content = {
     openSource: {
       eyebrow: '从设计上保持开放',
       title: '你的电脑始终是会话的源头。',
-      body: 'Paws 把你的设备连接到电脑上已经运行的智能体；需要完全掌控基础设施时，可以自行托管中继服务。'
+      body: 'Paws 把你的设备连接到电脑上已经运行的智能体；需要完全掌控基础设施时，可以自行托管中继服务。',
+      topology: ['手机 / Web', '加密中继', 'Paws CLI', '编程智能体'],
+      actions: { github: '查看 GitHub', selfHosting: '自托管指南' }
     },
     finalCta: { title: '把编程智能体带在身边。', body: '安装 Paws、绑定设备，然后从快速上手开始。', action: '阅读快速上手' },
-    footer: { privacy: '隐私', docs: '文档', github: 'GitHub' },
+    footer: { privacy: '隐私', docs: '文档', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
       language: 'Switch to English', themeLight: '切换到亮色主题', themeDark: '切换到深色主题',
       menuOpen: '打开导航', menuClose: '关闭导航', copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令'

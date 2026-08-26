@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
+import AgentStrip from '../components/AgentStrip';
+import FeatureGrid from '../components/FeatureGrid';
+import FinalCTA from '../components/FinalCTA';
+import Footer from '../components/Footer';
+import HowItWorks from '../components/HowItWorks';
+import OpenSource from '../components/OpenSource';
 import { content } from './content';
 import { usePreferences } from './usePreferences';
 
@@ -40,21 +46,13 @@ export default function App() {
       />
       <main id="top">
         <Hero copy={copy} language={language} theme={theme} />
-        <section id="how-it-works" className="shell-section" aria-labelledby="how-title">
-          <h2 id="how-title">{copy.nav.how}</h2>
-          {copy.steps.map(step => (
-            <div key={step.title}>
-              <h3>{step.title}</h3>
-              <p>{step.body}</p>
-            </div>
-          ))}
-        </section>
-        <section id="open-source" className="shell-section" aria-labelledby="open-source-title">
-          <p className="eyebrow">{copy.openSource.eyebrow}</p>
-          <h2 id="open-source-title">{copy.openSource.title}</h2>
-          <p>{copy.openSource.body}</p>
-        </section>
+        <AgentStrip agents={copy.agents} />
+        <HowItWorks copy={copy} />
+        <FeatureGrid copy={copy} />
+        <OpenSource copy={copy} language={language} />
+        <FinalCTA copy={copy} language={language} />
       </main>
+      <Footer copy={copy} language={language} />
     </>
   );
 }

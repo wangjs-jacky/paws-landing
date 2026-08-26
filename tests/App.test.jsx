@@ -35,3 +35,36 @@ it('opens and closes an accessible mobile navigation menu', async () => {
   await user.click(screen.getByRole('link', { name: 'Product' }));
   expect(menu).toHaveAttribute('aria-expanded', 'false');
 });
+
+it('renders factual agents, three steps and four capabilities without testimonials', () => {
+  render(<App />);
+  for (const agent of ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents']) {
+    expect(screen.getByText(agent)).toBeInTheDocument();
+  }
+  expect(screen.getAllByTestId('workflow-step')).toHaveLength(3);
+  expect(screen.getAllByTestId('feature-card')).toHaveLength(4);
+  expect(screen.queryByText(/Loved by developers|Testimonials/i)).not.toBeInTheDocument();
+});
+
+it('renders the approved product flow, actions and section order', () => {
+  const { container } = render(<App />);
+  expect(screen.getByText('Phone / Web')).toBeInTheDocument();
+  expect(screen.getByText('Encrypted relay')).toBeInTheDocument();
+  expect(screen.getByText('Paws CLI')).toBeInTheDocument();
+  expect(screen.getByText('Coding agent')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Self-hosting guide' })).toHaveAttribute('href', '/docs#self-hosting');
+
+  const sectionIds = [...container.querySelectorAll('main > section')].map(section => section.id);
+  expect(sectionIds).toEqual(['hero', 'supported-agents', 'how-it-works', 'product', 'open-source', 'final-cta']);
+});
+
+it('links both documentation languages and privacy without making a license claim', () => {
+  render(<App />);
+  expect(screen.getByRole('link', { name: 'English docs' })).toHaveAttribute('href', '/docs');
+  expect(screen.getByRole('link', { name: '中文文档' })).toHaveAttribute('href', '/docs/zh-CN');
+  expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute(
+    'href',
+    'https://github.com/wangjs-jacky/happy/blob/main/PRIVACY.md'
+  );
+  expect(screen.queryByText(/MIT License/i)).not.toBeInTheDocument();
+});

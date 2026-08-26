@@ -28,7 +28,7 @@ export default function Hero({ copy, language, theme }) {
   }, [dotFieldMode]);
 
   return (
-    <section id="product" className="hero" aria-labelledby="hero-title">
+    <section id="hero" className="hero" aria-labelledby="hero-title">
       <DotField theme={theme} onModeChange={setDotFieldMode} />
       <div className="hero-ambient" aria-hidden="true" />
       <div className="page-shell hero-grid">
