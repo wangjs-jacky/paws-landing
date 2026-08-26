@@ -4,7 +4,7 @@ const path = require('node:path');
 
 function loadControls() {
   try {
-    return require(path.join(__dirname, '..', 'web', 'assets', 'docs-controls.js'));
+    return require(path.join(__dirname, '..', 'public', 'assets', 'docs-controls.js'));
   } catch {
     return {};
   }

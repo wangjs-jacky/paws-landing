@@ -2,4 +2,5 @@
 .preview/
 .wrangler/
 node_modules/
+dist/
 *.log
