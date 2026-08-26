@@ -16,13 +16,25 @@ const EMBER = {
   light: ['rgba(185,91,0,.28)', 'rgba(110,68,28,.10)']
 };
 
-function currentMode(width) {
+function currentMode(width, reducedMotionQuery, coarsePointerQuery, connection) {
   return selectDotFieldMode({
-    reducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
-    coarsePointer: window.matchMedia?.('(pointer: coarse)').matches ?? false,
-    saveData: navigator.connection?.saveData === true,
+    reducedMotion: reducedMotionQuery?.matches ?? false,
+    coarsePointer: coarsePointerQuery?.matches ?? false,
+    saveData: connection?.saveData === true,
     width
   });
+}
+
+function subscribeToChange(source, listener) {
+  if (source?.addEventListener) {
+    source.addEventListener('change', listener);
+    return () => source.removeEventListener('change', listener);
+  }
+  if (source?.addListener) {
+    source.addListener(listener);
+    return () => source.removeListener(listener);
+  }
+  return () => {};
 }
 
 const DotField = memo(function DotField({ theme, className = '', onModeChange }) {
@@ -43,6 +55,9 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
     if (!context) return undefined;
 
     root.dataset.canvas = 'ready';
+    const reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const coarsePointerQuery = window.matchMedia?.('(pointer: coarse)');
+    const connection = navigator.connection;
     const pointer = { x: -9999, y: -9999, energy: 0 };
     let dots = [];
     let width = 0;
@@ -174,7 +189,7 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      setMode(currentMode(width));
+      setMode(currentMode(width, reducedMotionQuery, coarsePointerQuery, connection));
       dots = buildDotGrid(width, height, mode === 'interactive' ? EMBER.spacingDesktop : EMBER.spacingMobile);
       gradient = null;
       pointer.energy = 0;
@@ -205,6 +220,9 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
     }
 
     rebuild();
+    const removeReducedMotionListener = subscribeToChange(reducedMotionQuery, rebuild);
+    const removeCoarsePointerListener = subscribeToChange(coarsePointerQuery, rebuild);
+    const removeConnectionListener = subscribeToChange(connection, rebuild);
     if ('ResizeObserver' in window) {
       resizeObserver = new ResizeObserver(queueRebuild);
       resizeObserver.observe(root);
@@ -231,6 +249,9 @@ const DotField = memo(function DotField({ theme, className = '', onModeChange })
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
       if (!resizeObserver) window.removeEventListener('resize', queueRebuild);
+      removeReducedMotionListener();
+      removeCoarsePointerListener();
+      removeConnectionListener();
       disablePointerTracking();
     };
   }, [onModeChange, theme]);
