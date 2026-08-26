@@ -60,6 +60,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px;
+  min-height: 44px;
   padding: 3px;
   border-radius: var(--radius-pill);
   color: var(--color-muted);
