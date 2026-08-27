@@ -98,7 +98,7 @@ describe('MascotLook pointer lifecycle', () => {
     render(<Harness />);
     const surface = screen.getByTestId('pointer-surface');
     const mascot = screen.getByTestId('mascot-look');
-    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 });
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
     await loadAtlas();
     setVisible(surface, true);
 
@@ -111,11 +111,26 @@ describe('MascotLook pointer lifecycle', () => {
     );
   });
 
+  it('clamps pointer Y to four pixels of vertical translation', async () => {
+    render(<Harness />);
+    const surface = screen.getByTestId('pointer-surface');
+    const mascot = screen.getByTestId('mascot-look');
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+    await loadAtlas();
+    setVisible(surface, true);
+
+    fireEvent.pointerMove(surface, { clientX: 50, clientY: 200 });
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('4px');
+
+    fireEvent.pointerMove(surface, { clientX: 50, clientY: -100 });
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('-4px');
+  });
+
   it('returns to center frame 12 after the pointer leaves', async () => {
     render(<Harness />);
     const surface = screen.getByTestId('pointer-surface');
     const mascot = screen.getByTestId('mascot-look');
-    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 });
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
     await loadAtlas();
     setVisible(surface, true);
     fireEvent.pointerMove(surface, { clientX: 100 });
@@ -125,21 +140,51 @@ describe('MascotLook pointer lifecycle', () => {
     flushAnimationFrames();
 
     expect(mascot).toHaveAttribute('data-frame', '12');
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('0px');
   });
 
-  it('does no pointer geometry or RAF work while offscreen', async () => {
+  it('resets translation and does no pointer geometry or RAF work while offscreen', async () => {
     render(<Harness />);
     const surface = screen.getByTestId('pointer-surface');
-    const rect = vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 });
+    const mascot = screen.getByTestId('mascot-look');
+    const rect = vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
     await loadAtlas();
+    setVisible(surface, true);
+    fireEvent.pointerMove(surface, { clientX: 100, clientY: 100 });
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('4px');
+
     setVisible(surface, false);
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('0px');
+    rect.mockClear();
     window.requestAnimationFrame.mockClear();
 
-    fireEvent.pointerMove(surface, { clientX: 100 });
+    fireEvent.pointerMove(surface, { clientX: 100, clientY: 0 });
 
     expect(rect).not.toHaveBeenCalled();
     expect(window.requestAnimationFrame).not.toHaveBeenCalled();
   });
+});
+
+it('falls back without another RAF when an atlas draw fails after load', async () => {
+  render(<Harness />);
+  const surface = screen.getByTestId('pointer-surface');
+  const mascot = screen.getByTestId('mascot-look');
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+  await loadAtlas();
+  setVisible(surface, true);
+  context.drawImage.mockImplementationOnce(() => {
+    throw new Error('canvas lost');
+  });
+  window.requestAnimationFrame.mockClear();
+
+  fireEvent.pointerMove(surface, { clientX: 100, clientY: 50 });
+  flushAnimationFrames();
+
+  expect(mascot).toHaveAttribute('data-ready', 'false');
+  expect(mascot).toHaveAttribute('data-mode', 'fallback');
+  expect(screen.getByRole('img', { name: 'Paws mascot' })).toHaveAttribute('src', '/fallback.png');
+  expect(window.requestAnimationFrame).toHaveBeenCalledOnce();
+  expect(rafCallbacks.size).toBe(0);
 });
 
 it('keeps the static fallback visible when atlas decoding fails', async () => {
@@ -162,7 +207,7 @@ it.each([
   installMatchMedia(media);
   render(<Harness />);
   const surface = screen.getByTestId('pointer-surface');
-  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 });
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
   await loadAtlas();
   setVisible(surface, true);
 
@@ -178,7 +223,7 @@ it('cleans hero listeners, observer, RAF, media listeners, and image callbacks o
   const { unmount } = render(<Harness />);
   const surface = screen.getByTestId('pointer-surface');
   const removeEventListener = vi.spyOn(surface, 'removeEventListener');
-  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 });
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
   const atlas = await loadAtlas();
   const observer = setVisible(surface, true);
   fireEvent.pointerMove(surface, { clientX: 100 });

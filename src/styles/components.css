@@ -382,6 +382,7 @@
   aspect-ratio: 1;
   width: min(100%, 34rem);
   filter: drop-shadow(0 2rem 3rem rgb(0 0 0 / 20%));
+  transform: translateY(var(--mascot-y, 0px));
 }
 
 .mascot-look canvas,

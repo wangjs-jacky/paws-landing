@@ -24,9 +24,11 @@ export default function MascotLook({
   rows = 4
 }) {
   const centerFrame = Math.round((frameCount - 1) / 2);
+  const mascotRef = useRef(null);
   const canvasRef = useRef(null);
   const atlasRef = useRef(null);
   const contextRef = useRef(null);
+  const failAtlasRef = useRef(null);
   const currentFrameRef = useRef(centerFrame);
   const targetFrameRef = useRef(centerFrame);
   const visibleRef = useRef(false);
@@ -83,6 +85,7 @@ export default function MascotLook({
       setAtlasReady(false);
       setAtlasFailed(true);
     };
+    failAtlasRef.current = fail;
 
     atlas.onload = async () => {
       try {
@@ -124,6 +127,7 @@ export default function MascotLook({
       atlas.onerror = null;
       atlasRef.current = null;
       contextRef.current = null;
+      failAtlasRef.current = null;
     };
   }, [atlasSrc, centerFrame, columns, rows]);
 
@@ -137,6 +141,10 @@ export default function MascotLook({
       rafRef.current = null;
     };
 
+    const resetTranslation = () => {
+      mascotRef.current?.style.setProperty('--mascot-y', '0px');
+    };
+
     const drawFrame = frameValue => {
       const atlas = atlasRef.current;
       const context = contextRef.current;
@@ -146,18 +154,25 @@ export default function MascotLook({
       const frameHeight = atlas.naturalHeight / rows;
       const sourceX = (frameValue % columns) * frameWidth;
       const sourceY = Math.floor(frameValue / columns) * frameHeight;
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(
-        atlas,
-        sourceX,
-        sourceY,
-        frameWidth,
-        frameHeight,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+      try {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(
+          atlas,
+          sourceX,
+          sourceY,
+          frameWidth,
+          frameHeight,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        return true;
+      } catch {
+        cancelFrame();
+        failAtlasRef.current?.();
+        return false;
+      }
     };
 
     const animate = () => {
@@ -166,7 +181,7 @@ export default function MascotLook({
       const next = easeFrame(currentFrameRef.current, targetFrameRef.current);
       currentFrameRef.current = next;
       const nextDisplayFrame = Math.round(next);
-      drawFrame(nextDisplayFrame);
+      if (!drawFrame(nextDisplayFrame)) return;
       setFrame(nextDisplayFrame);
       if (next !== targetFrameRef.current) {
         rafRef.current = requestAnimationFrame(animate);
@@ -182,12 +197,20 @@ export default function MascotLook({
       if (!visibleRef.current || !interactive) return;
       const rect = surface.getBoundingClientRect();
       targetFrameRef.current = ratioToFrame(pointerRatio(event.clientX, rect), frameCount);
+      const rawTranslation = rect.height
+        ? ((event.clientY - rect.top) / rect.height - 0.5) * 8
+        : 0;
+      const translation = Number.isFinite(rawTranslation)
+        ? Math.max(-4, Math.min(4, rawTranslation))
+        : 0;
+      mascotRef.current?.style.setProperty('--mascot-y', `${Number(translation.toFixed(2))}px`);
       requestDraw();
     };
 
     const handlePointerLeave = () => {
       if (!visibleRef.current || !interactive) return;
       targetFrameRef.current = centerFrame;
+      resetTranslation();
       requestDraw();
     };
 
@@ -198,7 +221,10 @@ export default function MascotLook({
     if ('IntersectionObserver' in window) {
       observer = new IntersectionObserver(([entry]) => {
         visibleRef.current = entry.isIntersecting;
-        if (!entry.isIntersecting) cancelFrame();
+        if (!entry.isIntersecting) {
+          resetTranslation();
+          cancelFrame();
+        }
       });
       observer.observe(surface);
     } else {
@@ -211,12 +237,14 @@ export default function MascotLook({
       surface.removeEventListener('pointermove', handlePointerMove);
       surface.removeEventListener('pointerleave', handlePointerLeave);
       observer?.disconnect();
+      resetTranslation();
       cancelFrame();
     };
   }, [centerFrame, columns, frameCount, interactive, pointerSurfaceRef, rows]);
 
   return (
     <div
+      ref={mascotRef}
       className="mascot-look"
       data-testid="mascot-look"
       data-frame={frame}

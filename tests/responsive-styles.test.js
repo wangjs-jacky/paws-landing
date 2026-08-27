@@ -60,6 +60,7 @@ it('reserves one stable mascot box and reveals the atlas without relayout', () =
   expect(rule('.mascot-look')).toMatch(/position:\s*relative/);
   expect(rule('.mascot-look')).toMatch(/aspect-ratio:\s*1/);
   expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*34rem\)/);
+  expect(rule('.mascot-look')).toMatch(/transform:\s*translateY\(var\(--mascot-y,\s*0px\)\)/);
   expect(css).toMatch(/\.mascot-look canvas,\s*\.mascot-look img\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%/s);
   expect(rule(".mascot-look[data-ready='true'] img")).toMatch(/opacity:\s*0/);
 });
