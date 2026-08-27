@@ -1,0 +1,25 @@
+const NODE_IDS = ['clients', 'relay', 'daemon', 'agents'];
+
+export default function ArchitectureStory({ copy, language }) {
+  return (
+    <section
+      id="architecture"
+      className="shell-section architecture-story"
+      lang={language === 'zh' ? 'zh-CN' : 'en'}
+    >
+      <ol className="architecture-story__topology">
+        {NODE_IDS.map(nodeId => (
+          <li
+            key={nodeId}
+            className="architecture-story__node"
+            data-testid="architecture-node"
+            data-node-id={nodeId}
+          >
+            {copy.architecture.nodes[nodeId]}
+          </li>
+        ))}
+      </ol>
+      <p className="architecture-story__note">{copy.architecture.note}</p>
+    </section>
+  );
+}

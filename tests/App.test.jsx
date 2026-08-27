@@ -79,13 +79,24 @@ it('renders factual agents, four story scenes and six product-proof cases withou
   expect(screen.queryByText(/Loved by developers|Testimonials/i)).not.toBeInTheDocument();
 });
 
-it('renders the approved product flow, actions and section order', () => {
+it('renders the approved product flow, actions and section order', async () => {
+  const user = userEvent.setup();
   const { container } = render(<App />);
-  expect(screen.getByText('Phone / Web')).toBeInTheDocument();
-  expect(screen.getByText('Encrypted relay')).toBeInTheDocument();
-  expect(screen.getByText('Paws CLI')).toBeInTheDocument();
-  expect(screen.getByText('Coding agent')).toBeInTheDocument();
-  expect(within(container.querySelector('#open-source')).getByRole('link', { name: 'Self-hosting guide' }))
+  const architecture = container.querySelector('#architecture');
+  const openSource = container.querySelector('#open-source');
+
+  expect(within(architecture).getAllByTestId('architecture-node').map(node => node.dataset.nodeId)).toEqual([
+    'clients',
+    'relay',
+    'daemon',
+    'agents'
+  ]);
+  expect(openSource.querySelector('ol')).not.toBeInTheDocument();
+  expect(within(openSource).getByRole('link', { name: 'View on GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/wangjs-jacky/happy'
+  );
+  expect(within(openSource).getByRole('link', { name: 'Self-hosting guide' }))
     .toHaveAttribute('href', '/docs#self-hosting');
 
   const sectionIds = [...container.querySelectorAll('main > section')].map(section => section.id);
@@ -96,9 +107,15 @@ it('renders the approved product flow, actions and section order', () => {
     'paws-crew',
     'product',
     'comparison',
+    'architecture',
     'open-source',
+    'roadmap',
     'final-cta'
   ]);
+
+  await user.click(screen.getByRole('button', { name: content.en.labels.language }));
+  expect(within(openSource).getByRole('link', { name: '自托管指南' }))
+    .toHaveAttribute('href', '/docs/zh-CN#self-hosting');
 });
 
 it('exposes exactly one main landmark for the page', () => {

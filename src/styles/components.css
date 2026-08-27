@@ -880,18 +880,70 @@
   color: var(--color-muted);
 }
 
+.architecture-story {
+  padding-top: 0;
+  padding-bottom: clamp(var(--space-8), 10vw, 8rem);
+}
+
+.architecture-story__topology {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.architecture-story__node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 8rem;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-mono);
+  font-weight: 750;
+  text-align: center;
+}
+
+.architecture-story__node:not(:last-child)::after {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: calc(-0.5 * var(--space-4));
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-bg);
+  content: '→';
+  transform: translate(50%, -50%);
+}
+
+.architecture-story__note {
+  max-width: none;
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4);
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-muted);
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
 .open-source-section {
   padding-block: clamp(var(--space-8), 11vw, 9rem);
   border-block: 1px solid var(--color-border);
   background: var(--color-surface);
 }
 
-.open-source-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 1.1fr);
-  gap: clamp(var(--space-7), 8vw, 8rem);
-  align-items: center;
-}
+.open-source-copy { max-width: 48rem; }
 
 .open-source-copy h2 { max-width: 13ch; }
 .open-source-copy > p:not(.eyebrow) { color: var(--color-muted); }
@@ -906,45 +958,49 @@
 .section-actions a,
 .text-action { min-height: 44px; }
 
-.topology {
+.roadmap {
   display: grid;
-  gap: var(--space-3);
-  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.roadmap__group {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg);
+  background: var(--color-surface);
   box-shadow: var(--shadow-soft);
+}
+
+.roadmap__group h3 { font-size: clamp(1.35rem, 2.5vw, 2rem); }
+
+.roadmap__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 
-.topology li {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
+.roadmap__item {
+  display: flex;
   gap: var(--space-3);
   align-items: center;
-  min-height: 4.5rem;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-  font-family: var(--font-mono);
-  font-weight: 700;
+  min-height: 3.5rem;
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
-.topology li svg {
-  position: absolute;
-  right: calc(50% - 0.625rem);
-  bottom: calc(-1 * var(--space-5));
-  width: 1.25rem;
-  fill: none;
-  stroke: var(--color-accent);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
-  transform: rotate(90deg);
+.roadmap__badge {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .final-cta {
@@ -1118,7 +1174,6 @@
   .hero-actions .primary-action { display: inline-flex; }
 
   .section-heading,
-  .open-source-grid,
   .final-cta {
     grid-template-columns: 1fr;
   }
@@ -1178,7 +1233,19 @@
     font-weight: 750;
   }
 
-  .open-source-grid { gap: var(--space-7); }
+  .architecture-story__topology,
+  .roadmap { grid-template-columns: 1fr; }
+
+  .architecture-story__node { min-height: 6rem; }
+
+  .architecture-story__node:not(:last-child)::after {
+    top: auto;
+    right: 50%;
+    bottom: calc(-0.5 * var(--space-4));
+    content: '↓';
+    transform: translate(50%, 50%);
+  }
+
   .final-cta { gap: var(--space-7); }
 
   .site-footer__grid { grid-template-columns: 1fr; }

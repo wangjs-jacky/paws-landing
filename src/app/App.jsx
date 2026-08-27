@@ -6,6 +6,8 @@ import CrossDeviceStory from '../components/CrossDeviceStory/CrossDeviceStory';
 import MascotCrew from '../components/MascotCrew/MascotCrew';
 import ProductProof from '../components/ProductProof';
 import ValueComparison from '../components/ValueComparison';
+import ArchitectureStory from '../components/ArchitectureStory';
+import Roadmap from '../components/Roadmap';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
 import OpenSource from '../components/OpenSource';
@@ -59,7 +61,9 @@ export default function App() {
           proofLabel: copy.sectionLabels.capabilities
         }} language={language} />
         <ValueComparison copy={storyCopy} />
+        <ArchitectureStory copy={storyCopy} language={language} />
         <OpenSource copy={copy} language={language} />
+        <Roadmap copy={{ ...storyCopy, labels: copy.labels }} />
         <FinalCTA copy={copy} language={language} />
       </main>
       <Footer copy={copy} language={language} />
