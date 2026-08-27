@@ -5,8 +5,8 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  min-height: var(--header-height);
-  padding: var(--space-2) var(--space-3);
+  min-height: 72px;
+  padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-translucent);
@@ -56,36 +56,25 @@
   cursor: pointer;
 }
 
+.language-toggle,
+.theme-toggle {
+  width: 44px;
+  height: 44px;
+}
+
 .language-toggle {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  min-height: 44px;
-  padding: 3px;
-  border-radius: var(--radius-pill);
+  place-items: center;
+  padding: 0 10px;
+  border-radius: 12px;
   color: var(--color-muted);
   font-size: 0.75rem;
   font-weight: 800;
 }
 
-.language-toggle span {
-  min-width: 2.25rem;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-}
-
-.language-toggle[data-language='en'] span:first-child,
-.language-toggle[data-language='zh'] span:last-child {
-  color: var(--color-text);
-  background: var(--color-bg);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 15%);
-}
-
 .theme-toggle {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
   padding: 0;
   border-radius: 50%;
 }
@@ -249,8 +238,8 @@
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-  gap: clamp(var(--space-6), 5vw, var(--space-8));
+  grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+  gap: clamp(32px, 4vw, 64px);
   align-items: center;
   padding-block: calc(var(--header-height) + var(--space-8)) var(--space-7);
 }
@@ -264,10 +253,17 @@
 }
 
 .hero-copy h1 {
-  max-width: 12ch;
+  max-width: 11ch;
   margin-bottom: var(--space-5);
   text-wrap: balance;
   text-shadow: 0 2px 30px var(--color-bg), 0 1px 4px var(--color-bg);
+}
+
+.hero-title__line { display: block; }
+
+.hero-media {
+  position: relative;
+  min-width: 0;
 }
 
 .hero-lead {
@@ -784,8 +780,11 @@
     padding-top: calc(var(--header-height) + var(--space-6));
   }
 
-  .mascot-stage {
+  .hero-media {
     grid-row: 1;
+  }
+
+  .mascot-stage {
     min-height: 180px;
   }
 

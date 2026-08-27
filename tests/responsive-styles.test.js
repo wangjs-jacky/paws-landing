@@ -24,3 +24,10 @@ it('gives footer links at least 44 by 44 pixel touch targets', () => {
 it('connects the user pause state to the marquee animation', () => {
   expect(css).toMatch(/\.agent-strip\[data-paused=['"]true['"]\]\s+\.agent-strip__track\s*\{\s*animation-play-state:\s*paused/);
 });
+
+it('defines the header and hero layout anchors', () => {
+  expect(css).toContain('min-height: 72px');
+  expect(css).toContain('grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr)');
+  expect(css).toContain('.hero-title__line');
+  expect(css).toContain('.hero-media');
+});

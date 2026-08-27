@@ -44,7 +44,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
           data-language={language}
           onClick={() => onLanguageChange(language === 'en' ? 'zh' : 'en')}
         >
-          <span>EN</span><span lang="zh-CN">中文</span>
+          <span aria-hidden="true">{copy.labels.languageDestination}</span>
         </button>
         <button
           className="theme-toggle"

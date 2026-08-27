@@ -7,6 +7,7 @@ export default function Hero({ copy, language, theme }) {
   const stageRef = useRef(null);
   const stageVisibleRef = useRef(true);
   const [dotFieldMode, setDotFieldMode] = useState('static');
+  const titleLines = copy.hero.titleLines ?? [copy.hero.title];
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -50,16 +51,26 @@ export default function Hero({ copy, language, theme }) {
       <div className="page-shell hero-grid">
         <div className="hero-copy">
           <span className="eyebrow">{copy.hero.eyebrow}</span>
-          <h1 id="hero-title">{copy.hero.title}</h1>
+          <h1 id="hero-title" aria-label={copy.hero.title}>
+            {titleLines.map(line => (
+              <span key={line} className="hero-title__line" data-testid="hero-title-line" aria-hidden="true">
+                {line}
+              </span>
+            ))}
+          </h1>
           <p className="hero-lead">{copy.hero.body}</p>
           <div className="hero-actions">
             <a className="primary-action" href={docsHref(language, '#quick-start')}>{copy.hero.primary}</a>
             <a className="secondary-action" href="https://github.com/wangjs-jacky/happy">{copy.hero.secondary}</a>
           </div>
-          <InstallCommand command={INSTALL_COMMAND} labels={copy.labels} />
+          <div className="hero-terminal-slot">
+            <InstallCommand command={INSTALL_COMMAND} labels={copy.labels} />
+          </div>
         </div>
-        <div ref={stageRef} className="mascot-stage" onPointerMove={handleMascotPointerMove}>
-          <img src="/assets/mascot-hero.png" alt={language === 'zh' ? '竖起拇指的 Paws 吉祥物' : 'Paws mascot giving a thumbs up'} />
+        <div className="hero-media">
+          <div ref={stageRef} className="mascot-stage" onPointerMove={handleMascotPointerMove}>
+            <img src="/assets/mascot-hero.png" alt={language === 'zh' ? '竖起拇指的 Paws 吉祥物' : 'Paws mascot giving a thumbs up'} />
+          </div>
         </div>
       </div>
     </section>

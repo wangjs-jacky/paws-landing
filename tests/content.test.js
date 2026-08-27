@@ -13,6 +13,13 @@ it('keeps English and Chinese content structurally identical', () => {
   expect(Object.keys(content.zh.labels)).toEqual(Object.keys(content.en.labels));
 });
 
+it('provides two display title lines and the destination language label in each locale', () => {
+  expect(content.en.hero.titleLines).toEqual(['Your coding agents.', 'Within reach.']);
+  expect(content.zh.hero.titleLines).toEqual(['让编程智能体，', '随时触手可及。']);
+  expect(content.en.labels.languageDestination).toBe('中文');
+  expect(content.zh.labels.languageDestination).toBe('EN');
+});
+
 it('localizes the capability eyebrow, home label and marquee controls', () => {
   expect(content.en.sectionLabels.capabilities).toBe('PAWS / CAPABILITIES');
   expect(content.zh.sectionLabels.capabilities).toBe('PAWS / 产品能力');

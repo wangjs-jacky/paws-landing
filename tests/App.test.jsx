@@ -2,14 +2,19 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it } from 'vitest';
 import App from '../src/app/App';
+import { content } from '../src/app/content';
 
 beforeEach(() => localStorage.clear());
 
 it('switches all visible copy and document metadata to Chinese', async () => {
   const user = userEvent.setup();
   const { container } = render(<App />);
-  await user.click(screen.getByRole('button', { name: /Switch to Chinese/i }));
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('让你的编程智能体');
+  expect(screen.getAllByTestId('hero-title-line')).toHaveLength(2);
+  expect(screen.getByRole('button', { name: content.en.labels.language })).toHaveTextContent('中文');
+  await user.click(screen.getByRole('button', { name: content.en.labels.language }));
+  expect(screen.getByRole('button', { name: content.zh.labels.language })).toHaveTextContent('EN');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveAccessibleName(content.zh.hero.title);
+  expect(screen.getAllByTestId('hero-title-line')).toHaveLength(2);
   expect(screen.getByText('PAWS / 产品能力')).toBeInTheDocument();
   expect(container.querySelector('.footer-brand')).toHaveAttribute('aria-label', 'Paws 首页');
   expect(screen.getByRole('button', { name: '暂停智能体兼容列表动画' })).toBeInTheDocument();
@@ -17,6 +22,12 @@ it('switches all visible copy and document metadata to Chinese', async () => {
   expect(document.documentElement.lang).toBe('zh-CN');
   expect(document.title).toContain('随时控制');
   expect(document.querySelector('meta[name="description"]').content).toContain('通过手机');
+});
+
+it('exposes stable hero media and terminal layout slots', () => {
+  const { container } = render(<App />);
+  expect(container.querySelector('.hero-media .mascot-stage')).toBeInTheDocument();
+  expect(container.querySelector('.hero-terminal-slot .install-command')).toBeInTheDocument();
 });
 
 it('lets users pause and resume the supported-agent animation', async () => {

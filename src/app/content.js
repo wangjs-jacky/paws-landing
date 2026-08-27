@@ -9,6 +9,7 @@ export const content = {
     hero: {
       eyebrow: 'OPEN SOURCE · RUNS ON YOUR HARDWARE',
       title: 'Your coding agents. Within reach.',
+      titleLines: ['Your coding agents.', 'Within reach.'],
       body: 'Start, steer and approve AI coding sessions on your computer — securely from your phone.',
       primary: 'Get started',
       secondary: 'View on GitHub'
@@ -35,7 +36,7 @@ export const content = {
     finalCta: { title: 'Take your agents with you.', body: 'Install Paws, pair your device and start with the guide.', action: 'Read the quick start' },
     footer: { privacy: 'Privacy', docs: 'Documentation', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
-      language: 'Switch to Chinese', themeLight: 'Switch to light theme', themeDark: 'Switch to dark theme',
+      language: 'Switch to Chinese', languageDestination: '中文', themeLight: 'Switch to light theme', themeDark: 'Switch to dark theme',
       menuOpen: 'Open navigation', menuClose: 'Close navigation', home: 'Paws home',
       primaryNavigation: 'Primary navigation',
       pauseAgents: 'Pause supported-agent animation', resumeAgents: 'Resume supported-agent animation',
@@ -52,6 +53,7 @@ export const content = {
     hero: {
       eyebrow: '开源 · 运行在你的电脑上',
       title: '让你的编程智能体，随时触手可及。',
+      titleLines: ['让编程智能体，', '随时触手可及。'],
       body: '通过手机安全地启动、引导和审批电脑上的 AI 编程会话。',
       primary: '开始使用',
       secondary: '查看 GitHub'
@@ -78,7 +80,7 @@ export const content = {
     finalCta: { title: '把编程智能体带在身边。', body: '安装 Paws、绑定设备，然后从快速上手开始。', action: '阅读快速上手' },
     footer: { privacy: '隐私', docs: '文档', github: 'GitHub', englishDocs: 'English docs', chineseDocs: '中文文档' },
     labels: {
-      language: 'Switch to English', themeLight: '切换到亮色主题', themeDark: '切换到深色主题',
+      language: 'Switch to English', languageDestination: 'EN', themeLight: '切换到亮色主题', themeDark: '切换到深色主题',
       menuOpen: '打开导航', menuClose: '关闭导航', home: 'Paws 首页',
       primaryNavigation: '主导航',
       pauseAgents: '暂停智能体兼容列表动画', resumeAgents: '继续智能体兼容列表动画',
