@@ -278,6 +278,7 @@
 .terminal-demo__body {
   min-height: 148px;
   padding: var(--space-3);
+  overflow-wrap: anywhere;
   color: #d8d4ce;
   font-family: var(--font-mono);
   font-size: 0.8rem;
@@ -299,9 +300,7 @@
   display: grid;
   min-height: min(900px, 100svh);
   overflow: hidden;
-  background:
-    radial-gradient(circle at 78% 42%, rgb(239 108 62 / 18%), transparent 32rem),
-    var(--color-bg);
+  background: var(--color-bg);
 }
 
 .page-shell {
@@ -316,7 +315,8 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
   gap: clamp(32px, 4vw, 64px);
   align-items: center;
-  padding-block: calc(var(--header-height) + var(--space-8)) var(--space-7);
+  padding-top: calc(72px + 48px);
+  padding-bottom: var(--space-7);
 }
 
 .hero-copy { min-width: 0; }
@@ -330,6 +330,8 @@
 .hero-copy h1 {
   max-width: 11ch;
   margin-bottom: var(--space-5);
+  font-size: clamp(3.25rem, 5.2vw, 5.9rem);
+  line-height: 0.98;
   text-wrap: balance;
   text-shadow: 0 2px 30px var(--color-bg), 0 1px 4px var(--color-bg);
 }
@@ -338,9 +340,22 @@
 
 .hero-media {
   position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   min-width: 0;
+}
+
+.hero-media::before {
+  position: absolute;
+  z-index: -1;
+  width: min(100%, 30rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(239 108 62 / 32%) 0, rgb(239 108 62 / 12%) 42%, transparent 72%);
+  content: '';
+  filter: blur(18px);
+  pointer-events: none;
 }
 
 .hero-lead {
@@ -354,9 +369,16 @@
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-bottom: var(--space-5);
 }
+
+.hero-terminal-slot {
+  width: min(100%, 42rem);
+  min-width: 0;
+}
+
+.hero-terminal-slot .terminal-demo { width: 100%; }
 
 .hero-actions .primary-action,
 .secondary-action {
@@ -861,7 +883,7 @@
 
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-3);
+    gap: var(--space-4);
     align-content: start;
     padding-top: calc(var(--header-height) + var(--space-6));
   }
@@ -871,7 +893,7 @@
   }
 
   .mascot-look {
-    width: clamp(180px, 46vw, 220px);
+    width: min(100%, 17rem);
   }
 
   .hero-copy {
@@ -880,8 +902,11 @@
   }
 
   .hero-copy h1 {
-    font-size: clamp(2.55rem, 11vw, 4.5rem);
+    font-size: clamp(2.7rem, 13vw, 4rem);
   }
+
+  .hero-terminal-slot { max-width: 100%; }
+  .hero-terminal-slot .terminal-demo { width: 100%; }
 
   .hero-actions .primary-action { display: inline-flex; }
 

@@ -47,6 +47,19 @@ it('defines the header and hero layout anchors', () => {
   expect(css).toContain('.hero-media');
 });
 
+it('sets the final desktop hero hierarchy and media halo', () => {
+  expect(rule('.hero-grid')).toMatch(/padding-top:\s*calc\(72px\s*\+\s*48px\)/);
+  expect(rule('.hero-copy h1')).toMatch(/font-size:\s*clamp\(3\.25rem,\s*5\.2vw,\s*5\.9rem\)/);
+  expect(rule('.hero-copy h1')).toMatch(/line-height:\s*0\.98/);
+  expect(rule('.hero-terminal-slot')).toMatch(/width:\s*min\(100%,\s*42rem\)/);
+  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*34rem\)/);
+  expect(rule('.hero-media::before')).toMatch(/radial-gradient/);
+  expect(rule('.hero-media::before')).toMatch(/content:\s*''/);
+  expect(rule('.hero-actions')).toMatch(/gap:\s*var\(--space-2\)/);
+  expect(rule('.hero-grid')).toMatch(/z-index:\s*3/);
+  expect(css).not.toContain('.mascot-stage img');
+});
+
 it('keeps mobile hero media visible and ordered before the copy', () => {
   const mobile = block(css, /@media\s*\(max-width:\s*800px\)\s*\{/);
 
@@ -54,6 +67,11 @@ it('keeps mobile hero media visible and ordered before the copy', () => {
   expect(rule('.hero-media', mobile)).toMatch(/grid-row:\s*1/);
   expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*2/);
   expect(rule('.hero', mobile)).toMatch(/overflow:\s*visible/);
+  expect(rule('.mascot-look', mobile)).toMatch(/width:\s*min\(100%,\s*17rem\)/);
+  expect(rule('.hero-copy h1', mobile)).toMatch(/font-size:\s*clamp\(2\.7rem,\s*13vw,\s*4rem\)/);
+  expect(rule('.hero-terminal-slot', mobile)).toMatch(/max-width:\s*100%/);
+  expect(rule('.terminal-demo', mobile)).toMatch(/width:\s*100%/);
+  expect(css).not.toMatch(/overflow-x:\s*hidden/);
 });
 
 it('reserves one stable mascot box and reveals the atlas without relayout', () => {

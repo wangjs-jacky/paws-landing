@@ -26,8 +26,13 @@ it('switches all visible copy and document metadata to Chinese', async () => {
 
 it('exposes stable hero media and terminal layout slots', () => {
   const { container } = render(<App />);
-  expect(container.querySelector('.hero-media .mascot-look')).toBeInTheDocument();
-  expect(container.querySelector('.hero-terminal-slot .terminal-demo')).toBeInTheDocument();
+  const hero = container.querySelector('#hero');
+  expect(hero.querySelectorAll('.dot-field')).toHaveLength(1);
+  expect(hero.querySelectorAll('.hero-media .mascot-look')).toHaveLength(1);
+  expect(hero.querySelectorAll('.hero-terminal-slot .terminal-demo')).toHaveLength(1);
+  expect(hero.querySelectorAll('[data-testid="hero-title-line"]')).toHaveLength(2);
+  expect(hero.querySelector('.install-command')).not.toBeInTheDocument();
+  expect(hero.querySelector('.mascot-stage')).not.toBeInTheDocument();
 });
 
 it('lets users pause and resume the supported-agent animation', async () => {
