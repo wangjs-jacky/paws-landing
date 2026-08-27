@@ -45,17 +45,27 @@ async function expectStaticStoryEvidence(page) {
 
   for (const scene of scenes) {
     const scoped = story.locator(`[data-testid="story-static-evidence"][data-static-scene="${scene.id}"]`);
+    const pc = scoped.locator('[data-static-surface="pc"]');
+    const app = scoped.locator('[data-static-surface="mobile"]');
+    const connection = scoped.locator('.connection-flow');
     await expect(scoped).toHaveCount(1);
     await expect(scoped).toBeVisible();
-    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-scene', scene.id);
-    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-status', scene.status);
-    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-focus', scene.pcFocused);
-    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-scene', scene.id);
-    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-status', scene.status);
-    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-focus', scene.mobileFocused);
-    await expect(scoped.locator('.connection-flow')).toHaveAttribute('data-status', scene.status);
-    await expect(scoped.locator('.connection-flow')).toHaveAttribute('data-focus', scene.focus);
+    await expect(pc).toBeVisible();
+    await expect(app).toBeVisible();
+    await expect(connection).toBeVisible();
+    await expect(pc).toHaveAttribute('data-scene', scene.id);
+    await expect(pc).toHaveAttribute('data-status', scene.status);
+    await expect(pc).toHaveAttribute('data-focus', scene.pcFocused);
+    await expect(app).toHaveAttribute('data-scene', scene.id);
+    await expect(app).toHaveAttribute('data-status', scene.status);
+    await expect(app).toHaveAttribute('data-focus', scene.mobileFocused);
+    await expect(connection).toHaveAttribute('data-status', scene.status);
+    await expect(connection).toHaveAttribute('data-focus', scene.focus);
   }
+
+  await expect(story.locator('[data-static-surface="pc"]:visible')).toHaveCount(4);
+  await expect(story.locator('[data-static-surface="mobile"]:visible')).toHaveCount(4);
+  await expect(story.locator('[data-testid="story-static-evidence"] > .connection-flow:visible')).toHaveCount(4);
 
   await expect(story.locator('[data-static-scene="watch"]')).toContainText('Skill');
   await expect(story.locator('[data-static-scene="watch"]')).toContainText('Subagent');
@@ -322,6 +332,7 @@ test('reduced motion exposes every major page fact without scrolling', async ({ 
   try {
     await page.goto(`${BASE_URL}/`);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expectCompletePageCounts(page);
     await expectStaticStoryEvidence(page);
     await expect(page.locator('.story-step')).toHaveCount(4);
     await expect(page.getByTestId('proof-case')).toHaveCount(6);
@@ -356,6 +367,7 @@ test('1280 fine and 1024 coarse desktops select the correct story presentation',
     const page = await fineContext.newPage();
     await page.goto('/');
     await expectCompletePageCounts(page);
+    await expect(page.getByTestId('cross-device-story')).toHaveAttribute('data-story-motion-ready', 'true');
     await expect(page.locator('.cross-device-story__stage--shared')).toBeVisible();
     await expect(page.getByTestId('story-static-evidence')).toHaveCount(4);
     await expect(page.locator('[data-testid="story-static-evidence"]:visible')).toHaveCount(0);
@@ -381,6 +393,36 @@ test('1280 fine and 1024 coarse desktops select the correct story presentation',
     await expect(page.locator('[data-static-surface="mobile"]:visible')).toHaveCount(4);
   } finally {
     await coarseContext.close();
+  }
+});
+
+test('fine desktop keeps complete fallback when a motion precondition is missing', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  const context = await browser.newContext({
+    baseURL: BASE_URL,
+    locale: 'en-US',
+    viewport: { width: 1280, height: 900 }
+  });
+  try {
+    await context.addInitScript(() => {
+      const nativeQuerySelector = Element.prototype.querySelector;
+      Element.prototype.querySelector = function querySelector(selector) {
+        if (selector === '.story-scene-mascot'
+          && this.classList?.contains('cross-device-story__stage--shared')) {
+          return null;
+        }
+        return nativeQuerySelector.call(this, selector);
+      };
+    });
+    const page = await context.newPage();
+    await page.goto('/');
+
+    await expectCompletePageCounts(page);
+    await expect(page.getByTestId('cross-device-story')).not.toHaveAttribute('data-story-motion-ready');
+    await expectStaticStoryEvidence(page);
+  } finally {
+    await context.close();
   }
 });
 

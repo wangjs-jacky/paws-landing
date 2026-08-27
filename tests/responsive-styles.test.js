@@ -150,11 +150,12 @@ it('limits story pinning styles to fine-pointer desktops without reduced motion'
   const outsideDesktopMotion = storyCss.replace(desktopMotion, '');
 
   expect(desktopMotion).not.toBe('');
-  expect(rule('.cross-device-story__stage--shared', desktopMotion)).toMatch(/position:\s*sticky/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .cross-device-story__stage--shared", desktopMotion))
+    .toMatch(/position:\s*sticky/);
   expect(outsideDesktopMotion).not.toMatch(/position:\s*sticky/);
 });
 
-it('shows chapter evidence by default and swaps to one shared stage only for desktop motion', () => {
+it('shows chapter evidence by default and swaps stages only after desktop motion is ready', () => {
   const desktop = block(storyCss, /@media\s*\(min-width:\s*1024px\)\s*\{/);
   const desktopMotion = block(
     storyCss,
@@ -164,9 +165,14 @@ it('shows chapter evidence by default and swaps to one shared stage only for des
   expect(rule('.story-step__evidence', storyCss)).toMatch(/display:\s*grid/);
   expect(rule('.cross-device-story__stage--shared', storyCss)).toMatch(/display:\s*none/);
   expect(rule('.story-steps', desktop)).toMatch(/grid-column:\s*1\s*\/\s*-1/);
-  expect(rule('.story-step__evidence', desktopMotion)).toMatch(/display:\s*none/);
-  expect(rule('.cross-device-story__stage--shared', desktopMotion)).toMatch(/display:\s*grid/);
-  expect(rule('.story-steps', desktopMotion)).toMatch(/grid-column:\s*auto/);
+  expect(desktopMotion).not.toMatch(/(?:^|\n)\s*\.story-step__evidence\s*\{/);
+  expect(desktopMotion).not.toMatch(/(?:^|\n)\s*\.cross-device-story__stage--shared\s*\{/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .story-step__evidence", desktopMotion))
+    .toMatch(/display:\s*none/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .cross-device-story__stage--shared", desktopMotion))
+    .toMatch(/display:\s*grid/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .story-steps", desktopMotion))
+    .toMatch(/grid-column:\s*auto/);
 });
 
 it('keeps tablet and mobile stories in normal flow and prioritizes App approval', () => {

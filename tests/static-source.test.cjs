@@ -93,6 +93,8 @@ test('the static image verifier accepts only a quoted lazy loading literal', () 
     ['Eager.jsx', 'loading="eager"'],
     ['Undefined.jsx', 'loading={undefined}'],
     ['Conditional.jsx', "loading={visible ? 'lazy' : 'eager'}"],
+    ['Template.jsx', 'loading=`lazy`'],
+    ['Unquoted.jsx', 'loading=lazy'],
     ['Boolean.jsx', 'loading']
   ]) {
     assert.throws(

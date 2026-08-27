@@ -11,15 +11,21 @@ import { buildConsoleState } from '../src/components/CrossDeviceStory/storyModel
 const motionMocks = vi.hoisted(() => ({
   cancelAnimationFrame: vi.fn(),
   desktop: true,
+  deferMediaSetup: false,
   coarse: false,
   matchMedia: vi.fn(),
   mediaAdd: vi.fn(),
+  mediaCleanup: null,
   mediaRevert: vi.fn(),
+  pendingMediaSetup: null,
   reduced: false,
+  reducedListeners: new Set(),
+  reducedMedia: null,
   refresh: vi.fn(),
   registerPlugin: vi.fn(),
   requestAnimationFrame: vi.fn(),
   timeline: vi.fn(),
+  timelineKill: vi.fn(),
   timelineTo: vi.fn(),
   useGSAPConfigs: []
 }));
@@ -51,8 +57,13 @@ const copy = getStoryContent('en');
 
 beforeEach(() => {
   motionMocks.desktop = true;
+  motionMocks.deferMediaSetup = false;
   motionMocks.coarse = false;
   motionMocks.reduced = false;
+  motionMocks.mediaCleanup = null;
+  motionMocks.pendingMediaSetup = null;
+  motionMocks.reducedListeners.clear();
+  motionMocks.reducedMedia = null;
   motionMocks.useGSAPConfigs.length = 0;
 
   for (const mock of [
@@ -63,16 +74,26 @@ beforeEach(() => {
     motionMocks.refresh,
     motionMocks.requestAnimationFrame,
     motionMocks.timeline,
+    motionMocks.timelineKill,
     motionMocks.timelineTo
   ]) {
     mock.mockReset();
   }
 
   motionMocks.timelineTo.mockReturnThis();
-  motionMocks.timeline.mockReturnValue({ to: motionMocks.timelineTo });
+  motionMocks.timeline.mockReturnValue({ to: motionMocks.timelineTo, kill: motionMocks.timelineKill });
   motionMocks.mediaAdd.mockImplementation((query, setup) => {
     const enabled = motionMocks.desktop && !motionMocks.coarse && !motionMocks.reduced;
-    if (enabled) setup();
+    if (!enabled) return;
+    if (motionMocks.deferMediaSetup) {
+      motionMocks.pendingMediaSetup = setup;
+      return;
+    }
+    motionMocks.mediaCleanup = setup();
+  });
+  motionMocks.mediaRevert.mockImplementation(() => {
+    motionMocks.mediaCleanup?.();
+    motionMocks.mediaCleanup = null;
   });
   motionMocks.matchMedia.mockReturnValue({
     add: motionMocks.mediaAdd,
@@ -83,12 +104,20 @@ beforeEach(() => {
     return 73;
   });
 
-  window.matchMedia = vi.fn(query => ({
-    matches: query === '(prefers-reduced-motion: reduce)' && motionMocks.reduced,
-    media: query,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn()
-  }));
+  window.matchMedia = vi.fn(query => {
+    const media = {
+      matches: query === '(prefers-reduced-motion: reduce)' && motionMocks.reduced,
+      media: query,
+      addEventListener: vi.fn((event, listener) => {
+        if (event === 'change') motionMocks.reducedListeners.add(listener);
+      }),
+      removeEventListener: vi.fn((event, listener) => {
+        if (event === 'change') motionMocks.reducedListeners.delete(listener);
+      })
+    };
+    if (query === '(prefers-reduced-motion: reduce)') motionMocks.reducedMedia = media;
+    return media;
+  });
   window.requestAnimationFrame = motionMocks.requestAnimationFrame;
   window.cancelAnimationFrame = motionMocks.cancelAnimationFrame;
 });
@@ -133,6 +162,7 @@ describe('cross-device product demonstrations', () => {
     const [timelineConfig] = motionMocks.timeline.mock.calls[0];
 
     expect(motionMocks.timeline).toHaveBeenCalledOnce();
+    expect(story).toHaveAttribute('data-story-motion-ready', 'true');
     expect(motionMocks.mediaAdd).toHaveBeenCalledWith(
       '(min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
       expect.any(Function)
@@ -175,7 +205,92 @@ describe('cross-device product demonstrations', () => {
     expect(motionMocks.timeline).toHaveBeenCalledOnce();
 
     unmount();
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
     expect(motionMocks.mediaRevert).toHaveBeenCalledOnce();
+  });
+
+  it('keeps every static chapter when desktop timeline setup throws', () => {
+    motionMocks.timelineTo.mockImplementationOnce(() => {
+      throw new Error('timeline setup failed');
+    });
+
+    let view;
+    expect(() => {
+      view = render(<CrossDeviceStory language="en" />);
+    }).not.toThrow();
+
+    const story = screen.getByTestId('cross-device-story');
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
+    expect(screen.getAllByTestId('story-static-evidence')).toHaveLength(4);
+    expect(motionMocks.timeline).toHaveBeenCalledOnce();
+    expect(motionMocks.timelineKill).toHaveBeenCalledOnce();
+
+    view.unmount();
+  });
+
+  it('keeps every static chapter when timeline creation throws', () => {
+    motionMocks.timeline.mockImplementationOnce(() => {
+      throw new Error('timeline creation failed');
+    });
+
+    let view;
+    expect(() => {
+      view = render(<CrossDeviceStory language="en" />);
+    }).not.toThrow();
+
+    const story = screen.getByTestId('cross-device-story');
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
+    expect(screen.getAllByTestId('story-static-evidence')).toHaveLength(4);
+    expect(motionMocks.timelineKill).not.toHaveBeenCalled();
+
+    view.unmount();
+  });
+
+  it('keeps every static chapter when a required desktop motion target is missing', () => {
+    motionMocks.deferMediaSetup = true;
+    const view = render(<CrossDeviceStory language="en" />);
+    const story = screen.getByTestId('cross-device-story');
+
+    story.querySelector('.story-scene-mascot').classList.remove('story-scene-mascot');
+    act(() => {
+      motionMocks.mediaCleanup = motionMocks.pendingMediaSetup();
+    });
+
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
+    expect(screen.getAllByTestId('story-static-evidence')).toHaveLength(4);
+    expect(motionMocks.timeline).not.toHaveBeenCalled();
+
+    view.unmount();
+  });
+
+  it('removes readiness when the desktop media callback cleans up', () => {
+    const view = render(<CrossDeviceStory language="en" />);
+    const story = screen.getByTestId('cross-device-story');
+    const cleanup = motionMocks.mediaCleanup;
+
+    expect(story).toHaveAttribute('data-story-motion-ready', 'true');
+    act(() => cleanup());
+    motionMocks.mediaCleanup = null;
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
+
+    view.unmount();
+  });
+
+  it('removes readiness when reduced motion changes after setup', () => {
+    const view = render(<CrossDeviceStory language="en" />);
+    const story = screen.getByTestId('cross-device-story');
+
+    expect(story).toHaveAttribute('data-story-motion-ready', 'true');
+    act(() => {
+      motionMocks.reducedMedia.matches = true;
+      for (const listener of motionMocks.reducedListeners) listener();
+    });
+
+    expect(story).not.toHaveAttribute('data-story-motion-ready');
+    expect(screen.getAllByTestId('story-static-evidence')).toHaveLength(4);
+    expect(motionMocks.mediaRevert).toHaveBeenCalledOnce();
+
+    view.unmount();
   });
 
   it('keeps coarse-pointer desktops in the complete static flow', () => {
