@@ -39,7 +39,7 @@ export function buildConsoleState(sceneId, content) {
     }
   };
 
-  if (!states[sceneId]) {
+  if (!Object.hasOwn(states, sceneId)) {
     throw new RangeError(`Unknown Paws story scene: ${sceneId}`);
   }
 

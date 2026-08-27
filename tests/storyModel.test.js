@@ -85,10 +85,12 @@ describe('cross-device story model', () => {
       });
     });
 
-    it('rejects unknown scenes', () => {
-      expect(() => buildConsoleState('unknown', copy)).toThrow(
-        new RangeError('Unknown Paws story scene: unknown')
-      );
+    it('rejects unknown scenes, including inherited object property names', () => {
+      for (const sceneId of ['unknown', 'constructor', 'toString', '__proto__']) {
+        expect(() => buildConsoleState(sceneId, copy)).toThrow(
+          new RangeError(`Unknown Paws story scene: ${sceneId}`)
+        );
+      }
     });
   });
 });
