@@ -1,7 +1,7 @@
 # Paws Hero Mascot Motion and Terminal Refinement
 
-Date: 2026-08-27  
-Status: Approved in chat; awaiting written-spec review  
+Date: 2026-08-27
+Status: Approved in chat; awaiting written-spec review
 Repository: `wangjs-jacky/paws-landing`
 
 ## Objective
