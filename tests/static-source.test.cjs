@@ -4,6 +4,31 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
+const mascotIds = ['astro', 'explorer', 'hoodie', 'ninja', 'scientist', 'barista', 'florist'];
+
+test('the approved Paws Crew images are public and registered by stable ID', () => {
+  for (const id of mascotIds) {
+    const relative = `public/assets/mascots/${id}.png`;
+    assert.equal(fs.existsSync(path.join(root, relative)), true, relative);
+  }
+
+  const registry = fs.readFileSync(
+    path.join(root, 'src/components/MascotCrew/mascotRegistry.js'),
+    'utf8'
+  );
+
+  for (const id of mascotIds) {
+    assert.match(registry, new RegExp(`/assets/mascots/\\$\\{id\\}\\.png|/assets/mascots/${id}\\.png`));
+  }
+
+  const staticVerifier = fs.readFileSync(path.join(root, 'scripts/verify-static.cjs'), 'utf8');
+  for (const id of mascotIds) {
+    assert.match(
+      staticVerifier,
+      new RegExp(`dist/assets/mascots/\\$\\{id\\}\\.png|dist/assets/mascots/${id}\\.png`)
+    );
+  }
+});
 
 test('Vite public directory owns the documentation routes', () => {
   for (const relative of [

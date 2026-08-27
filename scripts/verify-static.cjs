@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
+const mascotIds = ['astro', 'explorer', 'hoodie', 'ninja', 'scientist', 'barista', 'florist'];
 const required = [
   'dist/index.html',
   'dist/docs.html',
@@ -11,7 +12,8 @@ const required = [
   'dist/assets/mascot-avatar.png',
   'dist/assets/mascot-hero.png',
   'dist/assets/mascot-static.png',
-  'dist/assets/mascot-turn-atlas.webp'
+  'dist/assets/mascot-turn-atlas.webp',
+  ...mascotIds.map(id => `dist/assets/mascots/${id}.png`)
 ];
 
 for (const relative of required) {

@@ -3,11 +3,13 @@ import Header from '../components/Header';
 import Hero from '../components/Hero';
 import AgentMarquee from '../components/AgentMarquee';
 import CrossDeviceStory from '../components/CrossDeviceStory/CrossDeviceStory';
+import MascotCrew from '../components/MascotCrew/MascotCrew';
 import FeatureGrid from '../components/FeatureGrid';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
 import OpenSource from '../components/OpenSource';
 import { content } from './content';
+import { getStoryContent } from './storyContent';
 import { usePreferences } from './usePreferences';
 
 const THEME_COLORS = {
@@ -28,6 +30,7 @@ function getOrCreateMeta(name) {
 export default function App() {
   const { language, theme, setLanguage, toggleTheme } = usePreferences();
   const copy = content[language];
+  const storyCopy = getStoryContent(language);
 
   useEffect(() => {
     document.title = copy.meta.title;
@@ -48,6 +51,7 @@ export default function App() {
         <Hero copy={copy} language={language} theme={theme} />
         <AgentMarquee agents={copy.agents} labels={copy.labels} />
         <CrossDeviceStory language={language} />
+        <MascotCrew copy={storyCopy} />
         <FeatureGrid copy={copy} />
         <OpenSource copy={copy} language={language} />
         <FinalCTA copy={copy} language={language} />

@@ -86,7 +86,15 @@ it('renders the approved product flow, actions and section order', () => {
   expect(screen.getByRole('link', { name: 'Self-hosting guide' })).toHaveAttribute('href', '/docs#self-hosting');
 
   const sectionIds = [...container.querySelectorAll('main > section')].map(section => section.id);
-  expect(sectionIds).toEqual(['hero', 'supported-agents', 'app-pc', 'product', 'open-source', 'final-cta']);
+  expect(sectionIds).toEqual([
+    'hero',
+    'supported-agents',
+    'app-pc',
+    'paws-crew',
+    'product',
+    'open-source',
+    'final-cta'
+  ]);
 });
 
 it('exposes exactly one main landmark for the page', () => {
