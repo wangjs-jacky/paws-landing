@@ -31,7 +31,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
       </button>
       <nav id="primary-navigation" aria-label={copy.labels.primaryNavigation}>
         <a href="#product" onClick={closeMenu}>{copy.nav.product}</a>
-        <a href="#how-it-works" onClick={closeMenu}>{copy.nav.how}</a>
+        <a href="#app-pc" onClick={closeMenu}>{copy.nav.how}</a>
         <a href="#open-source" onClick={closeMenu}>{copy.nav.openSource}</a>
         <a href={docsHref(language)} onClick={closeMenu}>{copy.nav.docs}</a>
         <a href="https://github.com/wangjs-jacky/happy" onClick={closeMenu}>GitHub</a>

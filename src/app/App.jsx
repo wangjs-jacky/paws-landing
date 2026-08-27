@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import AgentMarquee from '../components/AgentMarquee';
+import CrossDeviceStory from '../components/CrossDeviceStory/CrossDeviceStory';
 import FeatureGrid from '../components/FeatureGrid';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
-import HowItWorks from '../components/HowItWorks';
 import OpenSource from '../components/OpenSource';
 import { content } from './content';
 import { usePreferences } from './usePreferences';
@@ -47,7 +47,7 @@ export default function App() {
       <main id="top">
         <Hero copy={copy} language={language} theme={theme} />
         <AgentMarquee agents={copy.agents} labels={copy.labels} />
-        <HowItWorks copy={copy} />
+        <CrossDeviceStory language={language} />
         <FeatureGrid copy={copy} />
         <OpenSource copy={copy} language={language} />
         <FinalCTA copy={copy} language={language} />

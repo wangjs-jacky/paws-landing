@@ -1,3 +1,136 @@
+.cross-device-story {
+  display: grid;
+  width: min(calc(100% - 2 * var(--space-5)), 90rem);
+  gap: clamp(2rem, 6vw, 6rem);
+  margin-inline: auto;
+  padding-block: var(--space-8);
+}
+
+.cross-device-story__intro {
+  max-width: 55rem;
+}
+
+.cross-device-story__intro .eyebrow {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.cross-device-story__intro h2 {
+  max-width: 17ch;
+  text-wrap: balance;
+}
+
+.cross-device-story__intro > p:last-child {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+}
+
+.story-steps {
+  display: grid;
+  gap: 1rem;
+}
+
+.story-step {
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.story-step[data-active='true'] {
+  border-color: var(--color-accent);
+}
+
+.story-step__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.story-step__meta button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.story-step__meta button[aria-current='step'] {
+  color: var(--color-action-text);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.story-step h3 {
+  margin-bottom: var(--space-3);
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+}
+
+.story-step > p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.cross-device-story__stage {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
+  gap: clamp(1rem, 2vw, 2rem);
+  align-items: center;
+}
+
+.cross-device-story__stage > .pc-console,
+.cross-device-story__stage > .mobile-console {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .cross-device-story {
+    grid-template-columns: minmax(17rem, 0.65fr) minmax(0, 2fr);
+    align-items: start;
+  }
+
+  .cross-device-story__intro {
+    grid-column: 1 / -1;
+  }
+
+  .story-step {
+    min-height: clamp(13rem, 24vh, 18rem);
+  }
+
+  .cross-device-story__stage {
+    position: sticky;
+    top: calc(var(--header-height) + 1rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .cross-device-story__stage {
+    grid-template-columns: 1fr;
+  }
+
+  .cross-device-story__stage > .mobile-console {
+    justify-self: center;
+  }
+
+  .cross-device-story__stage > .connection-flow {
+    display: none;
+  }
+}
+
 .pc-console,
 .mobile-console {
   color: #f6f3ef;

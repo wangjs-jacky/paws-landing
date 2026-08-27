@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { getStoryContent } from '../src/app/storyContent';
 import ConnectionFlow from '../src/components/CrossDeviceStory/ConnectionFlow';
+import CrossDeviceStory from '../src/components/CrossDeviceStory/CrossDeviceStory';
 import MobileConsoleDemo from '../src/components/CrossDeviceStory/MobileConsoleDemo';
 import PcConsoleDemo from '../src/components/CrossDeviceStory/PcConsoleDemo';
 import { buildConsoleState } from '../src/components/CrossDeviceStory/storyModel';
@@ -30,6 +31,22 @@ function expectDemoButtonsToBeDisabled(container) {
 }
 
 describe('cross-device product demonstrations', () => {
+  it('renders every localized story scene while exposing the active console scene', () => {
+    render(<CrossDeviceStory language="zh" activeSceneOverride="approve" />);
+
+    const articles = screen.getAllByRole('article');
+    expect(articles).toHaveLength(4);
+    expect(articles.map(article => article.dataset.scene)).toEqual(['start', 'watch', 'approve', 'handoff']);
+    expect(screen.getByRole('heading', { name: '关键操作，手机拍板' })).toBeVisible();
+    expect(within(articles[2]).getByRole('button', { name: '关键操作，手机拍板' })).toHaveAttribute(
+      'aria-current',
+      'step'
+    );
+    expect(screen.getByTestId('cross-device-story')).toHaveAttribute('data-active-scene', 'approve');
+    expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'approve');
+    expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'approve');
+  });
+
   it('shows localized remote-start controls in the PC Web composer', () => {
     const { pc, mobile } = renderDemos('start');
 

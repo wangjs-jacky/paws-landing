@@ -65,14 +65,14 @@ it('opens and closes an accessible mobile navigation menu', async () => {
   expect(menu).toHaveAttribute('aria-expanded', 'false');
 });
 
-it('renders factual agents, three steps and four capabilities without testimonials', () => {
+it('renders factual agents, four story scenes and four capabilities without testimonials', () => {
   render(<App />);
   const marquee = screen.getByRole('region', { name: content.en.labels.agentMarquee });
   const readableAgents = within(marquee).getByRole('list');
   for (const agent of ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'OpenClaw', 'ACP Agents']) {
     expect(within(readableAgents).getByText(agent)).toBeInTheDocument();
   }
-  expect(screen.getAllByTestId('workflow-step')).toHaveLength(3);
+  expect(screen.getAllByRole('article')).toHaveLength(4);
   expect(screen.getAllByTestId('feature-card')).toHaveLength(4);
   expect(screen.queryByText(/Loved by developers|Testimonials/i)).not.toBeInTheDocument();
 });
@@ -86,7 +86,16 @@ it('renders the approved product flow, actions and section order', () => {
   expect(screen.getByRole('link', { name: 'Self-hosting guide' })).toHaveAttribute('href', '/docs#self-hosting');
 
   const sectionIds = [...container.querySelectorAll('main > section')].map(section => section.id);
-  expect(sectionIds).toEqual(['hero', 'supported-agents', 'how-it-works', 'product', 'open-source', 'final-cta']);
+  expect(sectionIds).toEqual(['hero', 'supported-agents', 'app-pc', 'product', 'open-source', 'final-cta']);
+});
+
+it('links both localized work-flow navigation labels to the cross-device story', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+
+  expect(screen.getByRole('link', { name: content.en.nav.how })).toHaveAttribute('href', '#app-pc');
+  await user.click(screen.getByRole('button', { name: content.en.labels.language }));
+  expect(screen.getByRole('link', { name: content.zh.nav.how })).toHaveAttribute('href', '#app-pc');
 });
 
 it('links both documentation languages and privacy without making a license claim', () => {
