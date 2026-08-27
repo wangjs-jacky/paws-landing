@@ -89,6 +89,12 @@ it('renders the approved product flow, actions and section order', () => {
   expect(sectionIds).toEqual(['hero', 'supported-agents', 'app-pc', 'product', 'open-source', 'final-cta']);
 });
 
+it('exposes exactly one main landmark for the page', () => {
+  const { container } = render(<App />);
+
+  expect(container.querySelectorAll('main')).toHaveLength(1);
+});
+
 it('links both localized work-flow navigation labels to the cross-device story', async () => {
   const user = userEvent.setup();
   render(<App />);

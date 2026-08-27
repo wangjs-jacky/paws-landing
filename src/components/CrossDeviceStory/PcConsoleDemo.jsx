@@ -76,7 +76,7 @@ function ComposePanel({ state, copy, scene }) {
   ];
 
   return (
-    <main className="pc-console__main pc-console__main--compose">
+    <div className="pc-console__main pc-console__main--compose">
       <header className="pc-console__topbar">
         <div>
           <span className="console-kicker">PC WEB</span>
@@ -120,7 +120,7 @@ function ComposePanel({ state, copy, scene }) {
           <ProductDisclaimer copy={copy} />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -157,7 +157,7 @@ function ActivityList({ toolStates }) {
 function SessionPanel({ state, copy, scene }) {
   const pending = state.permission?.status === 'pending';
   return (
-    <main className="pc-console__main pc-console__main--session">
+    <div className="pc-console__main pc-console__main--session">
       <header className="pc-console__session-header">
         <div className="pc-console__session-title">
           <span className="pc-console__terminal-glyph" aria-hidden="true">›_</span>
@@ -204,7 +204,7 @@ function SessionPanel({ state, copy, scene }) {
         <button type="button" disabled aria-label={copy.consoles.pcSummary[state.sceneId]}><SendIcon /></button>
       </div>
       <ProductDisclaimer copy={copy} />
-    </main>
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { getStoryContent } from '../src/app/storyContent';
 import ConnectionFlow from '../src/components/CrossDeviceStory/ConnectionFlow';
@@ -45,6 +46,25 @@ describe('cross-device product demonstrations', () => {
     expect(screen.getByTestId('cross-device-story')).toHaveAttribute('data-active-scene', 'approve');
     expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'approve');
     expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'approve');
+  });
+
+  it('synchronizes every story surface when a user selects another step', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<CrossDeviceStory language="en" />);
+    const articles = screen.getAllByRole('article');
+    const startButton = within(articles[0]).getByRole('button', { name: copy.scenes[0].title });
+    const approveButton = within(articles[2]).getByRole('button', { name: copy.scenes[2].title });
+
+    expect(startButton).toHaveAttribute('aria-current', 'step');
+    await user.click(approveButton);
+
+    expect(screen.getByTestId('cross-device-story')).toHaveAttribute('data-active-scene', 'approve');
+    expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'approve');
+    expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'approve');
+    expect(container.querySelector('.connection-flow')).toHaveAttribute('data-focus', 'mobile');
+    expect(container.querySelector('.connection-flow')).toHaveAttribute('data-status', 'approval-pending');
+    expect(startButton).not.toHaveAttribute('aria-current');
+    expect(approveButton).toHaveAttribute('aria-current', 'step');
   });
 
   it('shows localized remote-start controls in the PC Web composer', () => {
