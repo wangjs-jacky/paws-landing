@@ -4,9 +4,24 @@ import { expect, it } from 'vitest';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/components.css'), 'utf8');
 
-function rule(selector) {
+function block(source, startPattern) {
+  const match = startPattern.exec(source);
+  if (!match) return '';
+  const openBrace = source.indexOf('{', match.index);
+  let depth = 1;
+
+  for (let index = openBrace + 1; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}') depth -= 1;
+    if (depth === 0) return source.slice(openBrace + 1, index);
+  }
+
+  return '';
+}
+
+function rule(selector, source = css) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`, 's'))?.[1] ?? '';
+  return block(source, new RegExp(`${escaped}\\s*\\{`));
 }
 
 it('hides only the header CTA on narrow screens', () => {
@@ -30,4 +45,13 @@ it('defines the header and hero layout anchors', () => {
   expect(css).toContain('grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr)');
   expect(css).toContain('.hero-title__line');
   expect(css).toContain('.hero-media');
+});
+
+it('keeps mobile hero media visible and ordered before the copy', () => {
+  const mobile = block(css, /@media\s*\(max-width:\s*800px\)\s*\{/);
+
+  expect(rule('.hero-grid', mobile)).toMatch(/grid-template-columns:\s*1fr/);
+  expect(rule('.hero-media', mobile)).toMatch(/grid-row:\s*1/);
+  expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*2/);
+  expect(rule('.hero', mobile)).toMatch(/overflow:\s*visible/);
 });

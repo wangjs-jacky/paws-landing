@@ -771,6 +771,7 @@
 
   .hero {
     min-height: 100svh;
+    overflow: visible;
   }
 
   .hero-grid {
