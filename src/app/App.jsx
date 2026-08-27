@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import AgentMarquee from '../components/AgentMarquee';
@@ -14,6 +14,7 @@ import OpenSource from '../components/OpenSource';
 import { content } from './content';
 import { getStoryContent } from './storyContent';
 import { usePreferences } from './usePreferences';
+import { usePageMotion } from '../hooks/usePageMotion';
 
 const THEME_COLORS = {
   dark: '#0e0d0c',
@@ -31,9 +32,12 @@ function getOrCreateMeta(name) {
 }
 
 export default function App() {
+  const mainRef = useRef(null);
   const { language, theme, setLanguage, toggleTheme } = usePreferences();
   const copy = content[language];
   const storyCopy = getStoryContent(language);
+
+  usePageMotion(mainRef);
 
   useEffect(() => {
     document.title = copy.meta.title;
@@ -50,7 +54,7 @@ export default function App() {
         onLanguageChange={setLanguage}
         onThemeChange={toggleTheme}
       />
-      <main id="top">
+      <main id="top" ref={mainRef}>
         <Hero copy={copy} language={language} theme={theme} />
         <AgentMarquee agents={copy.agents} labels={copy.labels} />
         <CrossDeviceStory language={language} />
@@ -61,7 +65,7 @@ export default function App() {
           proofLabel: copy.sectionLabels.capabilities
         }} language={language} />
         <ValueComparison copy={storyCopy} />
-        <ArchitectureStory copy={storyCopy} language={language} />
+        <ArchitectureStory copy={storyCopy} language={language} title={copy.nav.architecture} />
         <OpenSource copy={copy} language={language} />
         <Roadmap copy={{ ...storyCopy, labels: copy.labels }} />
         <FinalCTA copy={copy} language={language} />

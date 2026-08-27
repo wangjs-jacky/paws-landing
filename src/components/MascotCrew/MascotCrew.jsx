@@ -10,6 +10,7 @@ export default function MascotCrew({ copy }) {
       className="mascot-crew"
       aria-label={copy.crewLabel}
       data-testid="mascot-crew"
+      data-motion-section
     >
       <ol className="mascot-crew__rail" data-testid="mascot-crew-rail">
         {mascots.map(mascot => <MascotCard key={mascot.id} mascot={mascot} />)}

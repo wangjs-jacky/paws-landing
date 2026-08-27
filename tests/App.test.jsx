@@ -166,3 +166,37 @@ it('links both documentation languages and privacy without making a license clai
   );
   expect(screen.queryByText(/MIT License/i)).not.toBeInTheDocument();
 });
+
+it('connects stable navigation targets, story context and non-Hero image metadata', () => {
+  const { container } = render(<App />);
+  const navigation = screen.getByRole('navigation', { name: content.en.labels.primaryNavigation });
+  const hashLinks = within(navigation).getAllByRole('link')
+    .filter(link => link.getAttribute('href')?.startsWith('#'));
+
+  expect(within(navigation).getByRole('link', { name: content.en.nav.architecture }))
+    .toHaveAttribute('href', '#architecture');
+  for (const link of hashLinks) {
+    expect(container.querySelector(link.getAttribute('href'))).toBeInTheDocument();
+  }
+
+  const story = screen.getByTestId('cross-device-story');
+  const storySummary = container.querySelector('#cross-device-summary');
+  expect(storySummary).toHaveClass('sr-only');
+  expect(storySummary).toHaveTextContent('A four-step demonstration');
+  expect(story.querySelector('.cross-device-story__stage'))
+    .toHaveAttribute('aria-describedby', 'cross-device-summary');
+
+  expect(within(container.querySelector('footer')).getByRole('link', {
+    name: content.en.openSource.actions.selfHosting
+  }))
+    .toHaveAttribute('href', '/docs#self-hosting');
+
+  const nonHeroImages = [...container.querySelectorAll('img')]
+    .filter(image => !image.closest('#hero'));
+  expect(nonHeroImages.length).toBeGreaterThan(0);
+  for (const image of nonHeroImages) {
+    expect(image).toHaveAttribute('loading', 'lazy');
+    expect(image).toHaveAttribute('width');
+    expect(image).toHaveAttribute('height');
+  }
+});

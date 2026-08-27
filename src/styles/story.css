@@ -156,13 +156,32 @@
   }
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 1023px) {
+  .cross-device-story__stage {
+    position: relative;
+    top: auto;
+  }
+
+  .story-step { min-height: auto; }
+}
+
+@media (max-width: 767px) {
   .cross-device-story__stage {
     grid-template-columns: 1fr;
   }
 
   .cross-device-story__stage > .mobile-console {
     justify-self: center;
+  }
+
+  .cross-device-story[data-active-scene='approve'] .mobile-console {
+    order: -1;
+  }
+
+  .cross-device-story[data-active-scene='approve'] .pc-console {
+    width: 92%;
+    justify-self: center;
+    transform: none;
   }
 
   .cross-device-story__stage > .connection-flow {

@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/components.css'), 'utf8');
 const storyCss = readFileSync(resolve(process.cwd(), 'src/styles/story.css'), 'utf8');
+const tokensCss = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8');
 
 function block(source, startPattern) {
   const match = startPattern.exec(source);
@@ -35,6 +36,13 @@ it('gives footer links at least 44 by 44 pixel touch targets', () => {
   expect(rule('.footer-brand')).toMatch(/min-width:\s*44px/);
   expect(rule('.site-footer nav a')).toMatch(/min-height:\s*44px/);
   expect(rule('.site-footer nav a')).toMatch(/min-width:\s*44px/);
+});
+
+it('gives header navigation and brand links at least 44 by 44 pixel touch targets', () => {
+  expect(rule('#primary-navigation a')).toMatch(/min-height:\s*44px/);
+  expect(rule('#primary-navigation a')).toMatch(/min-width:\s*44px/);
+  expect(rule('.brand')).toMatch(/min-height:\s*44px/);
+  expect(rule('.brand')).toMatch(/min-width:\s*44px/);
 });
 
 it('pauses the agent marquee on hover and keyboard focus without a playback control', () => {
@@ -144,4 +152,34 @@ it('limits story pinning styles to fine-pointer desktops without reduced motion'
   expect(desktopMotion).not.toBe('');
   expect(rule('.cross-device-story__stage', desktopMotion)).toMatch(/position:\s*sticky/);
   expect(outsideDesktopMotion).not.toMatch(/position:\s*sticky/);
+});
+
+it('keeps tablet and mobile stories in normal flow and prioritizes App approval', () => {
+  const tablet = block(storyCss, /@media\s*\(max-width:\s*1023px\)\s*\{/);
+  const mobile = block(storyCss, /@media\s*\(max-width:\s*767px\)\s*\{/);
+
+  expect(rule('.cross-device-story__stage', tablet)).toMatch(/position:\s*relative/);
+  expect(rule('.cross-device-story__stage', tablet)).toMatch(/top:\s*auto/);
+  expect(rule('.story-step', tablet)).toMatch(/min-height:\s*auto/);
+  expect(tablet).not.toMatch(/position:\s*sticky/);
+
+  expect(rule('.cross-device-story__stage', mobile)).toMatch(/grid-template-columns:\s*1fr/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .mobile-console", mobile))
+    .toMatch(/order:\s*-1/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .pc-console", mobile))
+    .toMatch(/width:\s*92%/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .pc-console", mobile))
+    .toMatch(/transform:\s*none/);
+  expect(rule('.mascot-crew__rail', storyCss)).toMatch(/overflow-x:\s*auto/);
+});
+
+it('roots every color theme rule on the themed html element', () => {
+  expect(tokensCss).toContain("html[data-theme='light']");
+  expect(tokensCss).toContain("html[data-theme='dark']");
+  expect(`${tokensCss}\n${css}`).not.toMatch(/:root\[data-theme=/);
+  expect(css).not.toMatch(/(?:body|main|\.site-header)\[data-theme=/);
+});
+
+it('does not statically hide reveal content before GSAP initializes', () => {
+  expect(`${css}\n${storyCss}`).not.toMatch(/\[data-motion-item\][^{]*\{[^}]*opacity:\s*0/);
 });

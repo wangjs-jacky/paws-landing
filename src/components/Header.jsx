@@ -16,7 +16,14 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
   return (
     <header className="site-header" data-open={menuOpen || undefined}>
       <a className="brand" href="#top" aria-label={copy.labels.home} onClick={closeMenu}>
-        <img src="/assets/mascot-avatar.png" alt="" />
+        <img
+          src="/assets/mascot-avatar.png"
+          alt=""
+          width="1254"
+          height="1254"
+          loading="lazy"
+          decoding="async"
+        />
         <span>Paws</span>
       </a>
       <button
@@ -32,6 +39,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
       <nav id="primary-navigation" aria-label={copy.labels.primaryNavigation}>
         <a href="#product" onClick={closeMenu}>{copy.nav.product}</a>
         <a href="#app-pc" onClick={closeMenu}>{copy.nav.how}</a>
+        <a href="#architecture" onClick={closeMenu}>{copy.nav.architecture}</a>
         <a href="#open-source" onClick={closeMenu}>{copy.nav.openSource}</a>
         <a href={docsHref(language)} onClick={closeMenu}>{copy.nav.docs}</a>
         <a href="https://github.com/wangjs-jacky/happy" onClick={closeMenu}>GitHub</a>

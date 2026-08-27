@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const localExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+const previewPort = Number(process.env.PAWS_E2E_PORT ?? 4173);
+const previewBaseUrl = `http://127.0.0.1:${previewPort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -8,14 +10,14 @@ export default defineConfig({
   workers: 1,
   outputDir: '.preview/playwright-results',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: previewBaseUrl,
     locale: 'en-US',
     trace: 'retain-on-failure',
     launchOptions: localExecutable ? { executablePath: localExecutable } : undefined
   },
   webServer: {
-    command: 'npm run preview -- --host 127.0.0.1',
-    port: 4173,
+    command: `npm run preview -- --host 127.0.0.1 --port ${previewPort}`,
+    port: previewPort,
     reuseExistingServer: false
   },
   projects: [

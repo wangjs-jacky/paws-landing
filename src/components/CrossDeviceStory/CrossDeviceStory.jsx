@@ -44,12 +44,20 @@ export default function CrossDeviceStory({ language, activeSceneOverride }) {
         <h2 id="cross-device-story-title">{copy.intro.title}</h2>
         <p>{copy.intro.summary}</p>
       </header>
+      <p className="sr-only" id="cross-device-summary">{copy.intro.summary}</p>
       <StorySteps scenes={copy.scenes} activeId={activeId} onSelect={onSceneChange} />
-      <div className="cross-device-story__stage">
+      <div className="cross-device-story__stage" aria-describedby="cross-device-summary">
         <PcConsoleDemo state={state} copy={copy} />
         <ConnectionFlow focus={state.focus} status={state.sessionStatus} />
         <div className="story-scene-mascot" aria-hidden="true">
-          <img src="/assets/mascot-avatar.png" alt="" />
+          <img
+            src="/assets/mascot-avatar.png"
+            alt=""
+            width="1254"
+            height="1254"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
         <MobileConsoleDemo state={state} copy={copy} />
       </div>

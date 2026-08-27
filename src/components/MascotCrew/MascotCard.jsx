@@ -1,6 +1,11 @@
 export default function MascotCard({ mascot }) {
   return (
-    <li className="mascot-card" data-testid="mascot-card" data-mascot-id={mascot.id}>
+    <li
+      className="mascot-card"
+      data-testid="mascot-card"
+      data-mascot-id={mascot.id}
+      data-motion-item
+    >
       <div className="mascot-card__surface" data-testid={`mascot-card-${mascot.id}`}>
         <div className="mascot-card__media">
           <img

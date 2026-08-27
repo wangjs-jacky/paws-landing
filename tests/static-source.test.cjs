@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const staticVerifier = require('../scripts/verify-static.cjs');
 
 const root = path.resolve(__dirname, '..');
 const mascotIds = ['astro', 'explorer', 'hoodie', 'ninja', 'scientist', 'barista', 'florist'];
@@ -53,6 +54,28 @@ test('the React entry replaces the static homepage', () => {
   assert.equal(fs.existsSync(path.join(root, 'index.html')), true);
   assert.equal(fs.existsSync(path.join(root, 'src/main.jsx')), true);
   assert.equal(fs.existsSync(path.join(root, 'web/index.html')), false);
+});
+
+test('the static image verifier reads real JSX tags instead of comments or string decoys', () => {
+  const source = `
+    // <img loading="lazy" width="1" height="1" />
+    const decoy = '<img loading="lazy" width="1" height="1" />';
+    export function Image({ copy, visible }) {
+      return <img src="/real.png" alt={visible ? copy.label : ''}
+        loading="lazy" width="512" height="512" />;
+    }
+  `;
+  const tags = staticVerifier.extractJsxOpeningTags(source, 'img');
+
+  assert.equal(tags.length, 1);
+  assert.deepEqual(
+    [...staticVerifier.jsxAttributeNames(tags[0])].sort(),
+    ['alt', 'height', 'loading', 'src', 'width']
+  );
+  assert.throws(
+    () => staticVerifier.assertImageMetadata('<img src="/missing.png" alt="" />', 'Missing.jsx'),
+    /Missing\.jsx.*loading.*width.*height/
+  );
 });
 
 test('deployment secrets are scoped only to credential and deploy steps', () => {

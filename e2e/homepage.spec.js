@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const LANGUAGE_KEY = 'paws-home-language-v1';
 const THEME_KEY = 'paws-home-theme-v1';
+const BASE_URL = `http://127.0.0.1:${process.env.PAWS_E2E_PORT ?? 4173}`;
 const CHINESE_TITLE_LINES = ['让编程智能体，', '随时触手可及。'];
 const ENGLISH_TRANSCRIPT = [
   '$ paws',
@@ -16,6 +17,42 @@ async function resetPreferences(page) {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+}
+
+async function expectCompletePageCounts(page) {
+  await expect(page.getByTestId('cross-device-story')).toBeVisible();
+  await expect(page.getByTestId('mascot-card')).toHaveCount(7);
+  await expect(page.getByTestId('proof-case')).toHaveCount(6);
+  await expect(page.getByTestId('comparison-row')).toHaveCount(5);
+  await expect(page.getByTestId('architecture-node')).toHaveCount(4);
+  expect(await page.evaluate(() => (
+    document.documentElement.scrollWidth - document.documentElement.clientWidth
+  ))).toBe(0);
+}
+
+async function scrollStoryToProgress(page, progress) {
+  await page.getByTestId('cross-device-story').evaluate(async (story, targetProgress) => {
+    document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+    if (!window.__pawsStoryScrollRange) {
+      const stage = story.querySelector('.cross-device-story__stage');
+      const header = document.querySelector('.site-header');
+      const stageTop = stage.getBoundingClientRect().top + window.scrollY;
+      const storyBottom = story.getBoundingClientRect().bottom + window.scrollY;
+      const provisionalStart = stageTop - Math.round(header.getBoundingClientRect().height + 16);
+      window.scrollTo(0, provisionalStart);
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const pinnedViewportTop = stage.getBoundingClientRect().top;
+      window.__pawsStoryScrollRange = {
+        start: stageTop - pinnedViewportTop,
+        end: storyBottom - window.innerHeight
+      };
+    }
+    const { start, end } = window.__pawsStoryScrollRange;
+    window.scrollTo(0, start + ((end - start) * targetProgress));
+  }, progress);
+  await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
 }
 
 async function expectTransparentMascotSurface(page, mode) {
@@ -192,12 +229,85 @@ test('mobile navigation, mascot, targets and layout remain usable', async ({ pag
   }
 });
 
+test('complete desktop page advances through all four story scenes', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  await resetPreferences(page);
+  await expectCompletePageCounts(page);
+
+  const story = page.getByTestId('cross-device-story');
+  for (const [progress, scene] of [
+    [0, 'start'],
+    [0.3, 'watch'],
+    [0.55, 'approve'],
+    [0.8, 'handoff']
+  ]) {
+    await scrollStoryToProgress(page, progress);
+    await expect(story).toHaveAttribute('data-active-scene', scene);
+  }
+});
+
+test('complete mobile page keeps four scenes in flow and prioritizes App approval', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+
+  await resetPreferences(page);
+  await expectCompletePageCounts(page);
+
+  const story = page.getByTestId('cross-device-story');
+  const sceneHeadings = story.locator('.story-step h3');
+  await expect(sceneHeadings).toHaveCount(4);
+  const headingTops = await sceneHeadings.evaluateAll(headings => (
+    headings.map(heading => heading.getBoundingClientRect().top + window.scrollY)
+  ));
+  expect(headingTops).toEqual([...headingTops].sort((a, b) => a - b));
+  await expect(story.locator('.cross-device-story__stage')).not.toHaveCSS('position', 'sticky');
+
+  await story.locator('[data-scene="approve"] button').click();
+  await expect(story).toHaveAttribute('data-active-scene', 'approve');
+  const [pcBox, appBox] = await Promise.all([
+    story.getByTestId('pc-console').boundingBox(),
+    story.getByTestId('mobile-console').boundingBox()
+  ]);
+  expect(pcBox).not.toBeNull();
+  expect(appBox).not.toBeNull();
+  expect(appBox.y).toBeLessThan(pcBox.y);
+});
+
+test('reduced motion exposes every major page fact without scrolling', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  const context = await browser.newContext({ reducedMotion: 'reduce', locale: 'en-US' });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${BASE_URL}/`);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator('.story-step')).toHaveCount(4);
+    await expect(page.getByTestId('proof-case')).toHaveCount(6);
+    await expect(page.getByTestId('architecture-node')).toHaveCount(4);
+    for (const locator of [
+      page.locator('.story-step'),
+      page.getByTestId('proof-case'),
+      page.getByTestId('architecture-node')
+    ]) {
+      const visible = await locator.evaluateAll(elements => elements.every(element => {
+        const style = getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden'
+          && Number(style.opacity) > 0;
+      }));
+      expect(visible).toBe(true);
+    }
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  } finally {
+    await context.close();
+  }
+});
+
 test('reduced motion exposes full transcript and a static mascot', async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
 
   const context = await browser.newContext({ reducedMotion: 'reduce', locale: 'en-US' });
   const page = await context.newPage();
-  await page.goto('http://127.0.0.1:4173/');
+  await page.goto(`${BASE_URL}/`);
   await expect(page.locator('.dot-field')).toHaveAttribute('data-mode', 'static');
   await expect(page.locator('.dot-field')).toHaveAttribute('data-engaged', 'false');
   const terminal = page.getByTestId('terminal-demo');
@@ -231,7 +341,7 @@ test('captures transparent mascot in both themes at approved viewports', async (
     : { width: 390, height: 844 };
 
   const context = await browser.newContext({
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: BASE_URL,
     deviceScaleFactor: 1,
     locale: 'zh-CN',
     viewport

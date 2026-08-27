@@ -18,6 +18,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 44px;
+  min-height: 44px;
   padding-inline: var(--space-2);
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -38,7 +40,17 @@
 }
 
 #primary-navigation a,
-.brand { border-radius: var(--radius-sm); }
+.brand {
+  border-radius: var(--radius-sm);
+}
+
+#primary-navigation a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
 
 #primary-navigation a:hover { color: var(--color-text); }
 
@@ -526,7 +538,7 @@
   background-size: 26px 26px, 100% 100%;
 }
 
-:root[data-theme='light'] .dot-field-fallback {
+html[data-theme='light'] .dot-field-fallback {
   background-image:
     radial-gradient(circle at center, rgb(164 79 10 / 28%) 0 1.2px, transparent 1.4px),
     radial-gradient(circle at 68% 45%, rgb(185 91 0 / 12%), transparent 28rem);
@@ -881,9 +893,12 @@
 }
 
 .architecture-story {
+  position: relative;
   padding-top: 0;
   padding-bottom: clamp(var(--space-8), 10vw, 8rem);
 }
+
+.architecture-story > h2 { margin-bottom: var(--space-6); }
 
 .architecture-story__topology {
   display: grid;
@@ -926,6 +941,27 @@
   background: var(--color-bg);
   content: '→';
   transform: translate(50%, -50%);
+}
+
+.architecture-story__packet-track {
+  position: absolute;
+  top: clamp(7.4rem, 10vw, 9.5rem);
+  right: 8%;
+  left: 8%;
+  z-index: 2;
+  height: 2px;
+  pointer-events: none;
+}
+
+.architecture-story__packet {
+  display: block;
+  width: 0.72rem;
+  height: 0.72rem;
+  margin-inline: auto 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 0.28rem color-mix(in srgb, var(--color-accent) 20%, transparent);
+  transform: translateY(-50%);
 }
 
 .architecture-story__requirement {
@@ -1244,6 +1280,8 @@
 
   .architecture-story__node { min-height: 6rem; }
 
+  .architecture-story__packet-track { display: none; }
+
   .architecture-story__node:not(:last-child)::after {
     top: auto;
     right: 50%;
@@ -1294,6 +1332,7 @@
   .agent-marquee__track { width: 100%; animation: none; }
   .agent-marquee__duplicate { display: none; }
   .spotlight-card::before { display: none; }
+  .architecture-story__packet { transform: none !important; }
 }
 
 @media (hover: none), (pointer: coarse) {

@@ -76,6 +76,7 @@ function ProofCase({ item, language }) {
       className={`proof-case proof-case--${item.id}`}
       data-testid="proof-case"
       data-proof-id={item.id}
+      data-motion-item
       aria-labelledby={headingId}
     >
       <p className="proof-case__status" data-testid="proof-status">
@@ -95,8 +96,13 @@ export default function ProductProof({ copy, language }) {
   const title = copy.proofTitle ?? copy.proof[0]?.title;
 
   return (
-    <section id="product" className="shell-section product-proof" aria-labelledby="product-proof-title">
-      <header className="product-proof__heading">
+    <section
+      id="product"
+      className="shell-section product-proof"
+      aria-labelledby="product-proof-title"
+      data-motion-section
+    >
+      <header className="product-proof__heading" data-motion-item>
         <h2 id="product-proof-title">{title}</h2>
         {copy.proofLabel ? <p className="eyebrow">{copy.proofLabel}</p> : null}
       </header>
