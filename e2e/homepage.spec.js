@@ -102,6 +102,11 @@ test('desktop hero meets title, controls, mascot, terminal and preference contra
   const mascotBox = await mascot.boundingBox();
   expect(mascotBox).not.toBeNull();
   expect(mascotBox.width).toBeLessThanOrEqual(520);
+  const heroCrew = page.getByTestId('hero-crew-member');
+  await expect(heroCrew).toHaveCount(3);
+  await expect.poll(() => heroCrew.evaluateAll(images => images.every(image => (
+    image.complete && image.naturalWidth === 512 && image.naturalHeight === 512
+  )))).toBe(true);
   await expect(mascot.locator('canvas')).toHaveJSProperty('width', 768);
   await expect(mascot.locator('canvas')).toHaveJSProperty('height', 768);
   const centerFrame = Number(await mascot.getAttribute('data-frame'));
@@ -118,6 +123,7 @@ test('desktop hero meets title, controls, mascot, terminal and preference contra
 
   await page.getByRole('button', { name: 'Switch to Chinese' }).click();
   await expect(page.getByTestId('hero-title-line')).toHaveText(CHINESE_TITLE_LINES);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName('让你的编程智能体，随时触手可及。');
   await expect.poll(() => page.evaluate(key => localStorage.getItem(key), LANGUAGE_KEY)).toBe('zh');
   await page.reload();
   await expect(page.getByTestId('hero-title-line')).toHaveText(CHINESE_TITLE_LINES);
@@ -133,6 +139,20 @@ test('mobile navigation, mascot, targets and layout remain usable', async ({ pag
   await expect(mascot.locator('img')).toBeVisible();
   await expect(mascot.locator('img')).toHaveJSProperty('naturalWidth', 1254);
   await expect(mascot.locator('img')).toHaveJSProperty('naturalHeight', 1254);
+  const firstViewport = await Promise.all([
+    page.getByRole('heading', { level: 1 }).boundingBox(),
+    page.locator('.hero-actions .primary-action').boundingBox(),
+    page.locator('.hero-media').boundingBox(),
+    page.getByTestId('terminal-demo').boundingBox()
+  ]);
+  const [titleBox, primaryCtaBox, mascotStageBox, terminalBox] = firstViewport;
+  for (const box of firstViewport) expect(box).not.toBeNull();
+  const viewportHeight = page.viewportSize().height;
+  expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(viewportHeight);
+  expect(primaryCtaBox.y + primaryCtaBox.height).toBeLessThanOrEqual(viewportHeight);
+  expect(mascotStageBox.y).toBeLessThan(viewportHeight);
+  expect(primaryCtaBox.y).toBeLessThan(mascotStageBox.y);
+  expect(mascotStageBox.y).toBeLessThan(terminalBox.y);
   const menuButton = page.locator('.menu-toggle');
   await expect(menuButton).toHaveAccessibleName('Open navigation');
   await menuButton.click();

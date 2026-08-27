@@ -8,6 +8,7 @@ vi.mock('../src/components/react-bits/DotField', () => ({
 }));
 
 import Hero from '../src/components/Hero';
+import { content } from '../src/app/content';
 
 const copy = {
   hero: {
@@ -15,6 +16,12 @@ const copy = {
     title: 'Within reach',
     titleLines: ['Your agents.', 'Within reach.'],
     body: 'Body',
+    outcome: 'One live session follows you across every screen.',
+    productRolesLabel: 'Paws product roles',
+    appPill: 'App · Review and approve',
+    webPill: 'PC Web · Start and steer',
+    daemonPill: 'Daemon · Runs locally',
+    mascotAlt: 'Paws marmot mascot',
     primary: 'Start',
     secondary: 'GitHub'
   },
@@ -56,6 +63,70 @@ it('uses the hero alone as the mascot pointer and visibility surface', () => {
     if (hadObserver) window.IntersectionObserver = originalObserver;
     else delete window.IntersectionObserver;
   }
+});
+
+it('presents the cross-device outcome, product roles and decorative Paws Crew', () => {
+  const originalObserver = window.IntersectionObserver;
+  window.IntersectionObserver = vi.fn(function MockIntersectionObserver() {
+    this.observe = vi.fn();
+    this.disconnect = vi.fn();
+  });
+
+  try {
+    const { container } = render(<Hero copy={copy} language="en" theme="dark" />);
+
+    expect(screen.getByTestId('mascot-look')).toBeVisible();
+    expect(screen.getByTestId('terminal-demo')).toBeVisible();
+    expect(screen.getByText(copy.hero.outcome)).toBeVisible();
+    expect(screen.getByRole('list', { name: copy.hero.productRolesLabel })).toBeVisible();
+    expect(screen.getByText(copy.hero.appPill)).toBeVisible();
+    expect(screen.getByText(copy.hero.webPill)).toBeVisible();
+    expect(screen.getByText(copy.hero.daemonPill)).toBeVisible();
+
+    const crew = screen.getAllByTestId('hero-crew-member');
+    expect(crew).toHaveLength(3);
+    expect(crew.map(image => image.getAttribute('src'))).toEqual([
+      '/assets/mascots/astro.png',
+      '/assets/mascots/ninja.png',
+      '/assets/mascots/scientist.png'
+    ]);
+    crew.forEach(image => {
+      expect(image).toHaveAttribute('alt', '');
+      expect(image).toHaveAttribute('aria-hidden', 'true');
+      expect(image).toHaveAttribute('width', '512');
+      expect(image).toHaveAttribute('height', '512');
+      expect(image).toHaveAttribute('decoding', 'async');
+      expect(image).toHaveAttribute('loading', 'lazy');
+    });
+
+    const gridRegions = [...container.querySelector('.hero-grid').children]
+      .map(element => element.className);
+    expect(gridRegions).toEqual(['hero-copy', 'hero-media', 'hero-terminal-slot']);
+  } finally {
+    if (originalObserver) window.IntersectionObserver = originalObserver;
+    else delete window.IntersectionObserver;
+  }
+});
+
+it.each([
+  ['en', {
+    outcome: 'Start on App or PC Web, stay with the same live session, and answer permission requests away from your desk.',
+    productRolesLabel: 'Paws product roles',
+    appPill: 'App · Review and approve',
+    webPill: 'PC Web · Start and steer',
+    daemonPill: 'Daemon · Runs locally',
+    mascotAlt: 'Paws marmot mascot'
+  }],
+  ['zh', {
+    outcome: '从 App 或 PC Web 远程开工、跟进同一个实时会话，并在离开电脑时处理权限请求。',
+    productRolesLabel: 'Paws 产品角色',
+    appPill: 'App · 查看与审批',
+    webPill: 'PC Web · 启动与引导',
+    daemonPill: 'Daemon · 本机运行',
+    mascotAlt: 'Paws 土拨鼠吉祥物'
+  }]
+])('keeps the %s hero outcome and product roles concrete and localized', (language, heroCopy) => {
+  expect(content[language].hero).toMatchObject(heroCopy);
 });
 
 it('integrates one of each interactive layer without legacy hero composition', () => {

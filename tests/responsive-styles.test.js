@@ -65,28 +65,44 @@ it('defines the header and hero layout anchors', () => {
 
 it('sets the final desktop hero hierarchy and media halo', () => {
   expect(rule('.hero-grid')).toMatch(/padding-top:\s*calc\(72px\s*\+\s*48px\)/);
+  expect(rule('.hero-grid')).toMatch(/grid-template-columns:\s*minmax\(0,\s*1\.1fr\)\s*minmax\(20rem,\s*0\.9fr\)/);
   expect(rule('.hero-copy h1')).toMatch(/font-size:\s*clamp\(3\.25rem,\s*5\.2vw,\s*5\.9rem\)/);
   expect(rule('.hero-copy h1')).toMatch(/line-height:\s*0\.98/);
+  expect(rule('.hero-copy')).toMatch(/grid-column:\s*1/);
+  expect(rule('.hero-copy')).toMatch(/grid-row:\s*1/);
   expect(rule('.hero-terminal-slot')).toMatch(/width:\s*min\(100%,\s*42rem\)/);
+  expect(rule('.hero-terminal-slot')).toMatch(/grid-column:\s*1/);
+  expect(rule('.hero-terminal-slot')).toMatch(/grid-row:\s*2/);
+  expect(rule('.hero-media')).toMatch(/grid-column:\s*2/);
+  expect(rule('.hero-media')).toMatch(/grid-row:\s*1\s*\/\s*span\s*2/);
+  expect(rule('.hero-media')).toMatch(/overflow:\s*clip/);
   expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*520px\)/);
   expect(rule('.hero-media::before')).toMatch(/radial-gradient/);
   expect(rule('.hero-media::before')).toMatch(/content:\s*''/);
   expect(rule('.hero-actions')).toMatch(/gap:\s*var\(--space-2\)/);
   expect(rule('.hero-grid')).toMatch(/z-index:\s*3/);
+  expect(rule('.hero-crew')).toMatch(/position:\s*absolute/);
+  expect(rule('.hero-crew')).toMatch(/pointer-events:\s*none/);
+  expect(rule('.hero-crew img')).toMatch(/var\(--mascot-y,\s*0px\)/);
   expect(css).not.toContain('.mascot-stage img');
 });
 
-it('keeps mobile hero media visible and ordered before the copy', () => {
+it('orders mobile hero copy, mascot and terminal without an overflow escape hatch', () => {
   const mobile = block(css, /@media\s*\(max-width:\s*800px\)\s*\{/);
+  const narrowMobile = block(css, /@media\s*\(max-width:\s*767px\)\s*\{/);
 
-  expect(rule('.hero-grid', mobile)).toMatch(/grid-template-columns:\s*1fr/);
-  expect(rule('.hero-media', mobile)).toMatch(/grid-row:\s*1/);
-  expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*2/);
-  expect(rule('.hero', mobile)).toMatch(/overflow:\s*visible/);
+  expect(rule('.hero-grid', mobile)).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*1/);
+  expect(rule('.hero-media', mobile)).toMatch(/grid-row:\s*2/);
+  expect(rule('.hero-terminal-slot', mobile)).toMatch(/grid-row:\s*3/);
+  expect(rule('.hero', mobile)).toMatch(/overflow:\s*clip/);
   expect(rule('.mascot-look', mobile)).toMatch(/width:\s*min\(100%,\s*17rem\)/);
   expect(rule('.hero-copy h1', mobile)).toMatch(/font-size:\s*clamp\(2\.7rem,\s*13vw,\s*4rem\)/);
   expect(rule('.hero-terminal-slot', mobile)).toMatch(/max-width:\s*100%/);
   expect(rule('.terminal-demo', mobile)).toMatch(/width:\s*100%/);
+  expect(rule('.hero-grid', narrowMobile)).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(rule('.hero-media', narrowMobile)).toMatch(/min-height:\s*18rem/);
+  expect(rule('.hero-crew img:nth-child(n+2)', narrowMobile)).toMatch(/display:\s*none/);
   expect(css).not.toMatch(/overflow-x:\s*hidden/);
 });
 
