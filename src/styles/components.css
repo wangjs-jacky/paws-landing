@@ -336,7 +336,7 @@
   text-shadow: 0 2px 30px var(--color-bg), 0 1px 4px var(--color-bg);
 }
 
-.hero-title__line { display: block; }
+.hero-title__line { display: block; white-space: nowrap; }
 
 .hero-media {
   position: relative;
