@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { docsHref, INSTALL_COMMAND } from '../app/siteConstants';
-import InstallCommand from './InstallCommand';
+import TerminalDemo from './TerminalDemo';
 import DotField from './react-bits/DotField';
 
 export default function Hero({ copy, language, theme }) {
@@ -64,7 +64,7 @@ export default function Hero({ copy, language, theme }) {
             <a className="secondary-action" href="https://github.com/wangjs-jacky/happy">{copy.hero.secondary}</a>
           </div>
           <div className="hero-terminal-slot">
-            <InstallCommand command={INSTALL_COMMAND} labels={copy.labels} />
+            <TerminalDemo command={INSTALL_COMMAND} labels={copy.labels} terminalCopy={copy.terminal} />
           </div>
         </div>
         <div className="hero-media">

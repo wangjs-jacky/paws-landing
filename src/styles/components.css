@@ -218,6 +218,81 @@
   padding: var(--space-2);
 }
 
+.terminal-demo {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 16px;
+  color: #f5f2ec;
+  background: #101013;
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-mono);
+}
+
+.terminal-demo__bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  min-height: 42px;
+  padding-inline: var(--space-3);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  color: #aaa6a0;
+  font-size: 0.75rem;
+}
+
+.terminal-demo__lights { display: flex; gap: 6px; }
+.terminal-demo__lights i { width: 8px; height: 8px; border-radius: 50%; background: #6f6b67; }
+.terminal-demo__title { grid-column: 2; justify-self: center; }
+
+.terminal-demo__install {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 52px;
+  padding-left: var(--space-3);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.terminal-demo__install code {
+  overflow-wrap: anywhere;
+  color: inherit;
+  user-select: text;
+}
+
+.terminal-demo__copy {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: #aaa6a0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.terminal-demo__copy:hover { color: #fff; }
+.terminal-demo__copy:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+.terminal-demo__copy svg { width: 1.15rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; }
+
+.terminal-demo__body {
+  min-height: 148px;
+  padding: var(--space-3);
+  color: #d8d4ce;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.terminal-demo__caret { animation: terminal-caret 1s steps(1) infinite; }
+.terminal-demo__status { position: absolute; overflow: hidden; width: 1px; height: 1px; clip-path: inset(50%); white-space: nowrap; }
+
+@keyframes terminal-caret { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-demo__caret { animation: none; }
+}
+
 .hero {
   position: relative;
   isolation: isolate;

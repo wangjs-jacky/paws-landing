@@ -20,6 +20,27 @@ it('provides two display title lines and the destination language label in each 
   expect(content.zh.labels.languageDestination).toBe('EN');
 });
 
+it('provides matching six-line terminal sessions in both locales', () => {
+  expect(content.en.terminal.lines).toHaveLength(6);
+  expect(content.zh.terminal.lines).toHaveLength(6);
+  expect(content.en.terminal.lines).toEqual([
+    '$ paws',
+    '→ relay started · local machine',
+    '✔ phone paired',
+    '◐ agent · refactor-auth',
+    '  edit src/auth/session.ts (+42 −8)',
+    '✔ waiting for approval on your phone…'
+  ]);
+  expect(content.zh.terminal.lines).toEqual([
+    '$ paws',
+    '→ 中继已启动 · 本机',
+    '✔ 手机已配对',
+    '◐ 智能体 · refactor-auth',
+    '  编辑 src/auth/session.ts (+42 −8)',
+    '✔ 正在等待你在手机上批准…'
+  ]);
+});
+
 it('localizes the capability eyebrow, home label and marquee controls', () => {
   expect(content.en.sectionLabels.capabilities).toBe('PAWS / CAPABILITIES');
   expect(content.zh.sectionLabels.capabilities).toBe('PAWS / 产品能力');

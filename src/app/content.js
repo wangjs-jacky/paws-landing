@@ -14,6 +14,18 @@ export const content = {
       primary: 'Get started',
       secondary: 'View on GitHub'
     },
+    terminal: {
+      title: 'paws — live session',
+      installLabel: 'Install and start Paws',
+      lines: [
+        '$ paws',
+        '→ relay started · local machine',
+        '✔ phone paired',
+        '◐ agent · refactor-auth',
+        '  edit src/auth/session.ts (+42 −8)',
+        '✔ waiting for approval on your phone…'
+      ]
+    },
     agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents'],
     steps: [
       { title: 'Install Paws', body: 'Install the CLI on the computer where your coding agent runs.' },
@@ -57,6 +69,18 @@ export const content = {
       body: '通过手机安全地启动、引导和审批电脑上的 AI 编程会话。',
       primary: '开始使用',
       secondary: '查看 GitHub'
+    },
+    terminal: {
+      title: 'paws — 实时会话',
+      installLabel: '安装并启动 Paws',
+      lines: [
+        '$ paws',
+        '→ 中继已启动 · 本机',
+        '✔ 手机已配对',
+        '◐ 智能体 · refactor-auth',
+        '  编辑 src/auth/session.ts (+42 −8)',
+        '✔ 正在等待你在手机上批准…'
+      ]
     },
     agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents'],
     steps: [
