@@ -92,8 +92,8 @@ function extractJsxOpeningTags(source, tagName) {
   return tags;
 }
 
-function jsxAttributeNames(openingTag) {
-  const names = new Set();
+function jsxAttributes(openingTag) {
+  const attributes = new Map();
   let index = openingTag.indexOf('img') + 3;
 
   while (index < openingTag.length) {
@@ -110,23 +110,43 @@ function jsxAttributeNames(openingTag) {
       index += 1;
       continue;
     }
-    names.add(openingTag.slice(start, index));
+    const name = openingTag.slice(start, index);
 
     while (/\s/.test(openingTag[index] ?? '')) index += 1;
-    if (openingTag[index] !== '=') continue;
+    if (openingTag[index] !== '=') {
+      attributes.set(name, { kind: 'boolean', value: true });
+      continue;
+    }
     index += 1;
     while (/\s/.test(openingTag[index] ?? '')) index += 1;
 
-    if (openingTag[index] === '"' || openingTag[index] === "'" || openingTag[index] === '`') {
-      index = skipQuoted(openingTag, index, openingTag[index]);
+    if (openingTag[index] === '"' || openingTag[index] === "'") {
+      const valueStart = index + 1;
+      const nextIndex = skipQuoted(openingTag, index, openingTag[index]);
+      attributes.set(name, { kind: 'literal', value: openingTag.slice(valueStart, nextIndex - 1) });
+      index = nextIndex;
+    } else if (openingTag[index] === '`') {
+      const valueStart = index + 1;
+      const nextIndex = skipQuoted(openingTag, index, openingTag[index]);
+      attributes.set(name, { kind: 'template', value: openingTag.slice(valueStart, nextIndex - 1) });
+      index = nextIndex;
     } else if (openingTag[index] === '{') {
-      index = skipBalancedExpression(openingTag, index);
+      const valueStart = index + 1;
+      const nextIndex = skipBalancedExpression(openingTag, index);
+      attributes.set(name, { kind: 'expression', value: openingTag.slice(valueStart, nextIndex - 1) });
+      index = nextIndex;
     } else {
+      const valueStart = index;
       while (!/[\s/>]/.test(openingTag[index] ?? '>')) index += 1;
+      attributes.set(name, { kind: 'unquoted', value: openingTag.slice(valueStart, index) });
     }
   }
 
-  return names;
+  return attributes;
+}
+
+function jsxAttributeNames(openingTag) {
+  return new Set(jsxAttributes(openingTag).keys());
 }
 
 function assertImageMetadata(source, fileLabel) {
@@ -134,12 +154,18 @@ function assertImageMetadata(source, fileLabel) {
   const requiredAttributes = ['loading', 'width', 'height'];
 
   tags.forEach((tag, index) => {
-    const names = jsxAttributeNames(tag);
+    const attributes = jsxAttributes(tag);
+    const names = new Set(attributes.keys());
     const missing = requiredAttributes.filter(attribute => !names.has(attribute));
     assert.equal(
       missing.length,
       0,
       `${fileLabel} img #${index + 1} is missing required attributes: ${missing.join(', ')}`
+    );
+    const loading = attributes.get('loading');
+    assert.ok(
+      loading.kind === 'literal' && loading.value === 'lazy',
+      `${fileLabel} img #${index + 1} loading must be the quoted literal "lazy"`
     );
   });
 
@@ -232,6 +258,7 @@ function verifyStatic(root = defaultRoot) {
 module.exports = {
   assertImageMetadata,
   extractJsxOpeningTags,
+  jsxAttributes,
   jsxAttributeNames,
   verifyNonHeroImageMetadata,
   verifyStatic

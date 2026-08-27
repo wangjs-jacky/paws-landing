@@ -41,7 +41,7 @@ function ProductDisclaimer({ copy }) {
 
 function WorkspaceSidebar({ state, copy }) {
   return (
-    <aside className="pc-console__sidebar">
+    <div className="pc-console__sidebar">
       <div className="pc-console__brand">
         <span className="pc-console__brand-mark"><MarkIcon /></span>
         <span>Paws</span>
@@ -64,7 +64,7 @@ function WorkspaceSidebar({ state, copy }) {
         <span className="console-status-dot" data-status={state.machineStatus} />
         <span>{copy.consoles.machine}</span>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -212,8 +212,9 @@ export default function PcConsoleDemo({ state, copy }) {
   const scene = copy.scenes.find(item => item.id === state.sceneId);
   const focused = state.focus === 'pc' || state.focus === 'shared';
   return (
-    <section
+    <div
       className="pc-console"
+      role="group"
       data-testid="pc-console"
       data-scene={state.sceneId}
       data-status={state.sessionStatus}
@@ -231,6 +232,6 @@ export default function PcConsoleDemo({ state, copy }) {
           ? <ComposePanel state={state} copy={copy} scene={scene} />
           : <SessionPanel state={state} copy={copy} scene={scene} />}
       </div>
-    </section>
+    </div>
   );
 }

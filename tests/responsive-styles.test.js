@@ -150,8 +150,23 @@ it('limits story pinning styles to fine-pointer desktops without reduced motion'
   const outsideDesktopMotion = storyCss.replace(desktopMotion, '');
 
   expect(desktopMotion).not.toBe('');
-  expect(rule('.cross-device-story__stage', desktopMotion)).toMatch(/position:\s*sticky/);
+  expect(rule('.cross-device-story__stage--shared', desktopMotion)).toMatch(/position:\s*sticky/);
   expect(outsideDesktopMotion).not.toMatch(/position:\s*sticky/);
+});
+
+it('shows chapter evidence by default and swaps to one shared stage only for desktop motion', () => {
+  const desktop = block(storyCss, /@media\s*\(min-width:\s*1024px\)\s*\{/);
+  const desktopMotion = block(
+    storyCss,
+    /@media\s*\(min-width:\s*1024px\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{/
+  );
+
+  expect(rule('.story-step__evidence', storyCss)).toMatch(/display:\s*grid/);
+  expect(rule('.cross-device-story__stage--shared', storyCss)).toMatch(/display:\s*none/);
+  expect(rule('.story-steps', desktop)).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+  expect(rule('.story-step__evidence', desktopMotion)).toMatch(/display:\s*none/);
+  expect(rule('.cross-device-story__stage--shared', desktopMotion)).toMatch(/display:\s*grid/);
+  expect(rule('.story-steps', desktopMotion)).toMatch(/grid-column:\s*auto/);
 });
 
 it('keeps tablet and mobile stories in normal flow and prioritizes App approval', () => {
@@ -164,11 +179,11 @@ it('keeps tablet and mobile stories in normal flow and prioritizes App approval'
   expect(tablet).not.toMatch(/position:\s*sticky/);
 
   expect(rule('.cross-device-story__stage', mobile)).toMatch(/grid-template-columns:\s*1fr/);
-  expect(rule(".cross-device-story[data-active-scene='approve'] .mobile-console", mobile))
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .mobile-console", mobile))
     .toMatch(/order:\s*-1/);
-  expect(rule(".cross-device-story[data-active-scene='approve'] .pc-console", mobile))
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .pc-console", mobile))
     .toMatch(/width:\s*92%/);
-  expect(rule(".cross-device-story[data-active-scene='approve'] .pc-console", mobile))
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .pc-console", mobile))
     .toMatch(/transform:\s*none/);
   expect(rule('.mascot-crew__rail', storyCss)).toMatch(/overflow-x:\s*auto/);
 });
@@ -182,4 +197,9 @@ it('roots every color theme rule on the themed html element', () => {
 
 it('does not statically hide reveal content before GSAP initializes', () => {
   expect(`${css}\n${storyCss}`).not.toMatch(/\[data-motion-item\][^{]*\{[^}]*opacity:\s*0/);
+});
+
+it('starts the architecture packet at the beginning of its track', () => {
+  expect(rule('.architecture-story__packet')).toMatch(/margin-inline:\s*0\s+auto/);
+  expect(rule('.architecture-story__packet-track')).toMatch(/pointer-events:\s*none/);
 });

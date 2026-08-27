@@ -6,6 +6,7 @@ import { useStoryMotion } from '../../hooks/useStoryMotion';
 import ConnectionFlow from './ConnectionFlow';
 import MobileConsoleDemo from './MobileConsoleDemo';
 import PcConsoleDemo from './PcConsoleDemo';
+import StaticStoryEvidence from './StaticStoryEvidence';
 import StorySteps from './StorySteps';
 import { buildConsoleState } from './storyModel';
 
@@ -45,8 +46,20 @@ export default function CrossDeviceStory({ language, activeSceneOverride }) {
         <p>{copy.intro.summary}</p>
       </header>
       <p className="sr-only" id="cross-device-summary">{copy.intro.summary}</p>
-      <StorySteps scenes={copy.scenes} activeId={activeId} onSelect={onSceneChange} />
-      <div className="cross-device-story__stage" aria-describedby="cross-device-summary">
+      <StorySteps
+        scenes={copy.scenes}
+        activeId={activeId}
+        onSelect={onSceneChange}
+        renderEvidence={scene => {
+          const sceneState = buildConsoleState(scene.id, copy);
+
+          return <StaticStoryEvidence state={sceneState} copy={copy} scene={scene} />;
+        }}
+      />
+      <div
+        className="cross-device-story__stage cross-device-story__stage--shared"
+        aria-describedby="cross-device-summary"
+      >
         <PcConsoleDemo state={state} copy={copy} />
         <ConnectionFlow focus={state.focus} status={state.sessionStatus} />
         <div className="story-scene-mascot" aria-hidden="true">

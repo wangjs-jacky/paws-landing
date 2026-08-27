@@ -129,7 +129,7 @@ describe('cross-device product demonstrations', () => {
     const story = screen.getByTestId('cross-device-story');
     const stage = story.querySelector('.cross-device-story__stage');
     const mascot = story.querySelector('.story-scene-mascot');
-    const connectionLines = [...story.querySelectorAll('.connection-flow__line-progress')];
+    const connectionLines = [...stage.querySelectorAll('.connection-flow__line-progress')];
     const [timelineConfig] = motionMocks.timeline.mock.calls[0];
 
     expect(motionMocks.timeline).toHaveBeenCalledOnce();
@@ -198,6 +198,56 @@ describe('cross-device product demonstrations', () => {
     expect(motionMocks.timeline).not.toHaveBeenCalled();
   });
 
+  it('renders complete scene-specific evidence inside every static chapter', () => {
+    render(<CrossDeviceStory language="en" />);
+
+    const chapters = screen.getAllByRole('article');
+    const evidence = chapters.map(chapter => chapter.querySelector('[data-testid="story-static-evidence"]'));
+
+    expect(evidence).toHaveLength(4);
+    expect(evidence.every(Boolean)).toBe(true);
+    expect(evidence.map(item => item.dataset.staticScene)).toEqual(['start', 'watch', 'approve', 'handoff']);
+
+    for (const [index, scene] of copy.scenes.entries()) {
+      const state = buildConsoleState(scene.id, copy);
+      const pc = evidence[index].querySelector('[data-static-surface="pc"]');
+      const mobile = evidence[index].querySelector('[data-static-surface="mobile"]');
+      const connection = evidence[index].querySelector('.connection-flow');
+
+      expect(pc).toHaveAttribute('data-scene', scene.id);
+      expect(pc).toHaveAttribute('data-status', state.sessionStatus);
+      expect(pc).toHaveAttribute('data-focus', String(state.focus === 'pc' || state.focus === 'shared'));
+      expect(mobile).toHaveAttribute('data-scene', scene.id);
+      expect(mobile).toHaveAttribute('data-status', state.sessionStatus);
+      expect(mobile).toHaveAttribute('data-focus', String(state.focus === 'mobile' || state.focus === 'shared'));
+      expect(connection).toHaveAttribute('data-status', state.sessionStatus);
+      expect(connection).toHaveAttribute('data-focus', state.focus);
+    }
+
+    for (const value of [copy.consoles.machine, copy.consoles.project, copy.consoles.agent, copy.consoles.sessionId]) {
+      expect(within(evidence[0].querySelector('[data-static-surface="pc"]')).queryAllByText(value)).not.toHaveLength(0);
+    }
+    expect(within(evidence[1]).getAllByText('Skill')).not.toHaveLength(0);
+    expect(within(evidence[1]).getAllByText('Subagent')).not.toHaveLength(0);
+    expect(within(evidence[2]).getAllByText('npm run build')).not.toHaveLength(0);
+    expect(within(evidence[3]).getAllByText(copy.consoles.sessionId)).toHaveLength(2);
+
+    expect(screen.getAllByTestId('pc-console')).toHaveLength(1);
+    expect(screen.getAllByTestId('mobile-console')).toHaveLength(1);
+    expect(document.querySelectorAll('.cross-device-story__stage--shared')).toHaveLength(1);
+  });
+
+  it('does not duplicate nested landmarks or element IDs across rendered story evidence', () => {
+    render(<CrossDeviceStory language="en" />);
+
+    const story = screen.getByTestId('cross-device-story');
+    const ids = [...story.querySelectorAll('[id]')].map(element => element.id);
+
+    expect(within(story).queryAllByRole('region')).toHaveLength(0);
+    expect(within(story).queryAllByRole('complementary')).toHaveLength(0);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it('refreshes ScrollTrigger after language layout changes and cancels stale frames', () => {
     const { rerender, unmount } = render(<CrossDeviceStory language="en" />);
     const firstFrame = motionMocks.pendingFrame;
@@ -222,10 +272,7 @@ describe('cross-device product demonstrations', () => {
     expect(articles).toHaveLength(4);
     expect(articles.map(article => article.dataset.scene)).toEqual(['start', 'watch', 'approve', 'handoff']);
     expect(screen.getByRole('heading', { name: '关键操作，手机拍板' })).toBeVisible();
-    expect(within(articles[2]).getByRole('button', { name: '关键操作，手机拍板' })).toHaveAttribute(
-      'aria-current',
-      'step'
-    );
+    expect(articles[2].querySelector('.story-step__meta button')).toHaveAttribute('aria-current', 'step');
     expect(screen.getByTestId('cross-device-story')).toHaveAttribute('data-active-scene', 'approve');
     expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'approve');
     expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'approve');
@@ -235,8 +282,8 @@ describe('cross-device product demonstrations', () => {
     const user = userEvent.setup();
     const { container } = render(<CrossDeviceStory language="en" />);
     const articles = screen.getAllByRole('article');
-    const startButton = within(articles[0]).getByRole('button', { name: copy.scenes[0].title });
-    const approveButton = within(articles[2]).getByRole('button', { name: copy.scenes[2].title });
+    const startButton = articles[0].querySelector('.story-step__meta button');
+    const approveButton = articles[2].querySelector('.story-step__meta button');
 
     expect(startButton).toHaveAttribute('aria-current', 'step');
     await user.click(approveButton);
@@ -244,8 +291,9 @@ describe('cross-device product demonstrations', () => {
     expect(screen.getByTestId('cross-device-story')).toHaveAttribute('data-active-scene', 'approve');
     expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'approve');
     expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'approve');
-    expect(container.querySelector('.connection-flow')).toHaveAttribute('data-focus', 'mobile');
-    expect(container.querySelector('.connection-flow')).toHaveAttribute('data-status', 'approval-pending');
+    const sharedStage = container.querySelector('.cross-device-story__stage--shared');
+    expect(sharedStage.querySelector('.connection-flow')).toHaveAttribute('data-focus', 'mobile');
+    expect(sharedStage.querySelector('.connection-flow')).toHaveAttribute('data-status', 'approval-pending');
     expect(startButton).not.toHaveAttribute('aria-current');
     expect(approveButton).toHaveAttribute('aria-current', 'step');
   });

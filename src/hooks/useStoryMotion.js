@@ -25,7 +25,7 @@ export function useStoryMotion({ rootRef, sceneCount, disabled, onSceneChange })
 
     media.add(DESKTOP_MOTION_QUERY, () => {
       const root = rootRef.current;
-      const stage = root?.querySelector('.cross-device-story__stage');
+      const stage = root?.querySelector('.cross-device-story__stage--shared');
       const pc = stage?.querySelector('.pc-console');
       const connectionLines = [...(stage?.querySelectorAll('.connection-flow__line-progress') ?? [])];
       const mascot = stage?.querySelector('.story-scene-mascot');

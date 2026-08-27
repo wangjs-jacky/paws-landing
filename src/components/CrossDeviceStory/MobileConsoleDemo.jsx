@@ -85,13 +85,14 @@ export default function MobileConsoleDemo({ state, copy }) {
   const needsApproval = state.sceneId === 'approve' && state.permission?.status === 'pending';
 
   return (
-    <section
+    <div
       className="mobile-console"
+      role="group"
       data-testid="mobile-console"
       data-scene={state.sceneId}
       data-status={state.sessionStatus}
       data-focus={String(focused)}
-      aria-label={copy.consoles.demoDisclaimer}
+      aria-label={`${scene.title}: ${copy.consoles.demoDisclaimer}`}
     >
       <div className="mobile-console__shell">
         <div className="mobile-console__island" aria-hidden="true" />
@@ -100,7 +101,7 @@ export default function MobileConsoleDemo({ state, copy }) {
           <span>● ◔ ▰</span>
         </div>
         <header className="mobile-console__header">
-          <button type="button" disabled aria-label={scene.title}>‹</button>
+          <button type="button" disabled aria-hidden="true">‹</button>
           <div>
             <span>{state.sessionId}</span>
             <strong data-status={state.sessionStatus}>
@@ -127,6 +128,6 @@ export default function MobileConsoleDemo({ state, copy }) {
         </p>
         <div className="mobile-console__home" aria-hidden="true" />
       </div>
-    </section>
+    </div>
   );
 }

@@ -78,6 +78,33 @@ test('the static image verifier reads real JSX tags instead of comments or strin
   );
 });
 
+test('the static image verifier accepts only a quoted lazy loading literal', () => {
+  const doubleQuoted = '<img src="/one.png" loading="lazy" width="10" height="10" />';
+  const singleQuoted = "<img src='/two.png' loading='lazy' width='10' height='10' />";
+
+  assert.doesNotThrow(() => staticVerifier.assertImageMetadata(doubleQuoted, 'Double.jsx'));
+  assert.doesNotThrow(() => staticVerifier.assertImageMetadata(singleQuoted, 'Single.jsx'));
+  assert.deepEqual(staticVerifier.jsxAttributes(doubleQuoted).get('loading'), {
+    kind: 'literal',
+    value: 'lazy'
+  });
+
+  for (const [label, loading] of [
+    ['Eager.jsx', 'loading="eager"'],
+    ['Undefined.jsx', 'loading={undefined}'],
+    ['Conditional.jsx', "loading={visible ? 'lazy' : 'eager'}"],
+    ['Boolean.jsx', 'loading']
+  ]) {
+    assert.throws(
+      () => staticVerifier.assertImageMetadata(
+        `<img src="/invalid.png" ${loading} width="10" height="10" />`,
+        label
+      ),
+      new RegExp(`${label.replace('.', '\\.') }.*loading.*literal.*lazy`)
+    );
+  }
+});
+
 test('deployment secrets are scoped only to credential and deploy steps', () => {
   const workflow = fs.readFileSync(
     path.join(root, '.github/workflows/deploy-cloudflare-pages.yml'),

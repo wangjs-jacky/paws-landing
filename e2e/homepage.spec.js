@@ -30,6 +30,45 @@ async function expectCompletePageCounts(page) {
   ))).toBe(0);
 }
 
+async function expectStaticStoryEvidence(page) {
+  const story = page.getByTestId('cross-device-story');
+  const evidence = story.getByTestId('story-static-evidence');
+  const scenes = [
+    { id: 'start', status: 'ready', focus: 'pc', pcFocused: 'true', mobileFocused: 'false' },
+    { id: 'watch', status: 'running', focus: 'pc', pcFocused: 'true', mobileFocused: 'false' },
+    { id: 'approve', status: 'approval-pending', focus: 'mobile', pcFocused: 'false', mobileFocused: 'true' },
+    { id: 'handoff', status: 'running', focus: 'shared', pcFocused: 'true', mobileFocused: 'true' }
+  ];
+
+  await expect(evidence).toHaveCount(4);
+  await expect(story.locator('.cross-device-story__stage--shared')).toBeHidden();
+
+  for (const scene of scenes) {
+    const scoped = story.locator(`[data-testid="story-static-evidence"][data-static-scene="${scene.id}"]`);
+    await expect(scoped).toHaveCount(1);
+    await expect(scoped).toBeVisible();
+    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-scene', scene.id);
+    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-status', scene.status);
+    await expect(scoped.locator('[data-static-surface="pc"]')).toHaveAttribute('data-focus', scene.pcFocused);
+    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-scene', scene.id);
+    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-status', scene.status);
+    await expect(scoped.locator('[data-static-surface="mobile"]')).toHaveAttribute('data-focus', scene.mobileFocused);
+    await expect(scoped.locator('.connection-flow')).toHaveAttribute('data-status', scene.status);
+    await expect(scoped.locator('.connection-flow')).toHaveAttribute('data-focus', scene.focus);
+  }
+
+  await expect(story.locator('[data-static-scene="watch"]')).toContainText('Skill');
+  await expect(story.locator('[data-static-scene="watch"]')).toContainText('Subagent');
+  await expect(story.locator('[data-static-scene="approve"]')).toContainText('npm run build');
+  await expect(story.locator('[data-static-scene="handoff"] [data-static-surface="pc"] .story-static-console__permission'))
+    .toHaveAttribute('data-status', 'approved');
+  await expect(story.locator('[data-static-scene="handoff"] [data-static-surface="mobile"] .story-static-console__permission'))
+    .toHaveAttribute('data-status', 'approved');
+  expect(await page.evaluate(() => (
+    document.documentElement.scrollWidth - document.documentElement.clientWidth
+  ))).toBe(0);
+}
+
 async function scrollStoryToProgress(page, progress) {
   await page.getByTestId('cross-device-story').evaluate(async (story, targetProgress) => {
     document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
@@ -252,9 +291,10 @@ test('complete mobile page keeps four scenes in flow and prioritizes App approva
 
   await resetPreferences(page);
   await expectCompletePageCounts(page);
+  await expectStaticStoryEvidence(page);
 
   const story = page.getByTestId('cross-device-story');
-  const sceneHeadings = story.locator('.story-step h3');
+  const sceneHeadings = story.locator('.story-step > h3');
   await expect(sceneHeadings).toHaveCount(4);
   const headingTops = await sceneHeadings.evaluateAll(headings => (
     headings.map(heading => heading.getBoundingClientRect().top + window.scrollY)
@@ -262,11 +302,12 @@ test('complete mobile page keeps four scenes in flow and prioritizes App approva
   expect(headingTops).toEqual([...headingTops].sort((a, b) => a - b));
   await expect(story.locator('.cross-device-story__stage')).not.toHaveCSS('position', 'sticky');
 
-  await story.locator('[data-scene="approve"] button').click();
+  await story.locator('.story-step[data-scene="approve"] > .story-step__meta button').click();
   await expect(story).toHaveAttribute('data-active-scene', 'approve');
+  const approvalEvidence = story.locator('[data-static-scene="approve"]');
   const [pcBox, appBox] = await Promise.all([
-    story.getByTestId('pc-console').boundingBox(),
-    story.getByTestId('mobile-console').boundingBox()
+    approvalEvidence.locator('[data-static-surface="pc"]').boundingBox(),
+    approvalEvidence.locator('[data-static-surface="mobile"]').boundingBox()
   ]);
   expect(pcBox).not.toBeNull();
   expect(appBox).not.toBeNull();
@@ -281,6 +322,7 @@ test('reduced motion exposes every major page fact without scrolling', async ({ 
   try {
     await page.goto(`${BASE_URL}/`);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expectStaticStoryEvidence(page);
     await expect(page.locator('.story-step')).toHaveCount(4);
     await expect(page.getByTestId('proof-case')).toHaveCount(6);
     await expect(page.getByTestId('architecture-node')).toHaveCount(4);
@@ -299,6 +341,46 @@ test('reduced motion exposes every major page fact without scrolling', async ({ 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   } finally {
     await context.close();
+  }
+});
+
+test('1280 fine and 1024 coarse desktops select the correct story presentation', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  const fineContext = await browser.newContext({
+    baseURL: BASE_URL,
+    locale: 'en-US',
+    viewport: { width: 1280, height: 900 }
+  });
+  try {
+    const page = await fineContext.newPage();
+    await page.goto('/');
+    await expectCompletePageCounts(page);
+    await expect(page.locator('.cross-device-story__stage--shared')).toBeVisible();
+    await expect(page.getByTestId('story-static-evidence')).toHaveCount(4);
+    await expect(page.locator('[data-testid="story-static-evidence"]:visible')).toHaveCount(0);
+    await expect(page.locator('.pc-console:visible')).toHaveCount(1);
+    await expect(page.locator('.mobile-console:visible')).toHaveCount(1);
+  } finally {
+    await fineContext.close();
+  }
+
+  const coarseContext = await browser.newContext({
+    baseURL: BASE_URL,
+    hasTouch: true,
+    locale: 'en-US',
+    viewport: { width: 1024, height: 768 }
+  });
+  try {
+    const page = await coarseContext.newPage();
+    await page.goto('/');
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+    await expectCompletePageCounts(page);
+    await expectStaticStoryEvidence(page);
+    await expect(page.locator('[data-static-surface="pc"]:visible')).toHaveCount(4);
+    await expect(page.locator('[data-static-surface="mobile"]:visible')).toHaveCount(4);
+  } finally {
+    await coarseContext.close();
   }
 });
 

@@ -957,7 +957,7 @@ html[data-theme='light'] .dot-field-fallback {
   display: block;
   width: 0.72rem;
   height: 0.72rem;
-  margin-inline: auto 0;
+  margin-inline: 0 auto;
   border-radius: 50%;
   background: var(--color-accent);
   box-shadow: 0 0 0 0.28rem color-mix(in srgb, var(--color-accent) 20%, transparent);

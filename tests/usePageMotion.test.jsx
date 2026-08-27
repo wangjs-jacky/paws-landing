@@ -19,7 +19,8 @@ vi.mock('gsap', () => ({
     timeline(config) {
       const timeline = {
         config,
-        from: vi.fn(function from() { return timeline; })
+        from: vi.fn(function from() { return timeline; }),
+        to: vi.fn(function to() { return timeline; })
       };
       motionMocks.timelines.push(timeline);
       return timeline;
@@ -59,7 +60,14 @@ function Harness() {
       </section>
       <section data-motion-section>
         <h2 data-motion-item>Architecture</h2>
-        <span data-architecture-packet aria-hidden="true" />
+        <ol>
+          {['clients', 'relay', 'daemon', 'agents'].map(nodeId => (
+            <li data-motion-item data-architecture-node={nodeId} key={nodeId}>{nodeId}</li>
+          ))}
+        </ol>
+        <div data-architecture-track aria-hidden="true">
+          <span data-architecture-packet />
+        </div>
       </section>
     </main>
   );
@@ -99,7 +107,8 @@ it('creates at most one scoped reveal timeline per marked section and reverts it
     expect(timeline.config.scrollTrigger).toMatchObject({
       trigger: sections[index],
       start: 'top 82%',
-      once: true
+      once: true,
+      invalidateOnRefresh: true
     });
     expect(timeline.from).toHaveBeenCalled();
     for (const [, animation] of timeline.from.mock.calls) {
@@ -110,11 +119,27 @@ it('creates at most one scoped reveal timeline per marked section and reverts it
     }
   });
 
-  expect(motionMocks.timelines[2].from).toHaveBeenCalledWith(
-    expect.any(HTMLElement),
-    expect.objectContaining({ xPercent: expect.any(Number), opacity: 0 }),
-    expect.any(Number)
-  );
+  const architectureTimeline = motionMocks.timelines[2];
+  const track = container.querySelector('[data-architecture-track]');
+  const packet = container.querySelector('[data-architecture-packet]');
+  const nodes = [...container.querySelectorAll('[data-architecture-node]')];
+  Object.defineProperty(track, 'clientWidth', { configurable: true, value: 640 });
+  Object.defineProperty(packet, 'offsetWidth', { configurable: true, value: 16 });
+
+  expect(architectureTimeline.to).toHaveBeenCalledOnce();
+  const [packetTarget, packetAnimation, packetPosition] = architectureTimeline.to.mock.calls[0];
+  expect(packetTarget).toBe(packet);
+  expect(packetAnimation).toMatchObject({ x: expect.any(Function), duration: 1.2, ease: 'none' });
+  expect(packetAnimation.x()).toBe(624);
+  expect(packetPosition).toBe(0.2);
+
+  const nodeCalls = architectureTimeline.from.mock.calls.filter(([target]) => nodes.includes(target));
+  expect(nodeCalls).toHaveLength(4);
+  expect(nodeCalls.map(([target]) => target)).toEqual(nodes);
+  expect(nodeCalls.map(([, , position]) => position)).toEqual([0.2, 0.6, 1, 1.4]);
+  for (const [, animation] of nodeCalls) {
+    expect(animation).toMatchObject({ y: expect.any(Number), opacity: 0 });
+  }
 
   unmount();
   expect(motionMocks.mediaRevert).toHaveBeenCalledOnce();

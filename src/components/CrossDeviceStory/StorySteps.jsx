@@ -1,4 +1,4 @@
-export default function StorySteps({ scenes, activeId, onSelect }) {
+export default function StorySteps({ scenes, activeId, onSelect, renderEvidence }) {
   return (
     <div className="story-steps">
       {scenes.map((scene, index) => {
@@ -26,6 +26,7 @@ export default function StorySteps({ scenes, activeId, onSelect }) {
             </div>
             <h3 id={headingId}>{scene.title}</h3>
             <p>{scene.body}</p>
+            {renderEvidence?.(scene)}
           </article>
         );
       })}
