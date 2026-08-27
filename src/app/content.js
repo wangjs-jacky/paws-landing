@@ -4,7 +4,15 @@ export const content = {
       title: 'Paws — Control coding agents from anywhere',
       description: 'Start, attach and control AI coding agents running on your computer from your phone.'
     },
-    nav: { product: 'Product', how: 'How it works', openSource: 'Open source', docs: 'Docs', getPaws: 'Get Paws' },
+    nav: {
+      product: 'Product',
+      how: 'How it works',
+      openSource: 'Open source',
+      docs: 'Docs',
+      getPaws: 'Get Paws',
+      appPc: 'App + PC',
+      architecture: 'Architecture'
+    },
     sectionLabels: { capabilities: 'PAWS / CAPABILITIES' },
     hero: {
       eyebrow: 'OPEN SOURCE · RUNS ON YOUR HARDWARE',
@@ -26,7 +34,7 @@ export const content = {
         '✔ waiting for approval on your phone…'
       ]
     },
-    agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents'],
+    agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'OpenClaw', 'ACP Agents'],
     steps: [
       { title: 'Install Paws', body: 'Install the CLI on the computer where your coding agent runs.' },
       { title: 'Pair your device', body: 'Scan once to connect your phone or web client to the encrypted account.' },
@@ -52,7 +60,11 @@ export const content = {
       menuOpen: 'Open navigation', menuClose: 'Close navigation', home: 'Paws home',
       primaryNavigation: 'Primary navigation',
       pauseAgents: 'Pause supported-agent animation', resumeAgents: 'Resume supported-agent animation',
-      copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually'
+      copy: 'Copy install command', copied: 'Install command copied', copyFailed: 'Could not copy; select the command manually',
+      online: 'Online', running: 'Running', approvalPending: 'Approval required', complete: 'Complete',
+      planned: 'Planned', shipped: 'Available now', currentSession: 'Current session',
+      demoDisclaimer: 'Product demonstration — controls are not connected to an account.',
+      agentMarquee: 'Supported coding agents'
     }
   },
   zh: {
@@ -60,7 +72,15 @@ export const content = {
       title: 'Paws — 随时控制电脑上的编程智能体',
       description: '通过手机启动、接入和控制电脑上运行的 AI 编程智能体。'
     },
-    nav: { product: '产品能力', how: '工作方式', openSource: '开源与自托管', docs: '文档', getPaws: '开始使用' },
+    nav: {
+      product: '产品能力',
+      how: '工作方式',
+      openSource: '开源与自托管',
+      docs: '文档',
+      getPaws: '开始使用',
+      appPc: 'App + PC',
+      architecture: '系统架构'
+    },
     sectionLabels: { capabilities: 'PAWS / 产品能力' },
     hero: {
       eyebrow: '开源 · 运行在你的电脑上',
@@ -82,7 +102,7 @@ export const content = {
         '✔ 正在等待你在手机上批准…'
       ]
     },
-    agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents'],
+    agents: ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'OpenClaw', 'ACP Agents'],
     steps: [
       { title: '安装 Paws', body: '在运行编程智能体的电脑上安装 Paws CLI。' },
       { title: '绑定设备', body: '扫码一次，把手机或 Web 客户端接入你的加密账号。' },
@@ -108,7 +128,11 @@ export const content = {
       menuOpen: '打开导航', menuClose: '关闭导航', home: 'Paws 首页',
       primaryNavigation: '主导航',
       pauseAgents: '暂停智能体兼容列表动画', resumeAgents: '继续智能体兼容列表动画',
-      copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令'
+      copy: '复制安装命令', copied: '安装命令已复制', copyFailed: '无法自动复制，请手动选择命令',
+      online: '在线', running: '运行中', approvalPending: '等待批准', complete: '已完成',
+      planned: '计划中', shipped: '现已支持', currentSession: '当前会话',
+      demoDisclaimer: '产品演示界面，不连接真实账号。',
+      agentMarquee: '支持的编程智能体'
     }
   }
 };
