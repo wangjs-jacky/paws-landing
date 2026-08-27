@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
-import AgentStrip from '../components/AgentStrip';
+import AgentMarquee from '../components/AgentMarquee';
 import FeatureGrid from '../components/FeatureGrid';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
@@ -46,7 +46,7 @@ export default function App() {
       />
       <main id="top">
         <Hero copy={copy} language={language} theme={theme} />
-        <AgentStrip agents={copy.agents} labels={copy.labels} />
+        <AgentMarquee agents={copy.agents} labels={copy.labels} />
         <HowItWorks copy={copy} />
         <FeatureGrid copy={copy} />
         <OpenSource copy={copy} language={language} />

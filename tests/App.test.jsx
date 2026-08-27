@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it } from 'vitest';
 import App from '../src/app/App';
@@ -17,7 +17,8 @@ it('switches all visible copy and document metadata to Chinese', async () => {
   expect(screen.getAllByTestId('hero-title-line')).toHaveLength(2);
   expect(screen.getByText('PAWS / 产品能力')).toBeInTheDocument();
   expect(container.querySelector('.footer-brand')).toHaveAttribute('aria-label', 'Paws 首页');
-  expect(screen.getByRole('button', { name: '暂停智能体兼容列表动画' })).toBeInTheDocument();
+  const marquee = screen.getByRole('region', { name: content.zh.labels.agentMarquee });
+  expect(within(marquee).queryByRole('button')).not.toBeInTheDocument();
   expect(screen.getByRole('navigation', { name: '主导航' })).toBeInTheDocument();
   expect(document.documentElement.lang).toBe('zh-CN');
   expect(document.title).toContain('随时控制');
@@ -35,17 +36,12 @@ it('exposes stable hero media and terminal layout slots', () => {
   expect(hero.querySelector('.mascot-stage')).not.toBeInTheDocument();
 });
 
-it('lets users pause and resume the supported-agent animation', async () => {
-  const user = userEvent.setup();
-  const { container } = render(<App />);
-  const strip = container.querySelector('.agent-strip');
-  const pause = screen.getByRole('button', { name: 'Pause supported-agent animation' });
+it('renders a control-free supported-agent marquee', () => {
+  render(<App />);
+  const marquee = screen.getByRole('region', { name: content.en.labels.agentMarquee });
 
-  expect(pause).toHaveAttribute('aria-pressed', 'false');
-  expect(strip).toHaveAttribute('data-paused', 'false');
-  await user.click(pause);
-  expect(screen.getByRole('button', { name: 'Resume supported-agent animation' })).toHaveAttribute('aria-pressed', 'true');
-  expect(strip).toHaveAttribute('data-paused', 'true');
+  expect(marquee).toHaveAttribute('data-motion', 'auto');
+  expect(within(marquee).queryByRole('button')).not.toBeInTheDocument();
 });
 
 it('toggles theme and persists it', async () => {
@@ -71,8 +67,10 @@ it('opens and closes an accessible mobile navigation menu', async () => {
 
 it('renders factual agents, three steps and four capabilities without testimonials', () => {
   render(<App />);
-  for (const agent of ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'ACP Agents']) {
-    expect(screen.getByText(agent)).toBeInTheDocument();
+  const marquee = screen.getByRole('region', { name: content.en.labels.agentMarquee });
+  const readableAgents = within(marquee).getByRole('list');
+  for (const agent of ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'OpenClaw', 'ACP Agents']) {
+    expect(within(readableAgents).getByText(agent)).toBeInTheDocument();
   }
   expect(screen.getAllByTestId('workflow-step')).toHaveLength(3);
   expect(screen.getAllByTestId('feature-card')).toHaveLength(4);

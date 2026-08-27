@@ -36,8 +36,23 @@ it('gives footer links at least 44 by 44 pixel touch targets', () => {
   expect(rule('.site-footer nav a')).toMatch(/min-width:\s*44px/);
 });
 
-it('connects the user pause state to the marquee animation', () => {
-  expect(css).toMatch(/\.agent-strip\[data-paused=['"]true['"]\]\s+\.agent-strip__track\s*\{\s*animation-play-state:\s*paused/);
+it('pauses the agent marquee on hover and keyboard focus without a playback control', () => {
+  expect(css).toMatch(/\.agent-marquee:hover\s+\.agent-marquee__track,\s*\.agent-marquee:focus-within\s+\.agent-marquee__track\s*\{\s*animation-play-state:\s*paused/);
+  expect(css).not.toContain('.agent-strip__control');
+  expect(css).not.toContain('.agent-marquee__control');
+});
+
+it('makes the agent marquee static on narrow screens and for reduced motion', () => {
+  const mobile = block(css, /@media\s*\(max-width:\s*767px\)\s*\{/);
+  const lastReducedMotion = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+  const reduced = block(css.slice(lastReducedMotion), /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/);
+
+  expect(rule('.agent-marquee__track', mobile)).toMatch(/width:\s*100%/);
+  expect(rule('.agent-marquee__track', mobile)).toMatch(/animation:\s*none/);
+  expect(rule('.agent-marquee__list', mobile)).toMatch(/flex-wrap:\s*wrap/);
+  expect(rule('.agent-marquee__duplicate', mobile)).toMatch(/display:\s*none/);
+  expect(rule('.agent-marquee__track', reduced)).toMatch(/animation:\s*none/);
+  expect(rule('.agent-marquee__duplicate', reduced)).toMatch(/display:\s*none/);
 });
 
 it('defines the header and hero layout anchors', () => {
