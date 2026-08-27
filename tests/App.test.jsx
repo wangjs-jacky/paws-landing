@@ -65,15 +65,17 @@ it('opens and closes an accessible mobile navigation menu', async () => {
   expect(menu).toHaveAttribute('aria-expanded', 'false');
 });
 
-it('renders factual agents, four story scenes and four capabilities without testimonials', () => {
+it('renders factual agents, four story scenes and six product-proof cases without testimonials', () => {
   render(<App />);
   const marquee = screen.getByRole('region', { name: content.en.labels.agentMarquee });
   const readableAgents = within(marquee).getByRole('list');
   for (const agent of ['Claude Code', 'Codex', 'Gemini', 'OpenCode', 'OpenClaw', 'ACP Agents']) {
     expect(within(readableAgents).getByText(agent)).toBeInTheDocument();
   }
-  expect(screen.getAllByRole('article')).toHaveLength(4);
-  expect(screen.getAllByTestId('feature-card')).toHaveLength(4);
+  expect(document.querySelectorAll('.story-step')).toHaveLength(4);
+  expect(screen.getAllByTestId('proof-case')).toHaveLength(6);
+  expect(screen.getAllByTestId('comparison-row')).toHaveLength(5);
+  expect(screen.queryByTestId('feature-card')).not.toBeInTheDocument();
   expect(screen.queryByText(/Loved by developers|Testimonials/i)).not.toBeInTheDocument();
 });
 
@@ -83,7 +85,8 @@ it('renders the approved product flow, actions and section order', () => {
   expect(screen.getByText('Encrypted relay')).toBeInTheDocument();
   expect(screen.getByText('Paws CLI')).toBeInTheDocument();
   expect(screen.getByText('Coding agent')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Self-hosting guide' })).toHaveAttribute('href', '/docs#self-hosting');
+  expect(within(container.querySelector('#open-source')).getByRole('link', { name: 'Self-hosting guide' }))
+    .toHaveAttribute('href', '/docs#self-hosting');
 
   const sectionIds = [...container.querySelectorAll('main > section')].map(section => section.id);
   expect(sectionIds).toEqual([
@@ -92,6 +95,7 @@ it('renders the approved product flow, actions and section order', () => {
     'app-pc',
     'paws-crew',
     'product',
+    'comparison',
     'open-source',
     'final-cta'
   ]);

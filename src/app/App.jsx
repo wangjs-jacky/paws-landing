@@ -4,7 +4,8 @@ import Hero from '../components/Hero';
 import AgentMarquee from '../components/AgentMarquee';
 import CrossDeviceStory from '../components/CrossDeviceStory/CrossDeviceStory';
 import MascotCrew from '../components/MascotCrew/MascotCrew';
-import FeatureGrid from '../components/FeatureGrid';
+import ProductProof from '../components/ProductProof';
+import ValueComparison from '../components/ValueComparison';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
 import OpenSource from '../components/OpenSource';
@@ -52,7 +53,12 @@ export default function App() {
         <AgentMarquee agents={copy.agents} labels={copy.labels} />
         <CrossDeviceStory language={language} />
         <MascotCrew copy={storyCopy} />
-        <FeatureGrid copy={copy} />
+        <ProductProof copy={{
+          ...storyCopy,
+          proofTitle: copy.nav.product,
+          proofLabel: copy.sectionLabels.capabilities
+        }} />
+        <ValueComparison copy={storyCopy} />
         <OpenSource copy={copy} language={language} />
         <FinalCTA copy={copy} language={language} />
       </main>
