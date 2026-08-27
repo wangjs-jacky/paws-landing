@@ -66,6 +66,7 @@ export const storyContent = {
         daemon: 'Paws daemon on your computer',
         agents: 'Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP'
       },
+      requirement: 'Remote start requires the target machine to be online.',
       note: 'The Paws Web and sync services can run on Aliyun for a more controllable domestic access path. Underlying agent login and API connectivity still depend on each provider.'
     },
     roadmap: {
@@ -73,7 +74,10 @@ export const storyContent = {
         { id: 'app', title: 'Mobile App' },
         { id: 'pc-web', title: 'PC Web' },
         { id: 'daemon', title: 'CLI / daemon' },
-        { id: 'handoff', title: 'Cross-device sessions' }
+        { id: 'agents', title: 'Supported Agents' },
+        { id: 'approval', title: 'Remote approval' },
+        { id: 'handoff', title: 'Cross-device sessions' },
+        { id: 'self-hosting', title: 'Self-hosting' }
       ],
       planned: [
         { id: 'browser-first', title: 'Browser-first improvements' },
@@ -147,6 +151,7 @@ export const storyContent = {
         daemon: '用户电脑上的 Paws daemon',
         agents: 'Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP'
       },
+      requirement: '远程启动要求目标机器在线。',
       note: 'Paws 的 Web 与同步服务可部署在阿里云，国内访问路径更可控；底层 Agent 的账号登录与 API 网络要求仍取决于对应服务提供商。'
     },
     roadmap: {
@@ -154,7 +159,10 @@ export const storyContent = {
         { id: 'app', title: '移动 App' },
         { id: 'pc-web', title: 'PC Web' },
         { id: 'daemon', title: 'CLI / daemon' },
-        { id: 'handoff', title: '跨端会话' }
+        { id: 'agents', title: '支持的 Agents' },
+        { id: 'approval', title: '远程审批' },
+        { id: 'handoff', title: '跨端会话' },
+        { id: 'self-hosting', title: '自托管' }
       ],
       planned: [
         { id: 'browser-first', title: '浏览器优先增强' },

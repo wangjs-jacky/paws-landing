@@ -928,6 +928,12 @@
   transform: translate(50%, -50%);
 }
 
+.architecture-story__requirement {
+  margin: var(--space-5) 0 0;
+  color: var(--color-text);
+  font-weight: 800;
+}
+
 .architecture-story__note {
   max-width: none;
   margin: var(--space-5) 0 0;

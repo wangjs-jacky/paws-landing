@@ -4,6 +4,28 @@ import Roadmap from '../src/components/Roadmap';
 import { content } from '../src/app/content';
 import { getStoryContent } from '../src/app/storyContent';
 
+const SHIPPED_IDS = [
+  'app',
+  'pc-web',
+  'daemon',
+  'agents',
+  'approval',
+  'handoff',
+  'self-hosting'
+];
+
+it.each(['en', 'zh'])('renders the complete shipped set in approved order for %s', language => {
+  const copy = { ...getStoryContent(language), labels: content[language].labels };
+
+  render(<Roadmap copy={copy} />);
+
+  const shippedIds = within(screen.getByTestId('roadmap-shipped'))
+    .getAllByRole('listitem')
+    .map(item => item.dataset.roadmapId);
+  expect(shippedIds).toEqual(SHIPPED_IDS);
+  expect([...new Set(shippedIds)]).toEqual(SHIPPED_IDS);
+});
+
 it('separates shipped work from a non-actionable planned Chrome extension', () => {
   const storyCopy = getStoryContent('zh');
   const copy = { ...storyCopy, labels: content.zh.labels };

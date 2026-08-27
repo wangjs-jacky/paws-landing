@@ -19,6 +19,7 @@ export default function ArchitectureStory({ copy, language }) {
           </li>
         ))}
       </ol>
+      <p className="architecture-story__requirement">{copy.architecture.requirement}</p>
       <p className="architecture-story__note">{copy.architecture.note}</p>
     </section>
   );
