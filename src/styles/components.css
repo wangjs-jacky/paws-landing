@@ -949,6 +949,7 @@
   }
 
   .hero-copy .eyebrow { font-size: 0.76rem; }
+  .hero-copy h1 { font-size: clamp(2rem, 9vw, 4rem); }
   .hero-lead { font-size: 1rem; }
 }
 
@@ -962,7 +963,15 @@
 }
 
 @media (hover: none), (pointer: coarse) {
-  .agent-strip__track { animation: none; }
+  .agent-strip__track { width: 100%; animation: none; }
+  .agent-strip__list {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+  .agent-strip__list li { flex: 0 1 auto; font-size: 0.9rem; }
   .agent-strip__duplicate { display: none; }
   .agent-strip__control { display: none; }
   .spotlight-card::before { display: none; }
