@@ -35,7 +35,7 @@ it('uses the hero alone as the mascot pointer and visibility surface', () => {
     expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-frame', '12');
     expect(screen.getByRole('img', { name: 'Paws marmot mascot' })).toHaveAttribute(
       'src',
-      '/assets/mascot-hero.png'
+      '/assets/mascot-static.png'
     );
     expect(mascotObserver).toBeDefined();
     expect(terminalObserver).toBeDefined();

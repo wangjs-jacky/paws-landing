@@ -9,7 +9,9 @@ const required = [
   'dist/assets/docs-controls.js',
   'dist/assets/docs-controls.css',
   'dist/assets/mascot-avatar.png',
-  'dist/assets/mascot-hero.png'
+  'dist/assets/mascot-hero.png',
+  'dist/assets/mascot-static.png',
+  'dist/assets/mascot-turn-atlas.webp'
 ];
 
 for (const relative of required) {

@@ -35,7 +35,7 @@ export default function Hero({ copy, language, theme }) {
           <MascotLook
             pointerSurfaceRef={heroRef}
             atlasSrc="/assets/mascot-turn-atlas.webp"
-            fallbackSrc="/assets/mascot-hero.png"
+            fallbackSrc="/assets/mascot-static.png"
             alt={language === 'zh' ? 'Paws 土拨鼠吉祥物' : 'Paws marmot mascot'}
           />
         </div>

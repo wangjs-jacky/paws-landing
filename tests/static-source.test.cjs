@@ -12,7 +12,9 @@ test('Vite public directory owns the documentation routes', () => {
     'public/assets/docs-controls.js',
     'public/assets/docs-controls.css',
     'public/assets/mascot-avatar.png',
-    'public/assets/mascot-hero.png'
+    'public/assets/mascot-hero.png',
+    'public/assets/mascot-static.png',
+    'public/assets/mascot-turn-atlas.webp'
   ]) {
     assert.equal(fs.existsSync(path.join(root, relative)), true, relative);
   }
