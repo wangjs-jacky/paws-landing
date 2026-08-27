@@ -4,6 +4,7 @@ set -eu
 
 usage() {
   echo "Usage: $0 INPUT.mp4 OUTPUT.webp START_SECONDS SOURCE_DURATION_SECONDS" >&2
+  echo "The source segment is normalized to 4.00 seconds; atlas frame 12 must pass the open-eye highlight check." >&2
   exit 2
 }
 
@@ -91,6 +92,11 @@ import sys
 from PIL import Image
 
 DESPILL_GREEN_DOMINANCE_THRESHOLD = 16
+CENTER_FRAME_NUMBER = 13
+EYE_CROP = (170, 60, 350, 155)
+EYE_HIGHLIGHT_MIN_CHANNEL = 205
+EYE_HIGHLIGHT_MAX_SPREAD = 40
+EYE_HIGHLIGHT_MIN_PIXELS = 8
 frame_directory = Path(sys.argv[1])
 changed = 0
 
@@ -113,9 +119,29 @@ for frame_path in sorted(frame_directory.glob("frame-*.png")):
     image.putdata(cleaned)
     image.save(frame_path, format="PNG", compress_level=9)
 
+center_path = frame_directory / f"frame-{CENTER_FRAME_NUMBER:02d}.png"
+with Image.open(center_path) as center_source:
+    center = center_source.convert("RGBA").crop(EYE_CROP)
+center_eye_highlights = sum(
+    1
+    for red, green, blue, alpha in center.getdata()
+    if alpha > 200
+    and min(red, green, blue) >= EYE_HIGHLIGHT_MIN_CHANNEL
+    and max(red, green, blue) - min(red, green, blue) <= EYE_HIGHLIGHT_MAX_SPREAD
+)
+if center_eye_highlights < EYE_HIGHLIGHT_MIN_PIXELS:
+    raise SystemExit(
+        "build-mascot-atlas: center frame open-eye proxy failed "
+        f"(crop={EYE_CROP}, highlights={center_eye_highlights}, "
+        f"required={EYE_HIGHLIGHT_MIN_PIXELS})"
+    )
+
 print(
     f"green_dominance_threshold={DESPILL_GREEN_DOMINANCE_THRESHOLD},"
-    f"changed_pixels={changed}"
+    f"changed_pixels={changed},"
+    f"center_eye_crop={EYE_CROP},"
+    f"center_eye_highlights={center_eye_highlights},"
+    f"center_eye_required={EYE_HIGHLIGHT_MIN_PIXELS}"
 )
 PY
 )

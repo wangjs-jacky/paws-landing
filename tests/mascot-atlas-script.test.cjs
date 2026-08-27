@@ -27,6 +27,19 @@ test('mascot atlas builder applies reproducible green despill before tiling', ()
   assert.ok(despill < tile);
 });
 
+test('mascot atlas builder rejects a closed-eye center frame', () => {
+  for (const marker of [
+    'CENTER_FRAME_NUMBER = 13',
+    'EYE_CROP = (170, 60, 350, 155)',
+    'EYE_HIGHLIGHT_MIN_CHANNEL = 205',
+    'EYE_HIGHLIGHT_MAX_SPREAD = 40',
+    'EYE_HIGHLIGHT_MIN_PIXELS = 8',
+    'center frame open-eye proxy failed'
+  ]) {
+    assert.ok(script.includes(marker), marker);
+  }
+});
+
 test('mascot atlas builder keeps the fixed runtime asset contract', () => {
   for (const marker of [
     'normalized_duration=4.00',
