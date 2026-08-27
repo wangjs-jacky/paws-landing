@@ -1,6 +1,6 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getStoryContent } from '../src/app/storyContent';
 import ConnectionFlow from '../src/components/CrossDeviceStory/ConnectionFlow';
 import CrossDeviceStory from '../src/components/CrossDeviceStory/CrossDeviceStory';
@@ -8,7 +8,90 @@ import MobileConsoleDemo from '../src/components/CrossDeviceStory/MobileConsoleD
 import PcConsoleDemo from '../src/components/CrossDeviceStory/PcConsoleDemo';
 import { buildConsoleState } from '../src/components/CrossDeviceStory/storyModel';
 
+const motionMocks = vi.hoisted(() => ({
+  cancelAnimationFrame: vi.fn(),
+  desktop: true,
+  coarse: false,
+  matchMedia: vi.fn(),
+  mediaAdd: vi.fn(),
+  mediaRevert: vi.fn(),
+  reduced: false,
+  refresh: vi.fn(),
+  registerPlugin: vi.fn(),
+  requestAnimationFrame: vi.fn(),
+  timeline: vi.fn(),
+  timelineTo: vi.fn(),
+  useGSAPConfigs: []
+}));
+
+vi.mock('gsap', () => ({
+  default: {
+    matchMedia: motionMocks.matchMedia,
+    registerPlugin: motionMocks.registerPlugin,
+    timeline: motionMocks.timeline
+  }
+}));
+
+vi.mock('gsap/ScrollTrigger', () => ({
+  ScrollTrigger: { refresh: motionMocks.refresh }
+}));
+
+vi.mock('@gsap/react', async () => {
+  const { useEffect } = await import('react');
+
+  return {
+    useGSAP(setup, config) {
+      motionMocks.useGSAPConfigs.push(config);
+      useEffect(setup, config.dependencies);
+    }
+  };
+});
+
 const copy = getStoryContent('en');
+
+beforeEach(() => {
+  motionMocks.desktop = true;
+  motionMocks.coarse = false;
+  motionMocks.reduced = false;
+  motionMocks.useGSAPConfigs.length = 0;
+
+  for (const mock of [
+    motionMocks.cancelAnimationFrame,
+    motionMocks.matchMedia,
+    motionMocks.mediaAdd,
+    motionMocks.mediaRevert,
+    motionMocks.refresh,
+    motionMocks.requestAnimationFrame,
+    motionMocks.timeline,
+    motionMocks.timelineTo
+  ]) {
+    mock.mockReset();
+  }
+
+  motionMocks.timelineTo.mockReturnThis();
+  motionMocks.timeline.mockReturnValue({ to: motionMocks.timelineTo });
+  motionMocks.mediaAdd.mockImplementation((query, setup) => {
+    const enabled = motionMocks.desktop && !motionMocks.coarse && !motionMocks.reduced;
+    if (enabled) setup();
+  });
+  motionMocks.matchMedia.mockReturnValue({
+    add: motionMocks.mediaAdd,
+    revert: motionMocks.mediaRevert
+  });
+  motionMocks.requestAnimationFrame.mockImplementation(callback => {
+    motionMocks.pendingFrame = callback;
+    return 73;
+  });
+
+  window.matchMedia = vi.fn(query => ({
+    matches: query === '(prefers-reduced-motion: reduce)' && motionMocks.reduced,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn()
+  }));
+  window.requestAnimationFrame = motionMocks.requestAnimationFrame;
+  window.cancelAnimationFrame = motionMocks.cancelAnimationFrame;
+});
 
 function renderDemos(sceneId) {
   const state = buildConsoleState(sceneId, copy);
@@ -32,6 +115,75 @@ function expectDemoButtonsToBeDisabled(container) {
 }
 
 describe('cross-device product demonstrations', () => {
+  it('skips the scoped timeline when reduced motion is requested', () => {
+    motionMocks.reduced = true;
+
+    render(<CrossDeviceStory language="en" />);
+
+    expect(motionMocks.timeline).not.toHaveBeenCalled();
+    expect(motionMocks.matchMedia).not.toHaveBeenCalled();
+  });
+
+  it('creates one scoped desktop timeline and maps scroll progress back to React state', () => {
+    const { unmount } = render(<CrossDeviceStory language="en" />);
+    const story = screen.getByTestId('cross-device-story');
+    const stage = story.querySelector('.cross-device-story__stage');
+    const [timelineConfig] = motionMocks.timeline.mock.calls[0];
+
+    expect(motionMocks.timeline).toHaveBeenCalledOnce();
+    expect(motionMocks.mediaAdd).toHaveBeenCalledWith(
+      '(min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
+      expect.any(Function)
+    );
+    expect(motionMocks.useGSAPConfigs.at(-1)).toMatchObject({
+      scope: { current: story },
+      revertOnUpdate: true
+    });
+    expect(timelineConfig.scrollTrigger).toMatchObject({
+      trigger: story,
+      pin: stage,
+      scrub: true,
+      start: 'top top',
+      end: 'bottom bottom'
+    });
+    expect(motionMocks.timelineTo).not.toHaveBeenCalledWith(stage, expect.anything(), expect.anything());
+
+    act(() => timelineConfig.scrollTrigger.onUpdate({ progress: 0.76 }));
+    expect(story).toHaveAttribute('data-active-scene', 'handoff');
+    expect(screen.getByTestId('pc-console')).toHaveAttribute('data-scene', 'handoff');
+    expect(screen.getByTestId('mobile-console')).toHaveAttribute('data-scene', 'handoff');
+    expect(motionMocks.timeline).toHaveBeenCalledOnce();
+
+    unmount();
+    expect(motionMocks.mediaRevert).toHaveBeenCalledOnce();
+  });
+
+  it('keeps coarse-pointer desktops in the complete static flow', () => {
+    motionMocks.coarse = true;
+
+    render(<CrossDeviceStory language="en" />);
+
+    expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(motionMocks.timeline).not.toHaveBeenCalled();
+  });
+
+  it('refreshes ScrollTrigger after language layout changes and cancels stale frames', () => {
+    const { rerender, unmount } = render(<CrossDeviceStory language="en" />);
+    const firstFrame = motionMocks.pendingFrame;
+
+    rerender(<CrossDeviceStory language="zh" />);
+
+    expect(motionMocks.cancelAnimationFrame).toHaveBeenCalledWith(73);
+    expect(motionMocks.requestAnimationFrame).toHaveBeenCalledTimes(2);
+    act(() => motionMocks.pendingFrame());
+    expect(motionMocks.refresh).toHaveBeenCalledOnce();
+    expect(motionMocks.timeline).toHaveBeenCalledOnce();
+    expect(firstFrame).toEqual(expect.any(Function));
+
+    unmount();
+    expect(motionMocks.cancelAnimationFrame).toHaveBeenLastCalledWith(73);
+  });
+
   it('renders every localized story scene while exposing the active console scene', () => {
     render(<CrossDeviceStory language="zh" activeSceneOverride="approve" />);
 

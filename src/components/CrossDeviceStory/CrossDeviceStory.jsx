@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { getStoryContent } from '../../app/storyContent';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useStoryMotion } from '../../hooks/useStoryMotion';
 import ConnectionFlow from './ConnectionFlow';
 import MobileConsoleDemo from './MobileConsoleDemo';
 import PcConsoleDemo from './PcConsoleDemo';
@@ -8,12 +11,28 @@ import { buildConsoleState } from './storyModel';
 
 export default function CrossDeviceStory({ language, activeSceneOverride }) {
   const copy = getStoryContent(language);
+  const rootRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const onSceneChange = useCallback(index => setActiveIndex(index), []);
   const activeId = activeSceneOverride ?? copy.scenes[activeIndex].id;
   const state = buildConsoleState(activeId, copy);
 
+  useStoryMotion({
+    rootRef,
+    sceneCount: copy.scenes.length,
+    disabled: reducedMotion,
+    onSceneChange
+  });
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => ScrollTrigger.refresh());
+    return () => window.cancelAnimationFrame(frame);
+  }, [language]);
+
   return (
     <section
+      ref={rootRef}
       id="app-pc"
       className="cross-device-story"
       data-testid="cross-device-story"
@@ -25,7 +44,7 @@ export default function CrossDeviceStory({ language, activeSceneOverride }) {
         <h2 id="cross-device-story-title">{copy.intro.title}</h2>
         <p>{copy.intro.summary}</p>
       </header>
-      <StorySteps scenes={copy.scenes} activeId={activeId} onSelect={setActiveIndex} />
+      <StorySteps scenes={copy.scenes} activeId={activeId} onSelect={onSceneChange} />
       <div className="cross-device-story__stage">
         <PcConsoleDemo state={state} copy={copy} />
         <ConnectionFlow focus={state.focus} status={state.sessionStatus} />

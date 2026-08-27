@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/components.css'), 'utf8');
+const storyCss = readFileSync(resolve(process.cwd(), 'src/styles/story.css'), 'utf8');
 
 function block(source, startPattern) {
   const match = startPattern.exec(source);
@@ -103,4 +104,16 @@ it('breathes only the coarse static mascot and disables that motion by preferenc
   const reduced = block(css.slice(lastReducedMotion), /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/);
   expect(rule(".mascot-look[data-mode='coarse']")).toMatch(/animation:\s*mascot-breathe/);
   expect(rule(".mascot-look[data-mode='coarse']", reduced)).toMatch(/animation:\s*none/);
+});
+
+it('limits story pinning styles to fine-pointer desktops without reduced motion', () => {
+  const desktopMotion = block(
+    storyCss,
+    /@media\s*\(min-width:\s*1024px\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{/
+  );
+  const outsideDesktopMotion = storyCss.replace(desktopMotion, '');
+
+  expect(desktopMotion).not.toBe('');
+  expect(rule('.cross-device-story__stage', desktopMotion)).toMatch(/position:\s*sticky/);
+  expect(outsideDesktopMotion).not.toMatch(/position:\s*sticky/);
 });
