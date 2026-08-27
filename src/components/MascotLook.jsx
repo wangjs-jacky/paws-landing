@@ -3,6 +3,7 @@ import { easeFrame, pointerRatio, ratioToFrame } from './react-bits/mascotFrameM
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const FINE_POINTER_QUERY = '(pointer: fine)';
+const ATLAS_CELL_SIZE = 768;
 
 function readPreferences() {
   if (typeof window === 'undefined' || !window.matchMedia) {
@@ -93,7 +94,7 @@ export default function MascotLook({
         if (!active) return;
         const frameWidth = atlas.naturalWidth / columns;
         const frameHeight = atlas.naturalHeight / rows;
-        if (!frameWidth || !frameHeight) {
+        if (frameWidth !== ATLAS_CELL_SIZE || frameHeight !== ATLAS_CELL_SIZE) {
           fail();
           return;
         }

@@ -73,7 +73,7 @@ retime_factor=$(awk -v normalized="$normalized_duration" -v source="$duration_se
 ffmpeg -v error \
   -ss "$start_seconds" \
   -i "$input" \
-  -vf "trim=duration=${duration_seconds},setpts=(${normalized_duration}/${duration_seconds})*(PTS-STARTPTS),fps=6,chromakey=0x00ff00:0.18:0.08,scale=512:512:force_original_aspect_ratio=decrease:flags=lanczos,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba" \
+  -vf "trim=duration=${duration_seconds},setpts=(${normalized_duration}/${duration_seconds})*(PTS-STARTPTS),fps=6,chromakey=0x00ff00:0.18:0.08,scale=768:768:force_original_aspect_ratio=decrease:flags=lanczos,pad=768:768:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba" \
   -frames:v 24 \
   "$temp_dir/frame-%02d.png"
 
@@ -93,7 +93,7 @@ from PIL import Image
 
 DESPILL_GREEN_DOMINANCE_THRESHOLD = 16
 CENTER_FRAME_NUMBER = 13
-EYE_CROP = (170, 60, 350, 155)
+EYE_CROP = (255, 90, 525, 233)
 EYE_HIGHLIGHT_MIN_CHANNEL = 205
 EYE_HIGHLIGHT_MAX_SPREAD = 40
 EYE_HIGHLIGHT_MIN_PIXELS = 8
@@ -193,7 +193,7 @@ atlas_metadata=$(ffprobe -v error -select_streams v:0 -show_entries stream=width
 atlas_width=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $1}')
 atlas_height=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $2}')
 atlas_format=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $3}')
-[ "$atlas_width" -eq 3072 ] && [ "$atlas_height" -eq 2048 ] || fail "unexpected atlas dimensions: ${atlas_width}x${atlas_height}"
+[ "$atlas_width" -eq 4608 ] && [ "$atlas_height" -eq 3072 ] || fail "unexpected atlas dimensions: ${atlas_width}x${atlas_height}"
 case "$atlas_format" in
   *a*) ;;
   *) fail "atlas is missing alpha: $atlas_format" ;;
@@ -222,4 +222,4 @@ atlas_bytes=$(wc -c < "$temp_output" | tr -d ' ')
 [ "$atlas_bytes" -le 3145728 ] || fail "atlas exceeds 3,145,728 bytes: $atlas_bytes"
 
 mv "$temp_output" "$output"
-echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 512px cells, chromakey 0x00ff00:0.18:0.08, despill $despill_result, WebP quality 82, $alpha_counts, $atlas_bytes bytes"
+echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 768px cells, chromakey 0x00ff00:0.18:0.08, despill $despill_result, WebP quality 82, $alpha_counts, $atlas_bytes bytes"

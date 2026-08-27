@@ -68,7 +68,7 @@ it('sets the final desktop hero hierarchy and media halo', () => {
   expect(rule('.hero-copy h1')).toMatch(/font-size:\s*clamp\(3\.25rem,\s*5\.2vw,\s*5\.9rem\)/);
   expect(rule('.hero-copy h1')).toMatch(/line-height:\s*0\.98/);
   expect(rule('.hero-terminal-slot')).toMatch(/width:\s*min\(100%,\s*42rem\)/);
-  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*34rem\)/);
+  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*520px\)/);
   expect(rule('.hero-media::before')).toMatch(/radial-gradient/);
   expect(rule('.hero-media::before')).toMatch(/content:\s*''/);
   expect(rule('.hero-actions')).toMatch(/gap:\s*var\(--space-2\)/);
@@ -93,7 +93,7 @@ it('keeps mobile hero media visible and ordered before the copy', () => {
 it('reserves one stable mascot box and reveals the atlas without relayout', () => {
   expect(rule('.mascot-look')).toMatch(/position:\s*relative/);
   expect(rule('.mascot-look')).toMatch(/aspect-ratio:\s*1/);
-  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*34rem\)/);
+  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*520px\)/);
   expect(rule('.mascot-look')).toMatch(/transform:\s*translateY\(var\(--mascot-y,\s*0px\)\)/);
   expect(css).toMatch(/\.mascot-look canvas,\s*\.mascot-look img\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%/s);
   expect(rule(".mascot-look[data-ready='true'] img")).toMatch(/opacity:\s*0/);

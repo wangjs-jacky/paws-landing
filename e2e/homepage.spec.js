@@ -49,7 +49,7 @@ async function expectTransparentMascotSurface(page, mode) {
 
 async function expectAlertMascotCenterFrame(page) {
   const alertEyePixels = await page.getByTestId('mascot-look').locator('canvas').evaluate(canvas => {
-    const pixels = canvas.getContext('2d').getImageData(170, 60, 180, 95).data;
+    const pixels = canvas.getContext('2d').getImageData(255, 90, 270, 143).data;
     let count = 0;
     for (let offset = 0; offset < pixels.length; offset += 4) {
       const red = pixels[offset];
@@ -65,7 +65,7 @@ async function expectAlertMascotCenterFrame(page) {
   });
   expect(
     alertEyePixels,
-    'center frame 12 eye crop (170,60 180x95) should contain >=8 opaque near-white alert pixels'
+    'center frame 12 eye crop (255,90 270x143) should contain >=8 opaque near-white alert pixels'
   ).toBeGreaterThanOrEqual(8);
 }
 
@@ -99,6 +99,11 @@ test('desktop hero meets title, controls, mascot, terminal and preference contra
 
   const mascot = page.getByTestId('mascot-look');
   await expect(mascot).toHaveAttribute('data-ready', 'true');
+  const mascotBox = await mascot.boundingBox();
+  expect(mascotBox).not.toBeNull();
+  expect(mascotBox.width).toBeLessThanOrEqual(520);
+  await expect(mascot.locator('canvas')).toHaveJSProperty('width', 768);
+  await expect(mascot.locator('canvas')).toHaveJSProperty('height', 768);
   const centerFrame = Number(await mascot.getAttribute('data-frame'));
   await page.locator('#hero').hover({ position: { x: 1, y: 200 } });
   await expect.poll(async () => Number(await mascot.getAttribute('data-frame'))).toBeLessThan(centerFrame);
@@ -126,6 +131,8 @@ test('mobile navigation, mascot, targets and layout remain usable', async ({ pag
 
   const mascot = page.getByTestId('mascot-look');
   await expect(mascot.locator('img')).toBeVisible();
+  await expect(mascot.locator('img')).toHaveJSProperty('naturalWidth', 1254);
+  await expect(mascot.locator('img')).toHaveJSProperty('naturalHeight', 1254);
   const menuButton = page.locator('.menu-toggle');
   await expect(menuButton).toHaveAccessibleName('Open navigation');
   await menuButton.click();

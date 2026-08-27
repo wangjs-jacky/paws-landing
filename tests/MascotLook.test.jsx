@@ -56,8 +56,8 @@ beforeEach(() => {
   HTMLCanvasElement.prototype.getContext.mockReturnValue(context);
 
   window.Image = vi.fn(function MockImage() {
-    this.naturalWidth = 600;
-    this.naturalHeight = 400;
+    this.naturalWidth = 4608;
+    this.naturalHeight = 3072;
     this.decode = vi.fn().mockResolvedValue(undefined);
     imageInstances.push(this);
   });
@@ -94,6 +94,18 @@ function setVisible(surface, isIntersecting) {
 }
 
 describe('MascotLook pointer lifecycle', () => {
+  it('keeps the high-resolution atlas on a single-frame logical canvas', async () => {
+    render(<Harness />);
+    await loadAtlas();
+
+    const canvas = screen.getByTestId('mascot-look').querySelector('canvas');
+    expect(canvas).toHaveAttribute('width', '768');
+    expect(canvas).toHaveAttribute('height', '768');
+    expect(context.drawImage).toHaveBeenCalledWith(
+      imageInstances[0], 0, 1536, 768, 768, 0, 0, 768, 768
+    );
+  });
+
   it('draws the edge frame for a visible pointer at the right edge', async () => {
     render(<Harness />);
     const surface = screen.getByTestId('pointer-surface');
@@ -107,7 +119,7 @@ describe('MascotLook pointer lifecycle', () => {
 
     expect(mascot).toHaveAttribute('data-frame', '23');
     expect(context.drawImage).toHaveBeenLastCalledWith(
-      imageInstances[0], 500, 300, 100, 100, 0, 0, 100, 100
+      imageInstances[0], 3840, 2304, 768, 768, 0, 0, 768, 768
     );
   });
 
@@ -198,6 +210,20 @@ it('keeps the static fallback visible when atlas decoding fails', async () => {
   expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-mode', 'fallback');
   expect(screen.getByRole('img', { name: 'Paws mascot' })).toHaveAttribute('src', '/fallback.png');
   expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+});
+
+it('keeps the static fallback visible when atlas cells are not 768 pixels', async () => {
+  render(<Harness />);
+  const atlas = imageInstances[0];
+  atlas.naturalWidth = 3072;
+  atlas.naturalHeight = 2048;
+
+  await act(async () => atlas.onload());
+
+  expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-ready', 'false');
+  expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-mode', 'fallback');
+  expect(screen.getByRole('img', { name: 'Paws mascot' })).toHaveAttribute('src', '/fallback.png');
+  expect(context.drawImage).not.toHaveBeenCalled();
 });
 
 it.each([
