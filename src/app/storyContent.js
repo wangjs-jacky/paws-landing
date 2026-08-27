@@ -63,7 +63,7 @@ export const storyContent = {
         clients: 'App / PC Web',
         relay: 'Encrypted Paws relay',
         daemon: 'Paws daemon on your computer',
-        agents: 'Codex / Claude Code / Gemini / OpenCode / ACP'
+        agents: 'Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP'
       },
       note: 'The Paws Web and sync services can run on Aliyun for a more controllable domestic access path. Underlying agent login and API connectivity still depend on each provider.'
     },
@@ -143,7 +143,7 @@ export const storyContent = {
         clients: 'App / PC Web',
         relay: 'Paws 加密同步服务',
         daemon: '用户电脑上的 Paws daemon',
-        agents: 'Codex / Claude Code / Gemini / OpenCode / ACP'
+        agents: 'Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP'
       },
       note: 'Paws 的 Web 与同步服务可部署在阿里云，国内访问路径更可控；底层 Agent 的账号登录与 API 网络要求仍取决于对应服务提供商。'
     },

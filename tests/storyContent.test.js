@@ -44,6 +44,11 @@ describe('cross-device story content', () => {
     expect(findEmptyCollections(storyContent.zh)).toEqual([]);
   });
 
+  it('includes OpenClaw in the bilingual architecture agent list', () => {
+    expect(storyContent.en.architecture.nodes.agents).toBe('Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP');
+    expect(storyContent.zh.architecture.nodes.agents).toBe('Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP');
+  });
+
   it('marks the Chrome extension as planned and uses qualified Aliyun copy', () => {
     expect(storyContent.zh.roadmap.planned.find(item => item.id === 'chrome-extension')).toBeTruthy();
     expect(storyContent.zh.architecture.note).toContain('底层 Agent');
