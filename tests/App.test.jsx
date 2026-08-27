@@ -26,7 +26,7 @@ it('switches all visible copy and document metadata to Chinese', async () => {
 
 it('exposes stable hero media and terminal layout slots', () => {
   const { container } = render(<App />);
-  expect(container.querySelector('.hero-media .mascot-stage')).toBeInTheDocument();
+  expect(container.querySelector('.hero-media .mascot-look')).toBeInTheDocument();
   expect(container.querySelector('.hero-terminal-slot .terminal-demo')).toBeInTheDocument();
 });
 
