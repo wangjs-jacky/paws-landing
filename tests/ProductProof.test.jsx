@@ -73,6 +73,29 @@ describe('product proof', () => {
       '/docs#self-hosting'
     );
   });
+
+  it.each([
+    ['en', 'Self-hosting guide', '/docs#self-hosting'],
+    ['zh', '自托管文档', '/docs/zh-CN#self-hosting']
+  ])('routes %s open-source actions without changing the GitHub destination', (language, selfHostingLabel, selfHostingHref) => {
+    render(
+      <ProductProof
+        copy={{ ...getStoryContent(language), proofTitle: language === 'en' ? 'Product' : '产品能力' }}
+        language={language}
+      />
+    );
+
+    const actions = within(document.querySelector('[data-proof-id="open-source"]'))
+      .getByTestId('open-source-actions');
+    expect(within(actions).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/wangjs-jacky/happy'
+    );
+    expect(within(actions).getByRole('link', { name: selfHostingLabel })).toHaveAttribute(
+      'href',
+      selfHostingHref
+    );
+  });
 });
 
 describe('value comparison', () => {

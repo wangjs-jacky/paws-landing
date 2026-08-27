@@ -116,6 +116,29 @@ it('links both localized work-flow navigation labels to the cross-device story',
   expect(screen.getByRole('link', { name: content.zh.nav.how })).toHaveAttribute('href', '#app-pc');
 });
 
+it('routes product-proof self-hosting actions to the current documentation language', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  const proofActions = () => within(document.querySelector('[data-proof-id="open-source"]'))
+    .getByTestId('open-source-actions');
+
+  expect(within(proofActions()).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/wangjs-jacky/happy'
+  );
+  expect(within(proofActions()).getByRole('link', { name: 'Self-hosting guide' }))
+    .toHaveAttribute('href', '/docs#self-hosting');
+
+  await user.click(screen.getByRole('button', { name: content.en.labels.language }));
+
+  expect(within(proofActions()).getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/wangjs-jacky/happy'
+  );
+  expect(within(proofActions()).getByRole('link', { name: '自托管文档' }))
+    .toHaveAttribute('href', '/docs/zh-CN#self-hosting');
+});
+
 it('links both documentation languages and privacy without making a license claim', () => {
   render(<App />);
   expect(screen.getByRole('link', { name: 'English docs' })).toHaveAttribute('href', '/docs');

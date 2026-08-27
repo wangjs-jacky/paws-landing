@@ -1,5 +1,6 @@
+import { docsHref } from '../app/siteConstants';
+
 const GITHUB_URL = 'https://github.com/wangjs-jacky/happy';
-const SELF_HOSTING_URL = '/docs#self-hosting';
 
 function evidenceParts(evidence) {
   return evidence.split(/\s*[→·]\s*/);
@@ -22,7 +23,7 @@ function EvidenceList({ as: List = 'ul', children, evidence, testId, separator }
   );
 }
 
-function ProofEvidence({ item }) {
+function ProofEvidence({ item, language }) {
   switch (item.id) {
     case 'remote-start':
       return (
@@ -49,7 +50,7 @@ function ProofEvidence({ item }) {
       return <EvidenceList as="ol" evidence={item.evidence} testId="sync-topology" separator="→" />;
     case 'open-source': {
       const actions = evidenceParts(item.evidence);
-      const hrefs = [GITHUB_URL, SELF_HOSTING_URL];
+      const hrefs = [GITHUB_URL, docsHref(language, '#self-hosting')];
 
       return (
         <div className="proof-actions" data-testid="open-source-actions">
@@ -67,7 +68,7 @@ function ProofEvidence({ item }) {
   }
 }
 
-function ProofCase({ item }) {
+function ProofCase({ item, language }) {
   const headingId = `proof-${item.id}-title`;
 
   return (
@@ -84,13 +85,13 @@ function ProofCase({ item }) {
       <h3 id={headingId}>{item.title}</h3>
       <p className="proof-case__body">{item.body}</p>
       <div className="proof-evidence" data-testid="proof-evidence">
-        <ProofEvidence item={item} />
+        <ProofEvidence item={item} language={language} />
       </div>
     </article>
   );
 }
 
-export default function ProductProof({ copy }) {
+export default function ProductProof({ copy, language }) {
   const title = copy.proofTitle ?? copy.proof[0]?.title;
 
   return (
@@ -100,7 +101,7 @@ export default function ProductProof({ copy }) {
         {copy.proofLabel ? <p className="eyebrow">{copy.proofLabel}</p> : null}
       </header>
       <div className="product-proof__grid">
-        {copy.proof.map(item => <ProofCase key={item.id} item={item} />)}
+        {copy.proof.map(item => <ProofCase key={item.id} item={item} language={language} />)}
       </div>
     </section>
   );

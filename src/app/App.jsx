@@ -57,7 +57,7 @@ export default function App() {
           ...storyCopy,
           proofTitle: copy.nav.product,
           proofLabel: copy.sectionLabels.capabilities
-        }} />
+        }} language={language} />
         <ValueComparison copy={storyCopy} />
         <OpenSource copy={copy} language={language} />
         <FinalCTA copy={copy} language={language} />
