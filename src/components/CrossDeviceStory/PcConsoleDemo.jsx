@@ -210,12 +210,14 @@ function SessionPanel({ state, copy, scene }) {
 
 export default function PcConsoleDemo({ state, copy }) {
   const scene = copy.scenes.find(item => item.id === state.sceneId);
+  const focused = state.focus === 'pc' || state.focus === 'shared';
   return (
     <section
       className="pc-console"
       data-testid="pc-console"
       data-scene={state.sceneId}
       data-status={state.sessionStatus}
+      data-focus={String(focused)}
       aria-label={copy.consoles.pcSummary[state.sceneId]}
     >
       <div className="pc-console__chrome" aria-hidden="true">

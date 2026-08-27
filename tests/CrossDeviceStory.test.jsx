@@ -35,6 +35,7 @@ describe('cross-device product demonstrations', () => {
 
     expect(pc).toHaveAttribute('data-scene', 'start');
     expect(pc).toHaveAttribute('data-status', 'ready');
+    expect(pc).toHaveAttribute('data-focus', 'true');
     expect(pc).toHaveAccessibleName(copy.consoles.pcSummary.start);
     for (const value of [copy.consoles.machine, copy.consoles.project, copy.consoles.agent]) {
       expect(within(pc).getAllByText(value)[0]).toBeVisible();
@@ -51,6 +52,7 @@ describe('cross-device product demonstrations', () => {
 
     expect(pc).toHaveAttribute('data-scene', 'watch');
     expect(pc).toHaveAttribute('data-status', 'running');
+    expect(pc).toHaveAttribute('data-focus', 'true');
     expect(pc).toHaveAccessibleName(copy.consoles.pcSummary.watch);
     expect(within(pc).getByText(/Skill/)).toBeVisible();
     expect(within(pc).getByText(/Tool/)).toBeVisible();
@@ -63,6 +65,7 @@ describe('cross-device product demonstrations', () => {
     const { pc, mobile } = renderDemos('approve');
 
     expect(pc).toHaveAttribute('data-status', 'approval-pending');
+    expect(pc).toHaveAttribute('data-focus', 'false');
     expect(mobile).toHaveAttribute('data-scene', 'approve');
     expect(mobile).toHaveAttribute('data-status', 'approval-pending');
     expect(mobile).toHaveAttribute('data-focus', 'true');
@@ -78,6 +81,7 @@ describe('cross-device product demonstrations', () => {
 
     expect(pc).toHaveAttribute('data-scene', 'handoff');
     expect(pc).toHaveAttribute('data-status', 'running');
+    expect(pc).toHaveAttribute('data-focus', 'true');
     expect(mobile).toHaveAttribute('data-focus', 'true');
     expect(within(pc).getByText(state.sessionId)).toBeVisible();
     expect(within(mobile).getByText(state.sessionId)).toBeVisible();
