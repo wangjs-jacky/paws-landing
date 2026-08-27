@@ -128,6 +128,8 @@ describe('cross-device product demonstrations', () => {
     const { unmount } = render(<CrossDeviceStory language="en" />);
     const story = screen.getByTestId('cross-device-story');
     const stage = story.querySelector('.cross-device-story__stage');
+    const mascot = story.querySelector('.story-scene-mascot');
+    const connectionLines = [...story.querySelectorAll('.connection-flow__line-progress')];
     const [timelineConfig] = motionMocks.timeline.mock.calls[0];
 
     expect(motionMocks.timeline).toHaveBeenCalledOnce();
@@ -139,14 +141,32 @@ describe('cross-device product demonstrations', () => {
       scope: { current: story },
       revertOnUpdate: true
     });
-    expect(timelineConfig.scrollTrigger).toMatchObject({
-      trigger: story,
-      pin: stage,
-      scrub: true,
-      start: 'top top',
-      end: 'bottom bottom'
-    });
+    expect(timelineConfig.scrollTrigger.trigger).toBe(stage);
+    expect(timelineConfig.scrollTrigger.endTrigger).toBe(story);
+    expect(timelineConfig.scrollTrigger.pin).toBe(stage);
+    expect(timelineConfig.scrollTrigger.scrub).toBe(true);
+    expect(timelineConfig.scrollTrigger.start).toEqual(expect.any(Function));
+    expect(timelineConfig.scrollTrigger.end).toBe('bottom bottom');
+    expect(timelineConfig.scrollTrigger.start()).toBe('top top+=92');
     expect(motionMocks.timelineTo).not.toHaveBeenCalledWith(stage, expect.anything(), expect.anything());
+    expect(mascot).toHaveAttribute('aria-hidden', 'true');
+    expect(mascot.querySelector('img')).toHaveAttribute('alt', '');
+    expect(connectionLines).toHaveLength(3);
+    expect(motionMocks.timelineTo).toHaveBeenCalledWith(
+      connectionLines,
+      expect.objectContaining({ scaleX: expect.any(Number), opacity: expect.any(Number) }),
+      0
+    );
+    expect(motionMocks.timelineTo).toHaveBeenCalledWith(
+      mascot,
+      expect.objectContaining({
+        x: expect.any(Number),
+        y: expect.any(Number),
+        rotation: expect.any(Number),
+        scale: expect.any(Number)
+      }),
+      0
+    );
 
     act(() => timelineConfig.scrollTrigger.onUpdate({ progress: 0.76 }));
     expect(story).toHaveAttribute('data-active-scene', 'handoff');
@@ -164,6 +184,17 @@ describe('cross-device product demonstrations', () => {
     render(<CrossDeviceStory language="en" />);
 
     expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(motionMocks.timeline).not.toHaveBeenCalled();
+  });
+
+  it('keeps mobile and tablet layouts in the complete static flow', () => {
+    motionMocks.desktop = false;
+
+    render(<CrossDeviceStory language="en" />);
+
+    expect(screen.getAllByRole('article')).toHaveLength(4);
+    expect(screen.getByTestId('pc-console')).toBeVisible();
+    expect(screen.getByTestId('mobile-console')).toBeVisible();
     expect(motionMocks.timeline).not.toHaveBeenCalled();
   });
 
@@ -281,10 +312,15 @@ describe('cross-device product demonstrations', () => {
   it('marks the connection visualization as non-interactive decoration', () => {
     const { container } = render(<ConnectionFlow focus="shared" status="running" />);
     const flow = container.querySelector('.connection-flow');
+    const lines = flow.querySelectorAll('.connection-flow__line');
 
     expect(flow).toHaveAttribute('aria-hidden', 'true');
     expect(flow).toHaveAttribute('data-focus', 'shared');
     expect(flow).toHaveAttribute('data-status', 'running');
     expect(flow).toHaveClass('connection-flow');
+    expect(lines).toHaveLength(3);
+    for (const line of lines) {
+      expect(line.querySelector('.connection-flow__line-progress')).toBeInTheDocument();
+    }
   });
 });

@@ -6,9 +6,11 @@ export default function ConnectionFlow({ focus, status }) {
       data-status={status}
       aria-hidden="true"
     >
-      <i />
-      <i />
-      <i />
+      {[0, 1, 2].map(index => (
+        <i className="connection-flow__line" key={index}>
+          <span className="connection-flow__line-progress" />
+        </i>
+      ))}
     </div>
   );
 }

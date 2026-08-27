@@ -106,6 +106,18 @@ it('breathes only the coarse static mascot and disables that motion by preferenc
   expect(rule(".mascot-look[data-mode='coarse']", reduced)).toMatch(/animation:\s*none/);
 });
 
+it('keeps the desktop story in two columns independently of motion capability', () => {
+  const desktop = block(storyCss, /@media\s*\(min-width:\s*1024px\)\s*\{/);
+
+  expect(desktop).not.toBe('');
+  expect(rule('.cross-device-story', desktop)).toMatch(
+    /grid-template-columns:\s*minmax\(17rem,\s*0\.65fr\)\s*minmax\(0,\s*2fr\)/
+  );
+  expect(rule('.cross-device-story__intro', desktop)).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+  expect(rule('.story-step', desktop)).toMatch(/min-height:\s*clamp\(13rem,\s*24vh,\s*18rem\)/);
+  expect(desktop).not.toMatch(/position:\s*sticky/);
+});
+
 it('limits story pinning styles to fine-pointer desktops without reduced motion', () => {
   const desktopMotion = block(
     storyCss,

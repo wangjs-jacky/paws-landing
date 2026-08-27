@@ -48,6 +48,9 @@ export default function CrossDeviceStory({ language, activeSceneOverride }) {
       <div className="cross-device-story__stage">
         <PcConsoleDemo state={state} copy={copy} />
         <ConnectionFlow focus={state.focus} status={state.sessionStatus} />
+        <div className="story-scene-mascot" aria-hidden="true">
+          <img src="/assets/mascot-avatar.png" alt="" />
+        </div>
         <MobileConsoleDemo state={state} copy={copy} />
       </div>
     </section>
