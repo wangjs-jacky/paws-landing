@@ -35,6 +35,30 @@ for required_tool in ffmpeg ffprobe awk find grep mktemp python3 wc; do
   command -v "$required_tool" >/dev/null 2>&1 || fail "required tool not found: $required_tool"
 done
 
+python3 - <<'PY'
+from io import BytesIO
+
+try:
+    from PIL import Image, features
+except ImportError as error:
+    raise SystemExit(
+        "build-mascot-atlas: Pillow is required for RGBA despill and WebP validation: "
+        f"{error}"
+    )
+
+if not features.check("webp"):
+    raise SystemExit("build-mascot-atlas: Pillow lacks WebP decode/encode support")
+
+probe = BytesIO()
+Image.new("RGBA", (1, 1), (12, 34, 56, 0)).save(
+    probe, format="WEBP", quality=82, method=6
+)
+probe.seek(0)
+with Image.open(probe) as decoded:
+    if decoded.convert("RGBA").getpixel((0, 0))[3] != 0:
+        raise SystemExit("build-mascot-atlas: Pillow WebP alpha round-trip failed")
+PY
+
 output_dir=$(dirname "$output")
 mkdir -p "$output_dir"
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/paws-mascot-atlas.XXXXXX")
@@ -59,6 +83,42 @@ for frame in "$temp_dir"/frame-*.png; do
   frame_format=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of default=noprint_wrappers=1:nokey=1 "$frame")
   [ "$frame_format" = "rgba" ] || fail "frame is missing RGBA pixels: $frame ($frame_format)"
 done
+
+despill_result=$(python3 - "$temp_dir" <<'PY'
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+DESPILL_GREEN_DOMINANCE_THRESHOLD = 16
+frame_directory = Path(sys.argv[1])
+changed = 0
+
+for frame_path in sorted(frame_directory.glob("frame-*.png")):
+    with Image.open(frame_path) as source:
+        image = source.convert("RGBA")
+
+    cleaned = []
+    for red, green, blue, alpha in image.getdata():
+        if alpha == 0:
+            cleaned.append((0, 0, 0, 0))
+            continue
+
+        neutral_anchor = max(red, blue)
+        if green - neutral_anchor > DESPILL_GREEN_DOMINANCE_THRESHOLD:
+            green = max(0, neutral_anchor - 1)
+            changed += 1
+        cleaned.append((red, green, blue, alpha))
+
+    image.putdata(cleaned)
+    image.save(frame_path, format="PNG", compress_level=9)
+
+print(
+    f"green_dominance_threshold={DESPILL_GREEN_DOMINANCE_THRESHOLD},"
+    f"changed_pixels={changed}"
+)
+PY
+)
 
 temp_atlas_png="$temp_dir/mascot-turn-atlas.png"
 ffmpeg -v error \
@@ -136,4 +196,4 @@ atlas_bytes=$(wc -c < "$temp_output" | tr -d ' ')
 [ "$atlas_bytes" -le 3145728 ] || fail "atlas exceeds 3,145,728 bytes: $atlas_bytes"
 
 mv "$temp_output" "$output"
-echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 512px cells, chromakey 0x00ff00:0.18:0.08, WebP quality 82, $alpha_counts, $atlas_bytes bytes"
+echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 512px cells, chromakey 0x00ff00:0.18:0.08, despill $despill_result, WebP quality 82, $alpha_counts, $atlas_bytes bytes"
