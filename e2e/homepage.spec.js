@@ -47,6 +47,28 @@ async function expectTransparentMascotSurface(page, mode) {
   expect(cornerAlpha).toEqual([0, 0, 0, 0]);
 }
 
+async function expectAlertMascotCenterFrame(page) {
+  const alertEyePixels = await page.getByTestId('mascot-look').locator('canvas').evaluate(canvas => {
+    const pixels = canvas.getContext('2d').getImageData(170, 60, 180, 95).data;
+    let count = 0;
+    for (let offset = 0; offset < pixels.length; offset += 4) {
+      const red = pixels[offset];
+      const green = pixels[offset + 1];
+      const blue = pixels[offset + 2];
+      const alpha = pixels[offset + 3];
+      if (alpha > 200 && Math.min(red, green, blue) >= 205
+        && Math.max(red, green, blue) - Math.min(red, green, blue) <= 40) {
+        count += 1;
+      }
+    }
+    return count;
+  });
+  expect(
+    alertEyePixels,
+    'center frame 12 eye crop (170,60 180x95) should contain >=8 opaque near-white alert pixels'
+  ).toBeGreaterThanOrEqual(8);
+}
+
 test('desktop hero meets title, controls, mascot, terminal and preference contracts', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
 
@@ -173,6 +195,7 @@ test('Chinese documentation route keeps its existing heading', async ({ page }, 
 });
 
 test('captures transparent mascot in both themes at approved viewports', async ({ browser }, testInfo) => {
+  test.setTimeout(60_000);
   const viewport = testInfo.project.name === 'desktop'
     ? { width: 1440, height: 1000 }
     : { width: 390, height: 844 };
@@ -217,6 +240,7 @@ test('captures transparent mascot in both themes at approved viewports', async (
         await page.evaluate(() => new Promise(resolve => {
           requestAnimationFrame(() => requestAnimationFrame(resolve));
         }));
+        await expectAlertMascotCenterFrame(page);
       }
       await page.screenshot({
         path: testInfo.outputPath(`homepage-${testInfo.project.name}-${theme}.png`)
