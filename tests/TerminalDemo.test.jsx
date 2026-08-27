@@ -15,18 +15,34 @@ const terminalCopy = {
 };
 
 let intersectionCallback;
+let intersectionObservers;
+let reducedMotionQuery;
 
 function setReducedMotion(matches) {
-  window.matchMedia = vi.fn(() => ({
+  const listeners = new Set();
+  reducedMotionQuery = {
     matches,
     media: '(prefers-reduced-motion: reduce)',
     onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+    addEventListener: vi.fn((type, listener) => {
+      if (type === 'change') listeners.add(listener);
+    }),
+    removeEventListener: vi.fn((type, listener) => {
+      if (type === 'change') listeners.delete(listener);
+    }),
     addListener: vi.fn(),
     removeListener: vi.fn(),
     dispatchEvent: vi.fn()
-  }));
+  };
+  reducedMotionQuery.change = nextMatches => {
+    reducedMotionQuery.matches = nextMatches;
+    for (const listener of listeners) listener({ matches: nextMatches, media: reducedMotionQuery.media });
+  };
+  window.matchMedia = vi.fn(() => reducedMotionQuery);
+}
+
+function changeReducedMotion(matches) {
+  act(() => reducedMotionQuery.change(matches));
 }
 
 function intersect(isIntersecting) {
@@ -35,12 +51,14 @@ function intersect(isIntersecting) {
 
 beforeEach(() => {
   intersectionCallback = undefined;
+  intersectionObservers = [];
   setReducedMotion(false);
   window.IntersectionObserver = class {
     constructor(callback) {
       intersectionCallback = callback;
       this.observe = vi.fn();
       this.disconnect = vi.fn();
+      intersectionObservers.push(this);
     }
   };
 });
@@ -103,6 +121,61 @@ describe('TerminalDemo motion lifecycle', () => {
     expect(screen.getByTestId('terminal-demo')).toHaveAttribute('data-phase', 'hold');
     act(() => vi.advanceTimersByTime(1));
     expect(screen.getByTestId('terminal-demo')).toHaveAttribute('data-phase', 'typing');
+  });
+
+  it('restarts cleanly when the transcript changes during typing', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(
+      <TerminalDemo command={command} labels={labels} terminalCopy={{ ...terminalCopy, lines: ['old'] }} />
+    );
+    intersect(true);
+    act(() => vi.advanceTimersByTime(40));
+    expect(screen.getByText('o', { exact: true })).toBeVisible();
+
+    rerender(<TerminalDemo command={command} labels={labels} terminalCopy={{ ...terminalCopy, lines: ['新'] }} />);
+
+    expect(screen.queryByText('o', { exact: true })).not.toBeInTheDocument();
+    expect(screen.queryByText('新', { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByTestId('terminal-demo')).toHaveAttribute('data-phase', 'typing');
+  });
+
+  it('restarts cleanly when the transcript changes during hold', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(
+      <TerminalDemo command={command} labels={labels} terminalCopy={{ ...terminalCopy, lines: ['old'] }} />
+    );
+    intersect(true);
+    for (let step = 0; step < 4; step += 1) act(() => vi.advanceTimersByTime(40));
+    expect(screen.getByTestId('terminal-demo')).toHaveAttribute('data-phase', 'hold');
+    expect(screen.getByText('old')).toBeVisible();
+
+    rerender(<TerminalDemo command={command} labels={labels} terminalCopy={{ ...terminalCopy, lines: ['新'] }} />);
+
+    expect(screen.queryByText('old')).not.toBeInTheDocument();
+    expect(screen.queryByText('新', { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByTestId('terminal-demo')).toHaveAttribute('data-phase', 'typing');
+  });
+
+  it('requires fresh visibility confirmation after runtime reduced motion ends', () => {
+    vi.useFakeTimers();
+    render(<TerminalDemo command={command} labels={labels} terminalCopy={terminalCopy} />);
+
+    intersect(true);
+    expect(vi.getTimerCount()).toBe(1);
+    const originalObserver = intersectionObservers[0];
+
+    changeReducedMotion(true);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(originalObserver.disconnect).toHaveBeenCalledOnce();
+    for (const line of terminalCopy.lines) expect(screen.getByText(line)).toBeVisible();
+
+    changeReducedMotion(false);
+    expect(intersectionObservers).toHaveLength(2);
+    expect(vi.getTimerCount()).toBe(0);
+    intersect(false);
+    expect(vi.getTimerCount()).toBe(0);
+    intersect(true);
+    expect(vi.getTimerCount()).toBe(1);
   });
 });
 

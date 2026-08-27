@@ -4,6 +4,9 @@ export function createTerminalState() {
 
 export function advanceTerminal(state, transcript) {
   if (state.phase !== 'typing') return state;
+  if (transcript.length === 0) {
+    return { phase: 'hold', lineIndex: 0, charIndex: 0, rendered: [] };
+  }
 
   const line = transcript[state.lineIndex] ?? '';
   if (state.charIndex < line.length) {

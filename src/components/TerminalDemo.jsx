@@ -9,7 +9,18 @@ function prefersReducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
-export default function TerminalDemo({ command, labels, terminalCopy }) {
+export default function TerminalDemo(props) {
+  const { terminalCopy } = props;
+  const transcriptIdentity = JSON.stringify([
+    terminalCopy.title,
+    terminalCopy.installLabel,
+    terminalCopy.lines
+  ]);
+
+  return <TerminalDemoSession key={transcriptIdentity} {...props} />;
+}
+
+function TerminalDemoSession({ command, labels, terminalCopy }) {
   const rootRef = useRef(null);
   const [active, setActive] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
@@ -25,7 +36,10 @@ export default function TerminalDemo({ command, labels, terminalCopy }) {
   }, []);
 
   useEffect(() => {
-    if (reducedMotion) return undefined;
+    if (reducedMotion) {
+      setActive(false);
+      return undefined;
+    }
     const root = rootRef.current;
     if (!root || !('IntersectionObserver' in window)) {
       setActive(true);
