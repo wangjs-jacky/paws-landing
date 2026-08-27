@@ -148,9 +148,12 @@ test('mobile navigation, mascot, targets and layout remain usable', async ({ pag
   const [titleBox, primaryCtaBox, mascotStageBox, terminalBox] = firstViewport;
   for (const box of firstViewport) expect(box).not.toBeNull();
   const viewportHeight = page.viewportSize().height;
+  expect(titleBox.y).toBeGreaterThanOrEqual(0);
   expect(titleBox.y + titleBox.height).toBeLessThanOrEqual(viewportHeight);
+  expect(primaryCtaBox.y).toBeGreaterThanOrEqual(0);
   expect(primaryCtaBox.y + primaryCtaBox.height).toBeLessThanOrEqual(viewportHeight);
   expect(mascotStageBox.y).toBeLessThan(viewportHeight);
+  expect(mascotStageBox.y + mascotStageBox.height).toBeGreaterThan(0);
   expect(primaryCtaBox.y).toBeLessThan(mascotStageBox.y);
   expect(mascotStageBox.y).toBeLessThan(terminalBox.y);
   const menuButton = page.locator('.menu-toggle');

@@ -87,9 +87,9 @@ it('sets the final desktop hero hierarchy and media halo', () => {
   expect(css).not.toContain('.mascot-stage img');
 });
 
-it('orders mobile hero copy, mascot and terminal without an overflow escape hatch', () => {
+it('uses one 800px boundary for the 767, 768 and 800px mobile hero, restoring the crew at 801px', () => {
   const mobile = block(css, /@media\s*\(max-width:\s*800px\)\s*\{/);
-  const narrowMobile = block(css, /@media\s*\(max-width:\s*767px\)\s*\{/);
+  const base = css.slice(0, css.indexOf('@media (max-width: 800px)'));
 
   expect(rule('.hero-grid', mobile)).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*1/);
@@ -100,9 +100,9 @@ it('orders mobile hero copy, mascot and terminal without an overflow escape hatc
   expect(rule('.hero-copy h1', mobile)).toMatch(/font-size:\s*clamp\(2\.7rem,\s*13vw,\s*4rem\)/);
   expect(rule('.hero-terminal-slot', mobile)).toMatch(/max-width:\s*100%/);
   expect(rule('.terminal-demo', mobile)).toMatch(/width:\s*100%/);
-  expect(rule('.hero-grid', narrowMobile)).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
-  expect(rule('.hero-media', narrowMobile)).toMatch(/min-height:\s*18rem/);
-  expect(rule('.hero-crew img:nth-child(n+2)', narrowMobile)).toMatch(/display:\s*none/);
+  expect(rule('.hero-media', mobile)).toMatch(/min-height:\s*18rem/);
+  expect(rule('.hero-crew img:nth-child(n+2)', mobile)).toMatch(/display:\s*none/);
+  expect(rule('.hero-crew img', base)).not.toMatch(/display:\s*none/);
   expect(css).not.toMatch(/overflow-x:\s*hidden/);
 });
 

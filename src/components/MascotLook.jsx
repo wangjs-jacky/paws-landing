@@ -143,7 +143,7 @@ export default function MascotLook({
     };
 
     const resetTranslation = () => {
-      mascotRef.current?.style.setProperty('--mascot-y', '0px');
+      surface.style.setProperty('--mascot-y', '0px');
     };
 
     const drawFrame = frameValue => {
@@ -204,7 +204,7 @@ export default function MascotLook({
       const translation = Number.isFinite(rawTranslation)
         ? Math.max(-4, Math.min(4, rawTranslation))
         : 0;
-      mascotRef.current?.style.setProperty('--mascot-y', `${Number(translation.toFixed(2))}px`);
+      surface.style.setProperty('--mascot-y', `${Number(translation.toFixed(2))}px`);
       requestDraw();
     };
 

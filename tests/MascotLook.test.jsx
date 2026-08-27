@@ -14,6 +14,10 @@ function Harness(props) {
         alt="Paws mascot"
         {...props}
       />
+      <div
+        data-testid="satellite-transform-probe"
+        style={{ transform: 'translate3d(0, var(--mascot-y, 0px), 0)' }}
+      />
     </section>
   );
 }
@@ -123,19 +127,23 @@ describe('MascotLook pointer lifecycle', () => {
     );
   });
 
-  it('clamps pointer Y to four pixels of vertical translation', async () => {
+  it('publishes clamped pointer Y translation for the mascot and sibling satellites', async () => {
     render(<Harness />);
     const surface = screen.getByTestId('pointer-surface');
     const mascot = screen.getByTestId('mascot-look');
+    const satellite = screen.getByTestId('satellite-transform-probe');
     vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
     await loadAtlas();
     setVisible(surface, true);
 
     fireEvent.pointerMove(surface, { clientX: 50, clientY: 200 });
-    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('4px');
+    expect(surface.style.getPropertyValue('--mascot-y')).toBe('4px');
+    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('');
+    expect(surface).toContainElement(satellite);
+    expect(satellite).toHaveStyle({ transform: 'translate3d(0, var(--mascot-y, 0px), 0)' });
 
     fireEvent.pointerMove(surface, { clientX: 50, clientY: -100 });
-    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('-4px');
+    expect(surface.style.getPropertyValue('--mascot-y')).toBe('-4px');
   });
 
   it('returns to center frame 12 after the pointer leaves', async () => {
@@ -152,7 +160,7 @@ describe('MascotLook pointer lifecycle', () => {
     flushAnimationFrames();
 
     expect(mascot).toHaveAttribute('data-frame', '12');
-    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('0px');
+    expect(surface.style.getPropertyValue('--mascot-y')).toBe('0px');
   });
 
   it('resets translation and does no pointer geometry or RAF work while offscreen', async () => {
@@ -163,10 +171,10 @@ describe('MascotLook pointer lifecycle', () => {
     await loadAtlas();
     setVisible(surface, true);
     fireEvent.pointerMove(surface, { clientX: 100, clientY: 100 });
-    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('4px');
+    expect(surface.style.getPropertyValue('--mascot-y')).toBe('4px');
 
     setVisible(surface, false);
-    expect(mascot.style.getPropertyValue('--mascot-y')).toBe('0px');
+    expect(surface.style.getPropertyValue('--mascot-y')).toBe('0px');
     rect.mockClear();
     window.requestAnimationFrame.mockClear();
 
@@ -252,11 +260,13 @@ it('cleans hero listeners, observer, RAF, media listeners, and image callbacks o
   vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
   const atlas = await loadAtlas();
   const observer = setVisible(surface, true);
-  fireEvent.pointerMove(surface, { clientX: 100 });
+  fireEvent.pointerMove(surface, { clientX: 100, clientY: 100 });
   const pendingRaf = [...rafCallbacks.keys()][0];
+  expect(surface.style.getPropertyValue('--mascot-y')).toBe('4px');
 
   unmount();
 
+  expect(surface.style.getPropertyValue('--mascot-y')).toBe('0px');
   expect(observer.disconnect).toHaveBeenCalledOnce();
   expect(removeEventListener).toHaveBeenCalledWith('pointermove', expect.any(Function));
   expect(removeEventListener).toHaveBeenCalledWith('pointerleave', expect.any(Function));

@@ -946,7 +946,10 @@
   .hero-media {
     grid-column: 1;
     grid-row: 2;
+    min-height: 18rem;
   }
+
+  .hero-crew img:nth-child(n+2) { display: none; }
 
   .mascot-look {
     width: min(100%, 17rem);
@@ -1010,10 +1013,6 @@
 }
 
 @media (max-width: 767px) {
-  .hero-grid { grid-template-columns: minmax(0, 1fr); }
-  .hero-media { min-height: 18rem; }
-  .hero-crew img:nth-child(n+2) { display: none; }
-
   .agent-marquee::before,
   .agent-marquee::after { display: none; }
   .agent-marquee__track { width: 100%; animation: none; }
