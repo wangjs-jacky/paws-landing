@@ -8,7 +8,7 @@ export default function MascotCrew({ copy }) {
     <section
       id="paws-crew"
       className="mascot-crew"
-      aria-label="Paws Crew"
+      aria-label={copy.crewLabel}
       data-testid="mascot-crew"
     >
       <ol className="mascot-crew__rail" data-testid="mascot-crew-rail">

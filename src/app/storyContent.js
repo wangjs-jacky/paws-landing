@@ -33,6 +33,7 @@ export const storyContent = {
         handoff: 'PC Web showing the same session that is open in the App.'
       }
     },
+    crewLabel: 'Paws Crew',
     crew: [
       { id: 'astro', role: 'REMOTE LAUNCH', title: 'Astronaut', body: 'Start work across distance.', alt: 'Paws astronaut mascot' },
       { id: 'explorer', role: 'ANYWHERE', title: 'Explorer', body: 'Continue after leaving the desk.', alt: 'Paws explorer mascot' },
@@ -113,6 +114,7 @@ export const storyContent = {
         handoff: 'PC Web 与 App 正在显示同一个会话。'
       }
     },
+    crewLabel: 'Paws 角色小队',
     crew: [
       { id: 'astro', role: '远程启动', title: '宇航员', body: '跨越距离，远程开始工作。', alt: 'Paws 宇航员土拨鼠' },
       { id: 'explorer', role: '随处继续', title: '探险家', body: '离开电脑以后继续任务。', alt: 'Paws 探险家土拨鼠' },

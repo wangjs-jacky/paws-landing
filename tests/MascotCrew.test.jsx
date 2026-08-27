@@ -9,30 +9,63 @@ import { MASCOT_IDS, getMascotCrew } from '../src/components/MascotCrew/mascotRe
 
 const copy = getStoryContent('en');
 const storyCss = readFileSync(resolve(process.cwd(), 'src/styles/story.css'), 'utf8');
+const approvedIds = [
+  'astro',
+  'explorer',
+  'hoodie',
+  'ninja',
+  'scientist',
+  'barista',
+  'florist'
+];
 
 beforeEach(() => localStorage.clear());
 
 describe('Paws Crew registry', () => {
-  it('keeps the seven approved roles in their fixed narrative order', () => {
-    expect(MASCOT_IDS).toEqual([
-      'astro',
-      'explorer',
-      'hoodie',
-      'ninja',
-      'scientist',
-      'barista',
-      'florist'
-    ]);
+  it.each([
+    ['English', 'en', ['Astronaut', 'Explorer', 'Developer', 'Ninja', 'Scientist', 'Barista', 'Florist']],
+    ['Chinese', 'zh', ['宇航员', '探险家', '程序员', '忍者', '科学家', '咖啡师', '花艺师']]
+  ])('builds the complete %s crew in the approved order', (_label, language, expectedTitles) => {
+    const crew = getMascotCrew(getStoryContent(language));
 
-    expect(getMascotCrew(copy).map(({ id, src }) => ({ id, src }))).toEqual([
-      { id: 'astro', src: '/assets/mascots/astro.png' },
-      { id: 'explorer', src: '/assets/mascots/explorer.png' },
-      { id: 'hoodie', src: '/assets/mascots/hoodie.png' },
-      { id: 'ninja', src: '/assets/mascots/ninja.png' },
-      { id: 'scientist', src: '/assets/mascots/scientist.png' },
-      { id: 'barista', src: '/assets/mascots/barista.png' },
-      { id: 'florist', src: '/assets/mascots/florist.png' }
+    expect(MASCOT_IDS).toEqual(approvedIds);
+    expect(crew.map(item => item.id)).toEqual(approvedIds);
+    expect(crew.map(item => item.title)).toEqual(expectedTitles);
+    expect(crew.map(item => item.src)).toEqual([
+      '/assets/mascots/astro.png',
+      '/assets/mascots/explorer.png',
+      '/assets/mascots/hoodie.png',
+      '/assets/mascots/ninja.png',
+      '/assets/mascots/scientist.png',
+      '/assets/mascots/barista.png',
+      '/assets/mascots/florist.png'
     ]);
+  });
+
+  it('normalizes a valid shuffled copy to the approved order', () => {
+    const shuffledCopy = { ...copy, crew: [...copy.crew].reverse() };
+
+    expect(getMascotCrew(shuffledCopy).map(item => item.id)).toEqual(approvedIds);
+    expect(getMascotCrew(shuffledCopy).map(item => item.title)).toEqual([
+      'Astronaut',
+      'Explorer',
+      'Developer',
+      'Ninja',
+      'Scientist',
+      'Barista',
+      'Florist'
+    ]);
+  });
+
+  it.each([
+    ['missing', copy.crew.slice(0, -1)],
+    ['extra', [...copy.crew, { ...copy.crew[0], id: 'pilot' }]],
+    ['unknown', copy.crew.map(item => item.id === 'florist' ? { ...item, id: 'pilot' } : item)],
+    ['duplicate', copy.crew.map(item => item.id === 'florist' ? { ...copy.crew[0] } : item)]
+  ])('rejects a %s role collection', (_case, crew) => {
+    expect(() => getMascotCrew({ ...copy, crew })).toThrow(
+      'Paws Crew copy must contain exactly the seven unique approved mascot IDs.'
+    );
   });
 });
 
@@ -65,6 +98,17 @@ describe('Paws Crew rail', () => {
     render(<App />);
 
     expect(screen.getByTestId('mascot-crew').previousElementSibling).toHaveAttribute('id', 'app-pc');
+  });
+
+  it.each([
+    ['en', 'Paws Crew'],
+    ['zh', 'Paws 角色小队']
+  ])('uses the localized %s section label', (language, expectedLabel) => {
+    const localizedCopy = getStoryContent(language);
+
+    expect(localizedCopy.crewLabel).toBe(expectedLabel);
+    render(<MascotCrew copy={localizedCopy} />);
+    expect(screen.getByRole('region', { name: expectedLabel })).toBeInTheDocument();
   });
 
   it('uses native horizontal overflow and removes transforms for reduced motion', () => {
