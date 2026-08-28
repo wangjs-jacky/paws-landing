@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { act, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/app/App';
 import { getStoryContent } from '../src/app/storyContent';
 import MascotCrew from '../src/components/MascotCrew/MascotCrew';
@@ -70,6 +70,36 @@ describe('Paws Crew registry', () => {
 });
 
 describe('Paws Crew rail', () => {
+  it('defers below-fold image requests until the Crew section approaches the viewport', () => {
+    const originalObserver = window.IntersectionObserver;
+    const observers = [];
+    window.IntersectionObserver = vi.fn(function MockIntersectionObserver(callback, options) {
+      this.callback = callback;
+      this.options = options;
+      this.observe = vi.fn();
+      this.disconnect = vi.fn();
+      observers.push(this);
+    });
+
+    try {
+      const { container, unmount } = render(<MascotCrew copy={copy} />);
+      expect(container.querySelectorAll('.mascot-card__media img')).toHaveLength(0);
+      expect(observers).toHaveLength(1);
+      expect(observers[0].options).toEqual({ rootMargin: '800px 0px' });
+      expect(observers[0].observe).toHaveBeenCalledWith(screen.getByTestId('mascot-crew'));
+
+      act(() => observers[0].callback([{ isIntersecting: true }]));
+      expect(container.querySelectorAll('.mascot-card__media img')).toHaveLength(7);
+      expect(observers[0].disconnect).toHaveBeenCalledTimes(2);
+
+      unmount();
+      expect(observers[0].disconnect).toHaveBeenCalledTimes(2);
+    } finally {
+      if (originalObserver) window.IntersectionObserver = originalObserver;
+      else delete window.IntersectionObserver;
+    }
+  });
+
   it('renders every localized role with stable media dimensions and no controls', () => {
     const { container } = render(<MascotCrew copy={copy} />);
     const cards = screen.getAllByTestId('mascot-card');

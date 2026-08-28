@@ -1,4 +1,4 @@
-export default function MascotCard({ mascot }) {
+export default function MascotCard({ mascot, loadImage }) {
   return (
     <li
       className="mascot-card"
@@ -8,14 +8,16 @@ export default function MascotCard({ mascot }) {
     >
       <div className="mascot-card__surface" data-testid={`mascot-card-${mascot.id}`}>
         <div className="mascot-card__media">
-          <img
-            src={mascot.src}
-            alt={mascot.alt}
-            width="512"
-            height="512"
-            loading="lazy"
-            decoding="async"
-          />
+          {loadImage ? (
+            <img
+              src={mascot.src}
+              alt={mascot.alt}
+              width="512"
+              height="512"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : null}
         </div>
         <div className="mascot-card__copy">
           <p className="mascot-card__role">{mascot.role}</p>

@@ -17,6 +17,19 @@ const HOMEPAGE_BRAND_FILES = [
   'src/components/Footer.jsx',
   'src/components/CrossDeviceStory/CrossDeviceStory.jsx'
 ];
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+function readPngDimensions(input) {
+  const data = Buffer.from(input);
+  assert.ok(data.length >= 24, 'PNG is too short to contain an IHDR chunk');
+  assert.ok(data.subarray(0, 8).equals(PNG_SIGNATURE), 'Invalid PNG signature');
+  assert.equal(data.toString('ascii', 12, 16), 'IHDR', 'PNG first chunk must be IHDR');
+  assert.ok(data.readUInt32BE(8) >= 13, 'PNG IHDR chunk is truncated');
+  const width = data.readUInt32BE(16);
+  const height = data.readUInt32BE(20);
+  assert.ok(width > 0 && height > 0, 'PNG dimensions must be positive');
+  return { width, height };
+}
 
 function skipQuoted(source, start, quote) {
   for (let index = start + 1; index < source.length; index += 1) {
@@ -217,38 +230,17 @@ function verifyHomepageBrandAssets(root = defaultRoot) {
   assert.ok(fs.existsSync(brandPath), `Missing homepage brand asset: ${HOMEPAGE_BRAND_SOURCE}`);
   const brandBytes = fs.statSync(brandPath).size;
   assert.ok(brandBytes <= HOMEPAGE_BRAND_LIMIT, `Homepage brand exceeds ${HOMEPAGE_BRAND_LIMIT} bytes`);
+  assert.deepEqual(
+    readPngDimensions(fs.readFileSync(brandPath)),
+    { width: 512, height: 512 },
+    'Homepage brand must be exactly 512x512'
+  );
 
   const docsAvatarBytes = fs.statSync(path.join(root, 'public/assets/mascot-avatar.png')).size;
-  const bytes = relative => fs.statSync(path.join(root, relative)).size;
-  const sum = relatives => relatives.reduce((total, relative) => total + bytes(relative), 0);
-  const firstViewportPathBytes = {
-    desktopFine: sum([
-      'public/assets/mascot-turn-atlas.webp',
-      'public/assets/mascots/astro.png',
-      'public/assets/mascots/ninja.png',
-      'public/assets/mascots/scientist.png',
-      'public/assets/mascots/hoodie.png'
-    ]),
-    mobileCoarse: sum([
-      'public/assets/mascot-static.png',
-      'public/assets/mascots/astro.png',
-      'public/assets/mascots/hoodie.png'
-    ]),
-    desktopReduced: sum([
-      'public/assets/mascot-static.png',
-      'public/assets/mascots/astro.png',
-      'public/assets/mascots/ninja.png',
-      'public/assets/mascots/hoodie.png'
-    ])
-  };
-  for (const [context, totalBytes] of Object.entries(firstViewportPathBytes)) {
-    assert.ok(totalBytes <= 1_800_000, `${context} first-viewport images exceed 1,800,000 bytes`);
-  }
 
   return {
     brandBytes,
     docsAvatarBytes,
-    firstViewportPathBytes,
     savedBrandBytes: docsAvatarBytes - brandBytes
   };
 }
@@ -327,13 +319,9 @@ function verifyStatic(root = defaultRoot) {
   assert.equal(packageJson.dependencies['@gsap/react'], '2.1.2', '@gsap/react must remain fixed and local');
 
   const imageCount = verifyNonHeroImageMetadata(root);
-  const firstViewportSummary = Object.entries(homepageBrand.firstViewportPathBytes)
-    .map(([context, bytes]) => `${context}=${bytes}`)
-    .join(', ');
   console.log(
     `Verified ${required.length} production files, ${imageCount} non-Hero JSX images, `
-    + `${homepageBrand.brandBytes}-byte homepage brand, `
-    + `first-viewport paths (${firstViewportSummary}) `
+    + `${homepageBrand.brandBytes}-byte homepage brand `
     + `(saves ${homepageBrand.savedBrandBytes} bytes versus docs avatar)`
   );
 }
@@ -343,6 +331,7 @@ module.exports = {
   extractJsxOpeningTags,
   jsxAttributes,
   jsxAttributeNames,
+  readPngDimensions,
   verifyHomepageBrandAssets,
   verifyNonHeroImageMetadata,
   verifyStatic

@@ -68,6 +68,10 @@ test('the homepage favicon uses the approved lightweight hoodie asset', () => {
   const iconSource = path.join(root, 'public', iconPath.slice(1));
   assert.equal(fs.existsSync(iconSource), true, `favicon source does not exist: ${iconPath}`);
   assert.ok(fs.statSync(iconSource).size <= 300_000, 'homepage brand asset exceeds 300,000 bytes');
+  assert.deepEqual(
+    staticVerifier.readPngDimensions(fs.readFileSync(iconSource)),
+    { width: 512, height: 512 }
+  );
 });
 
 test('homepage sources never load the documentation-only mascot avatar', () => {
@@ -92,14 +96,8 @@ test('the production verifier enforces the homepage brand asset contract', () =>
     'static verifier must expose a homepage brand asset gate'
   );
   const metrics = staticVerifier.verifyHomepageBrandAssets(root);
-  assert.deepEqual(metrics.firstViewportPathBytes, {
-    desktopFine: 1_563_340,
-    mobileCoarse: 1_490_472,
-    desktopReduced: 1_697_477
-  });
-  for (const [context, bytes] of Object.entries(metrics.firstViewportPathBytes)) {
-    assert.ok(bytes <= 1_800_000, `${context} first-viewport images exceed 1,800,000 bytes`);
-  }
+  assert.equal(metrics.brandBytes, 220_098);
+  assert.ok(metrics.savedBrandBytes > 1_800_000);
 });
 
 test('the static image verifier reads real JSX tags instead of comments or string decoys', () => {

@@ -22,7 +22,9 @@ const requiredPaths = [
   '.github/workflows/deploy-cloudflare-pages.yml'
 ];
 
-const orderedGateSteps = [
+const exactStepNames = [
+  'Check out repository',
+  'Set up Node.js',
   'Install dependencies',
   'Test and build',
   'Install Playwright browser',
@@ -65,19 +67,25 @@ function assertWatchedPaths(document) {
       `Cloudflare workflow does not watch ${requiredPath}`
     );
   }
+  assert.equal(
+    actualPaths.length,
+    new Set(actualPaths).size,
+    'on.push.paths must not contain duplicates'
+  );
+  assert.deepEqual(
+    [...actualPaths].sort(),
+    [...requiredPaths].sort(),
+    'on.push.paths must be the exact required set'
+  );
 }
 
-function assertOrderedGateSteps(document) {
+function assertExactSteps(document) {
   const steps = deploySteps(document);
-  let priorPosition = -1;
-
-  for (const expectedName of orderedGateSteps) {
-    const position = steps.findIndex((step, index) => (
-      index > priorPosition && step.name === expectedName
-    ));
-    assert.ok(position > priorPosition, `${expectedName} is missing or out of order`);
-    priorPosition = position;
-  }
+  assert.deepEqual(
+    steps.map(step => step.name),
+    exactStepNames,
+    'deploy step names must be exact and unique'
+  );
 }
 
 function namedStep(document, name) {
@@ -93,12 +101,63 @@ function executableShell(run) {
     .join('\n');
 }
 
+function normalizedShell(run) {
+  return executableShell(run)
+    .trim()
+    .replace(/\\\s*\n\s*/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+function secretReferences(value) {
+  return [...JSON.stringify(value).matchAll(/\$\{\{\s*secrets\.[^}]+\}\}/g)]
+    .map(match => match[0]);
+}
+
+function assertSecretScope(document) {
+  const deployJob = document.getIn(['jobs', 'deploy']).toJSON();
+  const expectedEnv = {
+    CLOUDFLARE_API_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}',
+    CLOUDFLARE_ACCOUNT_ID: '${{ secrets.CLOUDFLARE_ACCOUNT_ID }}'
+  };
+  const authorizedSteps = new Set(['Check deployment credentials', 'Deploy to Cloudflare Pages']);
+  const jobWithoutSteps = { ...deployJob };
+  delete jobWithoutSteps.steps;
+
+  assert.equal(deployJob.env, undefined, 'deploy job must not expose secrets through job env');
+  assert.deepEqual(secretReferences(jobWithoutSteps), [], 'deploy job secret reference is forbidden');
+
+  for (const step of deployJob.steps) {
+    const references = secretReferences(step);
+    if (!authorizedSteps.has(step.name)) {
+      assert.deepEqual(references, [], `${step.name} secret reference is forbidden`);
+      continue;
+    }
+
+    assert.deepEqual(
+      Object.keys(step.env ?? {}).sort(),
+      Object.keys(expectedEnv).sort(),
+      `${step.name} secret env keys must be exact`
+    );
+    assert.deepEqual(step.env, expectedEnv, `${step.name} secret expressions must be exact`);
+    assert.deepEqual(
+      references.sort(),
+      Object.values(expectedEnv).sort(),
+      `${step.name} must reference each approved secret exactly once`
+    );
+  }
+}
+
 function assertWorkflowContract(source) {
   const document = parseWorkflow(source);
   const workflow = document.toJS();
   assert.ok(Object.hasOwn(workflow, 'on'), 'workflow must expose an on mapping');
   assertWatchedPaths(document);
-  assertOrderedGateSteps(document);
+  assertExactSteps(document);
+  assertSecretScope(document);
+
+  assert.equal(namedStep(document, 'Check out repository').uses, 'actions/checkout@v4');
+  assert.equal(namedStep(document, 'Set up Node.js').uses, 'actions/setup-node@v4');
+  assert.deepEqual(namedStep(document, 'Set up Node.js').with, { 'node-version': 22 });
 
   assert.equal(namedStep(document, 'Install dependencies').run, 'npm ci');
   assert.equal(namedStep(document, 'Test and build').run, 'npm run check');
@@ -118,13 +177,14 @@ function assertWorkflowContract(source) {
   assert.match(installerGate, /text\/html/);
   assert.match(installerGate, /head -n 1 dist\/install\.sh \| grep .*['"]\^#!['"]/);
 
-  const deploy = executableShell(namedStep(document, 'Deploy to Cloudflare Pages').run);
-  assert.match(deploy, /npx --yes wrangler@4\.105\.0 pages deploy dist/);
-  assert.match(deploy, /--project-name paws-landing/);
-  assert.match(deploy, /--branch main/);
-  assert.match(deploy, /--commit-hash "\$GITHUB_SHA"/);
-  assert.match(deploy, /--commit-message "GitHub Actions deployment"/);
-  assert.match(deploy, /--commit-dirty=false/);
+  const deploy = normalizedShell(namedStep(document, 'Deploy to Cloudflare Pages').run);
+  assert.equal(
+    deploy,
+    'npx --yes wrangler@4.105.0 pages deploy dist --project-name paws-landing --branch main '
+      + '--commit-hash "$GITHUB_SHA" --commit-message "GitHub Actions deployment" '
+      + '--commit-dirty=false',
+    'Wrangler run block must be exact'
+  );
 
   const verify = executableShell(namedStep(document, 'Verify production site').run);
   assert.match(verify, /verify_exact_artifact/);
@@ -175,19 +235,50 @@ test('YAML comments cannot fake watched paths or executable steps', () => {
 
 test('Cloudflare secrets remain scoped to credential and deploy steps in the YAML AST', () => {
   const document = parseWorkflow(workflowSource);
-  const deployJob = document.getIn(['jobs', 'deploy']).toJSON();
-  const secretNames = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'];
-  const authorizedSteps = new Set(['Check deployment credentials', 'Deploy to Cloudflare Pages']);
+  assert.doesNotThrow(() => assertSecretScope(document));
+});
 
-  assert.equal(deployJob.env, undefined);
-  for (const step of deployJob.steps) {
-    for (const secretName of secretNames) {
-      const value = step.env?.[secretName];
-      if (authorizedSteps.has(step.name)) {
-        assert.equal(value, `\${{ secrets.${secretName} }}`);
-      } else {
-        assert.equal(value, undefined, `${secretName} leaked into ${step.name}`);
-      }
-    }
-  }
+test('a duplicate early credential/deploy pair cannot bypass step ordering', () => {
+  const duplicateDocument = parseWorkflow(workflowSource);
+  const duplicateSteps = duplicateDocument.getIn(['jobs', 'deploy', 'steps'], true);
+  const credentialStep = duplicateSteps.items
+    .find(step => step.get('name') === 'Check deployment credentials').toJSON();
+  const deployStep = duplicateSteps.items
+    .find(step => step.get('name') === 'Deploy to Cloudflare Pages').toJSON();
+  duplicateSteps.items.splice(
+    2,
+    0,
+    duplicateDocument.createNode(credentialStep),
+    duplicateDocument.createNode(deployStep)
+  );
+  assert.throws(
+    () => assertWorkflowContract(duplicateDocument.toString()),
+    /step names must be exact and unique/
+  );
+});
+
+test('an extra Wrangler argument cannot bypass the exact deploy command', () => {
+  const extraArgumentDocument = parseWorkflow(workflowSource);
+  const extraArgumentSteps = extraArgumentDocument.getIn(['jobs', 'deploy', 'steps'], true);
+  const extraArgumentDeploy = extraArgumentSteps.items
+    .find(step => step.get('name') === 'Deploy to Cloudflare Pages');
+  extraArgumentDeploy.set('run', `${extraArgumentDeploy.get('run').trimEnd()} \\\n+  --dry-run\n`);
+  assert.throws(
+    () => assertWorkflowContract(extraArgumentDocument.toString()),
+    /Wrangler run block must be exact/
+  );
+});
+
+test('an arbitrary direct secret reference cannot bypass step scoping', () => {
+  const secretLeakDocument = parseWorkflow(workflowSource);
+  const secretLeakSteps = secretLeakDocument.getIn(['jobs', 'deploy', 'steps'], true);
+  const installerStep = secretLeakSteps.items
+    .find(step => step.get('name') === 'Validate installer artifact');
+  installerStep.set('env', secretLeakDocument.createNode({
+    ARBITRARY_SECRET: '${{ secrets.ARBITRARY_SECRET }}'
+  }));
+  assert.throws(
+    () => assertWorkflowContract(secretLeakDocument.toString()),
+    /secret reference is forbidden/
+  );
 });

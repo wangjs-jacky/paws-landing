@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { isImageAssetUrl, summarizeImageResources } from './image-budget.js';
 
 const LANGUAGE_KEY = 'paws-home-language-v1';
 const THEME_KEY = 'paws-home-theme-v1';
@@ -12,6 +13,85 @@ const ENGLISH_TRANSCRIPT = [
   '  edit src/auth/session.ts (+42 −8)',
   '✔ waiting for approval on your phone…'
 ];
+const FIRST_VIEWPORT_IMAGE_LIMIT = 1_800_000;
+
+function trackImageResponseSizes(page) {
+  const contentLengths = new Map();
+  const pending = [];
+
+  page.on('response', response => {
+    if (!isImageAssetUrl(response.url())) return;
+    pending.push((async () => {
+      const headers = await response.allHeaders();
+      const contentLength = Number(headers['content-length']);
+      if (Number.isFinite(contentLength) && contentLength > 0) {
+        const previous = contentLengths.get(response.url()) ?? 0;
+        contentLengths.set(response.url(), Math.max(previous, contentLength));
+      }
+    })());
+  });
+
+  return { contentLengths, pending };
+}
+
+async function waitForHeroImagePath(page, mode) {
+  const mascot = page.getByTestId('mascot-look');
+  await expect(mascot).toHaveAttribute('data-mode', mode);
+  await expect.poll(() => page.locator('.brand img').evaluate(image => (
+    image.complete && image.naturalWidth === 512
+  ))).toBe(true);
+
+  if (mode === 'interactive') {
+    await expect(mascot).toHaveAttribute('data-ready', 'true');
+    await expect.poll(() => page.getByTestId('hero-crew-member').evaluateAll(images => (
+      images.every(image => image.complete && image.naturalWidth === 512)
+    ))).toBe(true);
+    return;
+  }
+
+  await expect.poll(() => mascot.locator('img').evaluate(image => (
+    image.complete && image.naturalWidth === 1254
+  ))).toBe(true);
+  await expect.poll(() => page.getByTestId('hero-crew-member').evaluateAll(images => {
+    const visible = images.filter(image => getComputedStyle(image).display !== 'none');
+    return visible.length > 0
+      && visible.every(image => image.complete && image.naturalWidth === 512);
+  })).toBe(true);
+}
+
+async function measureFirstViewportImages(browser, { name, mode, ...contextOptions }) {
+  const context = await browser.newContext({ baseURL: BASE_URL, locale: 'en-US', ...contextOptions });
+  const page = await context.newPage();
+  const responseSizes = trackImageResponseSizes(page);
+
+  try {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await waitForHeroImagePath(page, mode);
+    await page.waitForLoadState('networkidle', { timeout: 15_000 });
+    await page.waitForTimeout(250);
+    await Promise.all(responseSizes.pending);
+
+    const resourceEntries = await page.evaluate(() => performance.getEntriesByType('resource')
+      .map(entry => ({ name: entry.name, encodedBodySize: entry.encodedBodySize })));
+    const summary = summarizeImageResources(resourceEntries, responseSizes.contentLengths);
+    const paths = new Set(summary.resources.map(resource => resource.pathname));
+
+    expect(summary.totalBytes, `${name} first-viewport image bytes`).toBeLessThanOrEqual(
+      FIRST_VIEWPORT_IMAGE_LIMIT
+    );
+    if (mode === 'interactive') {
+      expect(paths.has('/assets/mascot-turn-atlas.webp')).toBe(true);
+      expect(paths.has('/assets/mascot-static.png')).toBe(false);
+    } else {
+      expect(paths.has('/assets/mascot-static.png')).toBe(true);
+      expect(paths.has('/assets/mascot-turn-atlas.webp')).toBe(false);
+    }
+
+    return { name, ...summary };
+  } finally {
+    await context.close();
+  }
+}
 
 async function resetPreferences(page) {
   await page.goto('/');
@@ -155,6 +235,31 @@ async function expectAlertMascotCenterFrame(page) {
     'center frame 12 eye crop (255,90 270x143) should contain >=8 opaque near-white alert pixels'
   ).toBeGreaterThanOrEqual(8);
 }
+
+test('actual first-viewport image requests stay within budget in every motion context', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  const results = [];
+  results.push(await measureFirstViewportImages(browser, {
+    name: 'desktop-fine',
+    mode: 'interactive',
+    viewport: { width: 1440, height: 1000 }
+  }));
+  results.push(await measureFirstViewportImages(browser, {
+    name: 'mobile-coarse',
+    mode: 'coarse',
+    hasTouch: true,
+    viewport: { width: 390, height: 844 }
+  }));
+  results.push(await measureFirstViewportImages(browser, {
+    name: 'desktop-reduced',
+    mode: 'reduced',
+    reducedMotion: 'reduce',
+    viewport: { width: 1440, height: 1000 }
+  }));
+
+  console.log(`First-viewport image resources: ${JSON.stringify(results)}`);
+});
 
 test('desktop hero meets title, controls, mascot, terminal and preference contracts', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
