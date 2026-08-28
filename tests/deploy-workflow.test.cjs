@@ -79,6 +79,16 @@ function assertWatchedPaths(document) {
   );
 }
 
+function assertExactJobs(document) {
+  const jobsNode = document.getIn(['jobs'], true);
+  assert.ok(YAML.isMap(jobsNode), 'workflow jobs must be a YAML mapping');
+  assert.deepEqual(
+    jobsNode.items.map(pair => pair.key.value),
+    ['deploy'],
+    'workflow jobs must be exactly deploy'
+  );
+}
+
 function assertExactSteps(document) {
   const steps = deploySteps(document);
   assert.deepEqual(
@@ -160,6 +170,7 @@ function assertWorkflowContract(source) {
   const workflow = document.toJS();
   assert.ok(Object.hasOwn(workflow, 'on'), 'workflow must expose an on mapping');
   assertWatchedPaths(document);
+  assertExactJobs(document);
   assertExactSteps(document);
   assertProductionRefGuard(document);
   assertSecretScope(document);
@@ -232,6 +243,19 @@ test('workflow dispatch from a non-main ref cannot publish as production main', 
   assert.throws(
     () => assertWorkflowContract(unguardedDispatchDocument.toString()),
     /deploy job must allow only the main branch ref/
+  );
+});
+
+test('a second unguarded deployment job cannot bypass the production contract', () => {
+  const shadowDeployDocument = parseWorkflow(workflowSource);
+  const jobsNode = shadowDeployDocument.getIn(['jobs'], true);
+  const shadowDeployJob = jobsNode.get('deploy').toJSON();
+  delete shadowDeployJob.if;
+  jobsNode.set('shadow-deploy', shadowDeployDocument.createNode(shadowDeployJob));
+
+  assert.throws(
+    () => assertWorkflowContract(shadowDeployDocument.toString()),
+    /workflow jobs must be exactly deploy/
   );
 });
 
