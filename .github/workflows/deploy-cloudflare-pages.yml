@@ -9,10 +9,12 @@ on:
       - "public/**"
       - "tests/**"
       - "scripts/**"
+      - "e2e/**"
       - "index.html"
       - "package.json"
       - "package-lock.json"
       - "vite.config.js"
+      - "playwright.config.js"
       - ".github/workflows/deploy-cloudflare-pages.yml"
   workflow_dispatch:
 
@@ -26,6 +28,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy production site
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -43,6 +46,31 @@ jobs:
 
       - name: Test and build
         run: npm run check
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests against dist
+        run: npm run test:e2e
+
+      - name: Validate installer artifact
+        shell: bash
+        run: |
+          test -f dist/install.sh || {
+            echo "::error::dist/install.sh is missing; production deployment is intentionally blocked."
+            exit 1
+          }
+
+          installer_mime="$(file --brief --mime-type dist/install.sh)"
+          if [[ "$installer_mime" == "text/html" ]]; then
+            echo "::error::dist/install.sh is HTML, not an installer."
+            exit 1
+          fi
+
+          head -n 1 dist/install.sh | grep --quiet '^#!' || {
+            echo "::error::dist/install.sh does not begin with a shebang."
+            exit 1
+          }
 
       - name: Check deployment credentials
         shell: bash
@@ -70,6 +98,35 @@ jobs:
       - name: Verify production site
         shell: bash
         run: |
+          production_origin="https://paws-landing-eo4.pages.dev"
+
+          verify_exact_artifact() {
+            local label="$1"
+            local url="$2"
+            local local_file="$3"
+            local response_file="$RUNNER_TEMP/paws-${label}.remote"
+
+            for attempt in {1..12}; do
+              if curl --fail --silent --show-error --location --max-time 20 \
+                --output "$response_file" "$url"; then
+                local remote_sha
+                local local_sha
+                remote_sha="$(sha256sum "$response_file" | awk '{print $1}')"
+                local_sha="$(sha256sum "$local_file" | awk '{print $1}')"
+                if [[ "$remote_sha" == "$local_sha" ]] && cmp --silent "$response_file" "$local_file"; then
+                  echo "Verified exact $label artifact: $local_sha"
+                  return 0
+                fi
+              fi
+
+              echo "Waiting for exact $label artifact (attempt $attempt/12)"
+              sleep 10
+            done
+
+            echo "::error::Exact artifact verification failed for $url"
+            return 1
+          }
+
           verify_page() {
             local url="$1"
             local expected="$2"
@@ -91,6 +148,34 @@ jobs:
             return 1
           }
 
-          verify_page "https://paws-landing-eo4.pages.dev/" "Paws — Control your AI coding agents from anywhere"
-          verify_page "https://paws-landing-eo4.pages.dev/docs" "Pair your Paws account"
-          verify_page "https://paws-landing-eo4.pages.dev/docs/zh-CN" "安装与快速上手"
+          verify_installer() {
+            local url="$1"
+            local local_file="$2"
+            local response_file="$RUNNER_TEMP/paws-install.remote"
+
+            for attempt in {1..12}; do
+              local content_type
+              if content_type="$(curl --fail --silent --show-error --location --max-time 20 \
+                --output "$response_file" --write-out '%{content_type}' "$url")"; then
+                if [[ "$content_type" != text/html* ]] \
+                  && head -n 1 "$response_file" | grep --quiet '^#!' \
+                  && cmp --silent "$response_file" "$local_file"; then
+                  echo "Verified production installer"
+                  return 0
+                fi
+              fi
+
+              echo "Waiting for production installer (attempt $attempt/12)"
+              sleep 10
+            done
+
+            echo "::error::Production installer verification failed for $url"
+            return 1
+          }
+
+          verify_exact_artifact "homepage" "${production_origin}/" "dist/index.html"
+          verify_exact_artifact "hero-atlas" "${production_origin}/assets/mascot-turn-atlas.webp" \
+            "dist/assets/mascot-turn-atlas.webp"
+          verify_page "${production_origin}/docs" "Pair your Paws account"
+          verify_page "${production_origin}/docs/zh-CN" "安装与快速上手"
+          verify_installer "${production_origin}/install.sh" "dist/install.sh"

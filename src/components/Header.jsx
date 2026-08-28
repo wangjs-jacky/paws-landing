@@ -16,7 +16,14 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
   return (
     <header className="site-header" data-open={menuOpen || undefined}>
       <a className="brand" href="#top" aria-label={copy.labels.home} onClick={closeMenu}>
-        <img src="/assets/mascot-avatar.png" alt="" />
+        <img
+          src="/assets/mascots/hoodie.png"
+          alt=""
+          width="512"
+          height="512"
+          loading="lazy"
+          decoding="async"
+        />
         <span>Paws</span>
       </a>
       <button
@@ -31,7 +38,8 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
       </button>
       <nav id="primary-navigation" aria-label={copy.labels.primaryNavigation}>
         <a href="#product" onClick={closeMenu}>{copy.nav.product}</a>
-        <a href="#how-it-works" onClick={closeMenu}>{copy.nav.how}</a>
+        <a href="#app-pc" onClick={closeMenu}>{copy.nav.how}</a>
+        <a href="#architecture" onClick={closeMenu}>{copy.nav.architecture}</a>
         <a href="#open-source" onClick={closeMenu}>{copy.nav.openSource}</a>
         <a href={docsHref(language)} onClick={closeMenu}>{copy.nav.docs}</a>
         <a href="https://github.com/wangjs-jacky/happy" onClick={closeMenu}>GitHub</a>
@@ -44,7 +52,7 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
           data-language={language}
           onClick={() => onLanguageChange(language === 'en' ? 'zh' : 'en')}
         >
-          <span>EN</span><span lang="zh-CN">中文</span>
+          <span aria-hidden="true">{copy.labels.languageDestination}</span>
         </button>
         <button
           className="theme-toggle"

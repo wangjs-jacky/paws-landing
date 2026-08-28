@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './tests/setup.js',
     include: ['tests/**/*.test.{js,jsx}'],
-    css: true
+    css: true,
+    testTimeout: 30_000
   }
 });

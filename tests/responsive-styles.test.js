@@ -3,10 +3,27 @@ import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/components.css'), 'utf8');
+const storyCss = readFileSync(resolve(process.cwd(), 'src/styles/story.css'), 'utf8');
+const tokensCss = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8');
 
-function rule(selector) {
+function block(source, startPattern) {
+  const match = startPattern.exec(source);
+  if (!match) return '';
+  const openBrace = source.indexOf('{', match.index);
+  let depth = 1;
+
+  for (let index = openBrace + 1; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}') depth -= 1;
+    if (depth === 0) return source.slice(openBrace + 1, index);
+  }
+
+  return '';
+}
+
+function rule(selector, source = css) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`, 's'))?.[1] ?? '';
+  return block(source, new RegExp(`${escaped}\\s*\\{`));
 }
 
 it('hides only the header CTA on narrow screens', () => {
@@ -21,6 +38,175 @@ it('gives footer links at least 44 by 44 pixel touch targets', () => {
   expect(rule('.site-footer nav a')).toMatch(/min-width:\s*44px/);
 });
 
-it('connects the user pause state to the marquee animation', () => {
-  expect(css).toMatch(/\.agent-strip\[data-paused=['"]true['"]\]\s+\.agent-strip__track\s*\{\s*animation-play-state:\s*paused/);
+it('gives header navigation and brand links at least 44 by 44 pixel touch targets', () => {
+  expect(rule('#primary-navigation a')).toMatch(/min-height:\s*44px/);
+  expect(rule('#primary-navigation a')).toMatch(/min-width:\s*44px/);
+  expect(rule('.brand')).toMatch(/min-height:\s*44px/);
+  expect(rule('.brand')).toMatch(/min-width:\s*44px/);
+});
+
+it('pauses the agent marquee on hover and keyboard focus without a playback control', () => {
+  expect(css).toMatch(/\.agent-marquee:hover\s+\.agent-marquee__track,\s*\.agent-marquee:focus-within\s+\.agent-marquee__track\s*\{\s*animation-play-state:\s*paused/);
+  expect(css).not.toContain('.agent-strip__control');
+  expect(css).not.toContain('.agent-marquee__control');
+});
+
+it('makes the agent marquee static on narrow screens and for reduced motion', () => {
+  const mobile = block(css, /@media\s*\(max-width:\s*767px\)\s*\{/);
+  const lastReducedMotion = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+  const reduced = block(css.slice(lastReducedMotion), /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/);
+
+  expect(rule('.agent-marquee__track', mobile)).toMatch(/width:\s*100%/);
+  expect(rule('.agent-marquee__track', mobile)).toMatch(/animation:\s*none/);
+  expect(rule('.agent-marquee__list', mobile)).toMatch(/flex-wrap:\s*wrap/);
+  expect(rule('.agent-marquee__duplicate', mobile)).toMatch(/display:\s*none/);
+  expect(rule('.agent-marquee__track', reduced)).toMatch(/animation:\s*none/);
+  expect(rule('.agent-marquee__duplicate', reduced)).toMatch(/display:\s*none/);
+});
+
+it('defines the header and hero layout anchors', () => {
+  expect(css).toContain('min-height: 72px');
+  expect(css).toContain('grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr)');
+  expect(css).toContain('.hero-title__line');
+  expect(css).toContain('.hero-media');
+});
+
+it('sets the final desktop hero hierarchy and media halo', () => {
+  expect(rule('.hero-grid')).toMatch(/padding-top:\s*calc\(72px\s*\+\s*48px\)/);
+  expect(rule('.hero-grid')).toMatch(/grid-template-columns:\s*minmax\(0,\s*1\.1fr\)\s*minmax\(20rem,\s*0\.9fr\)/);
+  expect(rule('.hero-copy h1')).toMatch(/font-size:\s*clamp\(3\.25rem,\s*5\.2vw,\s*5\.9rem\)/);
+  expect(rule('.hero-copy h1')).toMatch(/line-height:\s*0\.98/);
+  expect(rule('.hero-copy')).toMatch(/grid-column:\s*1/);
+  expect(rule('.hero-copy')).toMatch(/grid-row:\s*1/);
+  expect(rule('.hero-terminal-slot')).toMatch(/width:\s*min\(100%,\s*42rem\)/);
+  expect(rule('.hero-terminal-slot')).toMatch(/grid-column:\s*1/);
+  expect(rule('.hero-terminal-slot')).toMatch(/grid-row:\s*2/);
+  expect(rule('.hero-media')).toMatch(/grid-column:\s*2/);
+  expect(rule('.hero-media')).toMatch(/grid-row:\s*1\s*\/\s*span\s*2/);
+  expect(rule('.hero-media')).toMatch(/overflow:\s*clip/);
+  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*520px\)/);
+  expect(rule('.hero-media::before')).toMatch(/radial-gradient/);
+  expect(rule('.hero-media::before')).toMatch(/content:\s*''/);
+  expect(rule('.hero-actions')).toMatch(/gap:\s*var\(--space-2\)/);
+  expect(rule('.hero-grid')).toMatch(/z-index:\s*3/);
+  expect(rule('.hero-crew')).toMatch(/position:\s*absolute/);
+  expect(rule('.hero-crew')).toMatch(/pointer-events:\s*none/);
+  expect(rule('.hero-crew img')).toMatch(/var\(--mascot-y,\s*0px\)/);
+  expect(css).not.toContain('.mascot-stage img');
+});
+
+it('uses one 800px boundary for the 767, 768 and 800px mobile hero, restoring the crew at 801px', () => {
+  const mobile = block(css, /@media\s*\(max-width:\s*800px\)\s*\{/);
+  const base = css.slice(0, css.indexOf('@media (max-width: 800px)'));
+
+  expect(rule('.hero-grid', mobile)).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(rule('.hero-copy', mobile)).toMatch(/grid-row:\s*1/);
+  expect(rule('.hero-media', mobile)).toMatch(/grid-row:\s*2/);
+  expect(rule('.hero-terminal-slot', mobile)).toMatch(/grid-row:\s*3/);
+  expect(rule('.hero', mobile)).toMatch(/overflow:\s*clip/);
+  expect(rule('.mascot-look', mobile)).toMatch(/width:\s*min\(100%,\s*17rem\)/);
+  expect(rule('.hero-copy h1', mobile)).toMatch(/font-size:\s*clamp\(2\.7rem,\s*13vw,\s*4rem\)/);
+  expect(rule('.hero-terminal-slot', mobile)).toMatch(/max-width:\s*100%/);
+  expect(rule('.terminal-demo', mobile)).toMatch(/width:\s*100%/);
+  expect(rule('.hero-media', mobile)).toMatch(/min-height:\s*18rem/);
+  expect(rule('.hero-crew img:nth-child(n+2)', mobile)).toMatch(/display:\s*none/);
+  expect(rule('.hero-crew img', base)).not.toMatch(/display:\s*none/);
+  expect(css).not.toMatch(/overflow-x:\s*hidden/);
+});
+
+it('reserves one stable mascot box and reveals the atlas without relayout', () => {
+  expect(rule('.mascot-look')).toMatch(/position:\s*relative/);
+  expect(rule('.mascot-look')).toMatch(/aspect-ratio:\s*1/);
+  expect(rule('.mascot-look')).toMatch(/width:\s*min\(100%,\s*520px\)/);
+  expect(rule('.mascot-look')).toMatch(/transform:\s*translateY\(var\(--mascot-y,\s*0px\)\)/);
+  expect(css).toMatch(/\.mascot-look canvas,\s*\.mascot-look img\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%/s);
+  expect(rule(".mascot-look[data-ready='true'] img")).toMatch(/opacity:\s*0/);
+});
+
+it('breathes only the coarse static mascot and disables that motion by preference', () => {
+  const lastReducedMotion = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+  const reduced = block(css.slice(lastReducedMotion), /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/);
+  expect(rule(".mascot-look[data-mode='coarse']")).toMatch(/animation:\s*mascot-breathe/);
+  expect(rule(".mascot-look[data-mode='coarse']", reduced)).toMatch(/animation:\s*none/);
+  expect(rule('.hero-crew img:nth-child(3)', reduced)).toMatch(/display:\s*none/);
+});
+
+it('keeps the desktop story in two columns independently of motion capability', () => {
+  const desktop = block(storyCss, /@media\s*\(min-width:\s*1024px\)\s*\{/);
+
+  expect(desktop).not.toBe('');
+  expect(rule('.cross-device-story', desktop)).toMatch(
+    /grid-template-columns:\s*minmax\(17rem,\s*0\.65fr\)\s*minmax\(0,\s*2fr\)/
+  );
+  expect(rule('.cross-device-story__intro', desktop)).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+  expect(rule('.story-step', desktop)).toMatch(/min-height:\s*clamp\(13rem,\s*24vh,\s*18rem\)/);
+  expect(desktop).not.toMatch(/position:\s*sticky/);
+});
+
+it('limits story pinning styles to fine-pointer desktops without reduced motion', () => {
+  const desktopMotion = block(
+    storyCss,
+    /@media\s*\(min-width:\s*1024px\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{/
+  );
+  const outsideDesktopMotion = storyCss.replace(desktopMotion, '');
+
+  expect(desktopMotion).not.toBe('');
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .cross-device-story__stage--shared", desktopMotion))
+    .toMatch(/position:\s*sticky/);
+  expect(outsideDesktopMotion).not.toMatch(/position:\s*sticky/);
+});
+
+it('shows chapter evidence by default and swaps stages only after desktop motion is ready', () => {
+  const desktop = block(storyCss, /@media\s*\(min-width:\s*1024px\)\s*\{/);
+  const desktopMotion = block(
+    storyCss,
+    /@media\s*\(min-width:\s*1024px\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{/
+  );
+
+  expect(rule('.story-step__evidence', storyCss)).toMatch(/display:\s*grid/);
+  expect(rule('.cross-device-story__stage--shared', storyCss)).toMatch(/display:\s*none/);
+  expect(rule('.story-steps', desktop)).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+  expect(desktopMotion).not.toMatch(/(?:^|\n)\s*\.story-step__evidence\s*\{/);
+  expect(desktopMotion).not.toMatch(/(?:^|\n)\s*\.cross-device-story__stage--shared\s*\{/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .story-step__evidence", desktopMotion))
+    .toMatch(/display:\s*none/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .cross-device-story__stage--shared", desktopMotion))
+    .toMatch(/display:\s*grid/);
+  expect(rule(".cross-device-story[data-story-motion-ready='true'] .story-steps", desktopMotion))
+    .toMatch(/grid-column:\s*auto/);
+});
+
+it('keeps tablet and mobile stories in normal flow and prioritizes App approval', () => {
+  const tablet = block(storyCss, /@media\s*\(max-width:\s*1023px\)\s*\{/);
+  const mobile = block(storyCss, /@media\s*\(max-width:\s*767px\)\s*\{/);
+
+  expect(rule('.cross-device-story__stage', tablet)).toMatch(/position:\s*relative/);
+  expect(rule('.cross-device-story__stage', tablet)).toMatch(/top:\s*auto/);
+  expect(rule('.story-step', tablet)).toMatch(/min-height:\s*auto/);
+  expect(tablet).not.toMatch(/position:\s*sticky/);
+
+  expect(rule('.cross-device-story__stage', mobile)).toMatch(/grid-template-columns:\s*1fr/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .mobile-console", mobile))
+    .toMatch(/order:\s*-1/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .pc-console", mobile))
+    .toMatch(/width:\s*92%/);
+  expect(rule(".cross-device-story[data-active-scene='approve'] .cross-device-story__stage--shared > .pc-console", mobile))
+    .toMatch(/transform:\s*none/);
+  expect(rule('.mascot-crew__rail', storyCss)).toMatch(/overflow-x:\s*auto/);
+});
+
+it('roots every color theme rule on the themed html element', () => {
+  expect(tokensCss).toContain("html[data-theme='light']");
+  expect(tokensCss).toContain("html[data-theme='dark']");
+  expect(`${tokensCss}\n${css}`).not.toMatch(/:root\[data-theme=/);
+  expect(css).not.toMatch(/(?:body|main|\.site-header)\[data-theme=/);
+});
+
+it('does not statically hide reveal content before GSAP initializes', () => {
+  expect(`${css}\n${storyCss}`).not.toMatch(/\[data-motion-item\][^{]*\{[^}]*opacity:\s*0/);
+});
+
+it('starts the architecture packet at the beginning of its track', () => {
+  expect(rule('.architecture-story__packet')).toMatch(/margin-inline:\s*0\s+auto/);
+  expect(rule('.architecture-story__packet-track')).toMatch(/pointer-events:\s*none/);
 });

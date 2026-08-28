@@ -1,14 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
-import AgentStrip from '../components/AgentStrip';
-import FeatureGrid from '../components/FeatureGrid';
+import AgentMarquee from '../components/AgentMarquee';
+import CrossDeviceStory from '../components/CrossDeviceStory/CrossDeviceStory';
+import MascotCrew from '../components/MascotCrew/MascotCrew';
+import ProductProof from '../components/ProductProof';
+import ValueComparison from '../components/ValueComparison';
+import ArchitectureStory from '../components/ArchitectureStory';
+import Roadmap from '../components/Roadmap';
 import FinalCTA from '../components/FinalCTA';
 import Footer from '../components/Footer';
-import HowItWorks from '../components/HowItWorks';
 import OpenSource from '../components/OpenSource';
 import { content } from './content';
+import { getStoryContent } from './storyContent';
 import { usePreferences } from './usePreferences';
+import { usePageMotion } from '../hooks/usePageMotion';
 
 const THEME_COLORS = {
   dark: '#0e0d0c',
@@ -26,8 +32,12 @@ function getOrCreateMeta(name) {
 }
 
 export default function App() {
+  const mainRef = useRef(null);
   const { language, theme, setLanguage, toggleTheme } = usePreferences();
   const copy = content[language];
+  const storyCopy = getStoryContent(language);
+
+  usePageMotion(mainRef);
 
   useEffect(() => {
     document.title = copy.meta.title;
@@ -44,12 +54,20 @@ export default function App() {
         onLanguageChange={setLanguage}
         onThemeChange={toggleTheme}
       />
-      <main id="top">
+      <main id="top" ref={mainRef}>
         <Hero copy={copy} language={language} theme={theme} />
-        <AgentStrip agents={copy.agents} labels={copy.labels} />
-        <HowItWorks copy={copy} />
-        <FeatureGrid copy={copy} />
+        <AgentMarquee agents={copy.agents} labels={copy.labels} />
+        <CrossDeviceStory language={language} />
+        <MascotCrew copy={storyCopy} />
+        <ProductProof copy={{
+          ...storyCopy,
+          proofTitle: copy.nav.product,
+          proofLabel: copy.sectionLabels.capabilities
+        }} language={language} />
+        <ValueComparison copy={storyCopy} />
+        <ArchitectureStory copy={storyCopy} language={language} title={copy.nav.architecture} />
         <OpenSource copy={copy} language={language} />
+        <Roadmap copy={{ ...storyCopy, labels: copy.labels }} />
         <FinalCTA copy={copy} language={language} />
       </main>
       <Footer copy={copy} language={language} />
