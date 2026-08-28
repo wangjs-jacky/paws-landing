@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { isImageAssetUrl, summarizeImageResources } from './image-budget.js';
+import {
+  isImageAssetUrl,
+  summarizeImageResources,
+  waitForImageRequestQuiescence
+} from './image-budget.js';
 
 const LANGUAGE_KEY = 'paws-home-language-v1';
 const THEME_KEY = 'paws-home-theme-v1';
@@ -25,8 +29,9 @@ function trackImageResponseSizes(page) {
       const headers = await response.allHeaders();
       const contentLength = Number(headers['content-length']);
       if (Number.isFinite(contentLength) && contentLength > 0) {
-        const previous = contentLengths.get(response.url()) ?? 0;
-        contentLengths.set(response.url(), Math.max(previous, contentLength));
+        const normalizedUrl = new URL(response.url()).href;
+        const previous = contentLengths.get(normalizedUrl) ?? 0;
+        contentLengths.set(normalizedUrl, Math.max(previous, contentLength));
       }
     })());
   });
@@ -59,21 +64,28 @@ async function waitForHeroImagePath(page, mode) {
   })).toBe(true);
 }
 
-async function measureFirstViewportImages(browser, { name, mode, ...contextOptions }) {
+async function measureFirstViewportImages(browser, { name, mode, initScript, ...contextOptions }) {
   const context = await browser.newContext({ baseURL: BASE_URL, locale: 'en-US', ...contextOptions });
+  if (initScript) await context.addInitScript(initScript);
   const page = await context.newPage();
   const responseSizes = trackImageResponseSizes(page);
 
   try {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForHeroImagePath(page, mode);
-    await page.waitForLoadState('networkidle', { timeout: 15_000 });
-    await page.waitForTimeout(250);
+    await page.evaluate(() => window.dispatchEvent(new Event('paws-budget-target-ready')));
+    const pageOrigin = new URL(page.url()).origin;
+    const resourceEntries = await waitForImageRequestQuiescence(page, {
+      pageOrigin,
+      idleMs: 1_500,
+      maxWaitMs: 8_000
+    });
     await Promise.all(responseSizes.pending);
 
-    const resourceEntries = await page.evaluate(() => performance.getEntriesByType('resource')
-      .map(entry => ({ name: entry.name, encodedBodySize: entry.encodedBodySize })));
-    const summary = summarizeImageResources(resourceEntries, responseSizes.contentLengths);
+    const summary = summarizeImageResources(resourceEntries, {
+      pageOrigin,
+      responseContentLengths: responseSizes.contentLengths
+    });
     const paths = new Set(summary.resources.map(resource => resource.pathname));
 
     expect(summary.totalBytes, `${name} first-viewport image bytes`).toBeLessThanOrEqual(
@@ -91,6 +103,16 @@ async function measureFirstViewportImages(browser, { name, mode, ...contextOptio
   } finally {
     await context.close();
   }
+}
+
+function installDelayedImageProbe() {
+  window.addEventListener('paws-budget-target-ready', () => {
+    setTimeout(() => {
+      const image = new Image();
+      image.src = '/assets/mascots/barista.png?first-viewport-delay-probe=1000';
+      window.__pawsDelayedBudgetProbe = image;
+    }, 1_000);
+  }, { once: true });
 }
 
 async function resetPreferences(page) {
@@ -259,6 +281,23 @@ test('actual first-viewport image requests stay within budget in every motion co
   }));
 
   console.log(`First-viewport image resources: ${JSON.stringify(results)}`);
+});
+
+test('first-viewport accounting includes an image requested 1000ms after Hero readiness', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
+
+  const result = await measureFirstViewportImages(browser, {
+    name: 'desktop-fine-delayed-probe',
+    mode: 'interactive',
+    initScript: installDelayedImageProbe,
+    viewport: { width: 1440, height: 1000 }
+  });
+  const delayedResource = result.resources.find(resource => (
+    resource.url.includes('first-viewport-delay-probe=1000')
+  ));
+
+  expect(delayedResource?.pathname).toBe('/assets/mascots/barista.png');
+  expect(result.totalBytes).toBe(1_790_145);
 });
 
 test('desktop hero meets title, controls, mascot, terminal and preference contracts', async ({ page }, testInfo) => {
