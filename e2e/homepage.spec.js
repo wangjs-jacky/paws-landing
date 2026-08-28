@@ -106,8 +106,9 @@ async function scrollStoryToProgress(page, progress) {
 
 async function expectTransparentMascotSurface(page, mode) {
   const surfaces = page.locator('.mascot-look, .mascot-look canvas, .mascot-look img');
-  await expect(surfaces).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) {
+  const expectedSurfaceCount = mode === 'interactive' ? 2 : 3;
+  await expect(surfaces).toHaveCount(expectedSurfaceCount);
+  for (let index = 0; index < expectedSurfaceCount; index += 1) {
     await expect(surfaces.nth(index)).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   }
 

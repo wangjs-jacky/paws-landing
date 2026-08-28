@@ -101,13 +101,16 @@ function setVisible(surface, isIntersecting) {
 describe('MascotLook pointer lifecycle', () => {
   it('defers the static fallback while the fine-pointer atlas is loading', async () => {
     render(<Harness />);
+    const mascot = screen.getByTestId('mascot-look');
 
     expect(imageInstances).toHaveLength(1);
-    expect(screen.getByRole('img', { name: 'Paws mascot' })).not.toHaveAttribute('src');
+    expect(mascot.querySelector('img')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Paws mascot' })).toBe(mascot);
 
     await loadAtlas();
 
-    expect(screen.getByRole('img', { name: 'Paws mascot' })).not.toHaveAttribute('src');
+    expect(mascot.querySelector('img')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Paws mascot' })).toBe(mascot);
   });
 
   it('keeps the high-resolution atlas on a single-frame logical canvas', async () => {

@@ -262,9 +262,11 @@ export default function MascotLook({
       data-frame={frame}
       data-ready={interactive ? 'true' : 'false'}
       data-mode={mode}
+      role={usesStaticFallback ? undefined : 'img'}
+      aria-label={usesStaticFallback ? undefined : alt}
     >
       <canvas ref={canvasRef} aria-hidden="true" />
-      <img src={usesStaticFallback ? fallbackSrc : undefined} alt={alt} />
+      {usesStaticFallback ? <img src={fallbackSrc} alt={alt} /> : null}
     </div>
   );
 }
