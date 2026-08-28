@@ -9,10 +9,12 @@ on:
       - "public/**"
       - "tests/**"
       - "scripts/**"
+      - "e2e/**"
       - "index.html"
       - "package.json"
       - "package-lock.json"
       - "vite.config.js"
+      - "playwright.config.js"
       - ".github/workflows/deploy-cloudflare-pages.yml"
   workflow_dispatch:
 
@@ -43,6 +45,12 @@ jobs:
 
       - name: Test and build
         run: npm run check
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests against dist
+        run: npm run test:e2e
 
       - name: Check deployment credentials
         shell: bash
