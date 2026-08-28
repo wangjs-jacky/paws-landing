@@ -17,10 +17,10 @@ export default function Header({ copy, language, theme, onLanguageChange, onThem
     <header className="site-header" data-open={menuOpen || undefined}>
       <a className="brand" href="#top" aria-label={copy.labels.home} onClick={closeMenu}>
         <img
-          src="/assets/mascot-avatar.png"
+          src="/assets/mascots/hoodie.png"
           alt=""
-          width="1254"
-          height="1254"
+          width="512"
+          height="512"
           loading="lazy"
           decoding="async"
         />

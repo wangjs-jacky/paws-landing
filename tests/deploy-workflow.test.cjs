@@ -1,0 +1,193 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const YAML = require('yaml');
+
+const root = path.resolve(__dirname, '..');
+const workflowPath = path.join(root, '.github/workflows/deploy-cloudflare-pages.yml');
+const workflowSource = fs.readFileSync(workflowPath, 'utf8');
+
+const requiredPaths = [
+  'src/**',
+  'public/**',
+  'scripts/**',
+  'tests/**',
+  'e2e/**',
+  'index.html',
+  'package.json',
+  'package-lock.json',
+  'vite.config.js',
+  'playwright.config.js',
+  '.github/workflows/deploy-cloudflare-pages.yml'
+];
+
+const orderedGateSteps = [
+  'Install dependencies',
+  'Test and build',
+  'Install Playwright browser',
+  'Run browser tests against dist',
+  'Validate installer artifact',
+  'Check deployment credentials',
+  'Deploy to Cloudflare Pages',
+  'Verify production site'
+];
+
+function parseWorkflow(source) {
+  const document = YAML.parseDocument(source, { prettyErrors: true });
+  assert.deepEqual(
+    document.errors.map(error => error.message),
+    [],
+    'workflow must be valid YAML'
+  );
+  assert.ok(document.getIn(['on'], true), 'YAML 1.2 parser must preserve the literal on key');
+  assert.equal(document.getIn([true], true), undefined, 'on must not be parsed as boolean true');
+  return document;
+}
+
+function watchedPaths(document) {
+  const pathsNode = document.getIn(['on', 'push', 'paths'], true);
+  assert.ok(YAML.isSeq(pathsNode), 'on.push.paths must be a YAML sequence');
+  return pathsNode.items.map(item => item.value);
+}
+
+function deploySteps(document) {
+  const stepsNode = document.getIn(['jobs', 'deploy', 'steps'], true);
+  assert.ok(YAML.isSeq(stepsNode), 'jobs.deploy.steps must be a YAML sequence');
+  return stepsNode.items.map(item => item.toJSON());
+}
+
+function assertWatchedPaths(document) {
+  const actualPaths = watchedPaths(document);
+  for (const requiredPath of requiredPaths) {
+    assert.ok(
+      actualPaths.some(actualPath => actualPath === requiredPath),
+      `Cloudflare workflow does not watch ${requiredPath}`
+    );
+  }
+}
+
+function assertOrderedGateSteps(document) {
+  const steps = deploySteps(document);
+  let priorPosition = -1;
+
+  for (const expectedName of orderedGateSteps) {
+    const position = steps.findIndex((step, index) => (
+      index > priorPosition && step.name === expectedName
+    ));
+    assert.ok(position > priorPosition, `${expectedName} is missing or out of order`);
+    priorPosition = position;
+  }
+}
+
+function namedStep(document, name) {
+  const step = deploySteps(document).find(candidate => candidate.name === name);
+  assert.ok(step, `Missing workflow step: ${name}`);
+  return step;
+}
+
+function executableShell(run) {
+  return run
+    .split('\n')
+    .filter(line => !line.trimStart().startsWith('#'))
+    .join('\n');
+}
+
+function assertWorkflowContract(source) {
+  const document = parseWorkflow(source);
+  const workflow = document.toJS();
+  assert.ok(Object.hasOwn(workflow, 'on'), 'workflow must expose an on mapping');
+  assertWatchedPaths(document);
+  assertOrderedGateSteps(document);
+
+  assert.equal(namedStep(document, 'Install dependencies').run, 'npm ci');
+  assert.equal(namedStep(document, 'Test and build').run, 'npm run check');
+  assert.equal(
+    namedStep(document, 'Install Playwright browser').run,
+    'npx playwright install --with-deps chromium'
+  );
+  assert.equal(
+    namedStep(document, 'Run browser tests against dist').run,
+    'npm run test:e2e',
+    'Run browser tests against dist must execute npm run test:e2e'
+  );
+
+  const installerGate = executableShell(namedStep(document, 'Validate installer artifact').run);
+  assert.match(installerGate, /test -f dist\/install\.sh/);
+  assert.match(installerGate, /file --brief --mime-type dist\/install\.sh/);
+  assert.match(installerGate, /text\/html/);
+  assert.match(installerGate, /head -n 1 dist\/install\.sh \| grep .*['"]\^#!['"]/);
+
+  const deploy = executableShell(namedStep(document, 'Deploy to Cloudflare Pages').run);
+  assert.match(deploy, /npx --yes wrangler@4\.105\.0 pages deploy dist/);
+  assert.match(deploy, /--project-name paws-landing/);
+  assert.match(deploy, /--branch main/);
+  assert.match(deploy, /--commit-hash "\$GITHUB_SHA"/);
+  assert.match(deploy, /--commit-message "GitHub Actions deployment"/);
+  assert.match(deploy, /--commit-dirty=false/);
+
+  const verify = executableShell(namedStep(document, 'Verify production site').run);
+  assert.match(verify, /verify_exact_artifact/);
+  assert.match(
+    verify,
+    /verify_exact_artifact "homepage" "\$\{production_origin\}\/" "dist\/index\.html"/
+  );
+  assert.match(
+    verify,
+    /verify_exact_artifact "hero-atlas" "\$\{production_origin\}\/assets\/mascot-turn-atlas\.webp" \\\n\s+"dist\/assets\/mascot-turn-atlas\.webp"/
+  );
+  assert.match(verify, /verify_installer/);
+  assert.match(verify, /text\/html/);
+  assert.match(verify, /head -n 1 .* \| grep .*['"]\^#!['"]/);
+  assert.match(
+    verify,
+    /verify_installer "\$\{production_origin\}\/install\.sh" "dist\/install\.sh"/
+  );
+
+  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.match(packageJson.scripts.check, /(?:^|&&\s*)npm run build(?:\s*&&|$)/);
+  assert.equal(packageJson.devDependencies.yaml, '2.9.0');
+}
+
+test('production deploy is structurally gated before Cloudflare publication', () => {
+  assertWorkflowContract(workflowSource);
+});
+
+test('YAML comments cannot fake watched paths or executable steps', () => {
+  const missingPathDocument = parseWorkflow(workflowSource);
+  const pathsNode = missingPathDocument.getIn(['on', 'push', 'paths'], true);
+  pathsNode.items = pathsNode.items.filter(item => item.value !== 'e2e/**');
+  const fakePathComment = `# - "e2e/**"\n${missingPathDocument.toString()}`;
+  assert.throws(
+    () => assertWatchedPaths(parseWorkflow(fakePathComment)),
+    /does not watch e2e\/\*\*/
+  );
+
+  const commentedCommandDocument = parseWorkflow(workflowSource);
+  const stepsNode = commentedCommandDocument.getIn(['jobs', 'deploy', 'steps'], true);
+  const browserStep = stepsNode.items.find(step => step.get('name') === 'Run browser tests against dist');
+  browserStep.set('run', '# npm run test:e2e');
+  assert.throws(
+    () => assertWorkflowContract(commentedCommandDocument.toString()),
+    /must execute npm run test:e2e/
+  );
+});
+
+test('Cloudflare secrets remain scoped to credential and deploy steps in the YAML AST', () => {
+  const document = parseWorkflow(workflowSource);
+  const deployJob = document.getIn(['jobs', 'deploy']).toJSON();
+  const secretNames = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'];
+  const authorizedSteps = new Set(['Check deployment credentials', 'Deploy to Cloudflare Pages']);
+
+  assert.equal(deployJob.env, undefined);
+  for (const step of deployJob.steps) {
+    for (const secretName of secretNames) {
+      const value = step.env?.[secretName];
+      if (authorizedSteps.has(step.name)) {
+        assert.equal(value, `\${{ secrets.${secretName} }}`);
+      } else {
+        assert.equal(value, undefined, `${secretName} leaked into ${step.name}`);
+      }
+    }
+  }
+});

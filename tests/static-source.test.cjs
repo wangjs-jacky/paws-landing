@@ -57,19 +57,49 @@ test('the React entry replaces the static homepage', () => {
   assert.equal(fs.existsSync(path.join(root, 'web/index.html')), false);
 });
 
-test('the homepage declares an existing favicon instead of triggering a browser 404', () => {
+test('the homepage favicon uses the approved lightweight hoodie asset', () => {
   const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const document = new JSDOM(home).window.document;
   const icon = document.querySelector('link[rel~="icon"]');
 
   assert.ok(icon, 'index.html must declare a favicon');
   const iconPath = icon.getAttribute('href');
-  assert.ok(iconPath?.startsWith('/'), 'favicon must use an absolute public path');
+  assert.equal(iconPath, '/assets/mascots/hoodie.png');
+  const iconSource = path.join(root, 'public', iconPath.slice(1));
+  assert.equal(fs.existsSync(iconSource), true, `favicon source does not exist: ${iconPath}`);
+  assert.ok(fs.statSync(iconSource).size <= 300_000, 'homepage brand asset exceeds 300,000 bytes');
+});
+
+test('homepage sources never load the documentation-only mascot avatar', () => {
+  const homepageFiles = [
+    'index.html',
+    'src/components/Header.jsx',
+    'src/components/Footer.jsx',
+    'src/components/CrossDeviceStory/CrossDeviceStory.jsx'
+  ];
+
+  for (const relative of homepageFiles) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    assert.doesNotMatch(source, /mascot-avatar\.png/, `${relative} loads the 2.1MB docs avatar`);
+    assert.match(source, /\/assets\/mascots\/hoodie\.png/, `${relative} must use the hoodie brand asset`);
+  }
+});
+
+test('the production verifier enforces the homepage brand asset contract', () => {
   assert.equal(
-    fs.existsSync(path.join(root, 'public', iconPath.slice(1))),
-    true,
-    `favicon source does not exist: ${iconPath}`
+    typeof staticVerifier.verifyHomepageBrandAssets,
+    'function',
+    'static verifier must expose a homepage brand asset gate'
   );
+  const metrics = staticVerifier.verifyHomepageBrandAssets(root);
+  assert.deepEqual(metrics.firstViewportPathBytes, {
+    desktopFine: 1_563_340,
+    mobileCoarse: 1_490_472,
+    desktopReduced: 1_697_477
+  });
+  for (const [context, bytes] of Object.entries(metrics.firstViewportPathBytes)) {
+    assert.ok(bytes <= 1_800_000, `${context} first-viewport images exceed 1,800,000 bytes`);
+  }
 });
 
 test('the static image verifier reads real JSX tags instead of comments or string decoys', () => {
@@ -121,69 +151,4 @@ test('the static image verifier accepts only a quoted lazy loading literal', () 
       new RegExp(`${label.replace('.', '\\.') }.*loading.*literal.*lazy`)
     );
   }
-});
-
-test('deployment secrets are scoped only to credential and deploy steps', () => {
-  const workflow = fs.readFileSync(
-    path.join(root, '.github/workflows/deploy-cloudflare-pages.yml'),
-    'utf8'
-  );
-  const workflowWithSentinel = `${workflow}\n      - name: __END__\n`;
-  const steps = [...workflowWithSentinel.matchAll(/^      - name: (.+)\n([\s\S]*?)(?=^      - name: )/gm)]
-    .reduce((entries, match) => ({ ...entries, [match[1]]: match[2] }), {});
-  const secretNames = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'];
-  const authorizedSteps = new Set(['Check deployment credentials', 'Deploy to Cloudflare Pages']);
-
-  for (const [stepName, stepBody] of Object.entries(steps)) {
-    if (stepName === '__END__') continue;
-    for (const secretName of secretNames) {
-      assert.equal(stepBody.includes(secretName), authorizedSteps.has(stepName), stepName);
-    }
-  }
-
-  const jobConfiguration = workflow.slice(workflow.indexOf('jobs:'), workflow.indexOf('    steps:'));
-  for (const name of secretNames) assert.equal(jobConfiguration.includes(name), false);
-});
-
-test('production deploy watches and runs every production validation input', () => {
-  const workflow = fs.readFileSync(
-    path.join(root, '.github/workflows/deploy-cloudflare-pages.yml'),
-    'utf8'
-  );
-  const watchedPaths = [
-    'src/**',
-    'public/**',
-    'scripts/**',
-    'tests/**',
-    'e2e/**',
-    'package.json',
-    'package-lock.json',
-    'vite.config.js',
-    'playwright.config.js',
-    '.github/workflows/deploy-cloudflare-pages.yml'
-  ];
-
-  for (const watchedPath of watchedPaths) {
-    assert.ok(
-      workflow.includes(`- "${watchedPath}"`),
-      `Cloudflare workflow does not watch ${watchedPath}`
-    );
-  }
-
-  const orderedCommands = [
-    'npm ci',
-    'npm run check',
-    'npx playwright install --with-deps chromium',
-    'npm run test:e2e',
-    'pages deploy dist'
-  ];
-  let previousIndex = -1;
-  for (const command of orderedCommands) {
-    const commandIndex = workflow.indexOf(command);
-    assert.ok(commandIndex > previousIndex, `${command} is missing or out of deployment order`);
-    previousIndex = commandIndex;
-  }
-
-  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.match(packageJson.scripts.check, /npm run build/, 'npm run check must build dist');
 });

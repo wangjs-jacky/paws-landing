@@ -9,6 +9,14 @@ const HERO_IMAGE_COMPONENTS = new Set([
   'src/components/Hero.jsx',
   'src/components/MascotLook.jsx'
 ]);
+const HOMEPAGE_BRAND_SOURCE = '/assets/mascots/hoodie.png';
+const HOMEPAGE_BRAND_LIMIT = 300_000;
+const HOMEPAGE_BRAND_FILES = [
+  'index.html',
+  'src/components/Header.jsx',
+  'src/components/Footer.jsx',
+  'src/components/CrossDeviceStory/CrossDeviceStory.jsx'
+];
 
 function skipQuoted(source, start, quote) {
   for (let index = start + 1; index < source.length; index += 1) {
@@ -193,7 +201,60 @@ function verifyNonHeroImageMetadata(root) {
   return imageCount;
 }
 
+function verifyHomepageBrandAssets(root = defaultRoot) {
+  for (const relative of HOMEPAGE_BRAND_FILES) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    assert.ok(!source.includes('mascot-avatar.png'), `${relative} loads the documentation avatar`);
+    assert.ok(source.includes(HOMEPAGE_BRAND_SOURCE), `${relative} does not use the hoodie brand asset`);
+  }
+
+  const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const document = new JSDOM(home).window.document;
+  const icon = document.querySelector('link[rel~="icon"]');
+  assert.equal(icon?.getAttribute('href'), HOMEPAGE_BRAND_SOURCE, 'Unexpected homepage favicon');
+
+  const brandPath = path.join(root, 'public', HOMEPAGE_BRAND_SOURCE.slice(1));
+  assert.ok(fs.existsSync(brandPath), `Missing homepage brand asset: ${HOMEPAGE_BRAND_SOURCE}`);
+  const brandBytes = fs.statSync(brandPath).size;
+  assert.ok(brandBytes <= HOMEPAGE_BRAND_LIMIT, `Homepage brand exceeds ${HOMEPAGE_BRAND_LIMIT} bytes`);
+
+  const docsAvatarBytes = fs.statSync(path.join(root, 'public/assets/mascot-avatar.png')).size;
+  const bytes = relative => fs.statSync(path.join(root, relative)).size;
+  const sum = relatives => relatives.reduce((total, relative) => total + bytes(relative), 0);
+  const firstViewportPathBytes = {
+    desktopFine: sum([
+      'public/assets/mascot-turn-atlas.webp',
+      'public/assets/mascots/astro.png',
+      'public/assets/mascots/ninja.png',
+      'public/assets/mascots/scientist.png',
+      'public/assets/mascots/hoodie.png'
+    ]),
+    mobileCoarse: sum([
+      'public/assets/mascot-static.png',
+      'public/assets/mascots/astro.png',
+      'public/assets/mascots/hoodie.png'
+    ]),
+    desktopReduced: sum([
+      'public/assets/mascot-static.png',
+      'public/assets/mascots/astro.png',
+      'public/assets/mascots/ninja.png',
+      'public/assets/mascots/hoodie.png'
+    ])
+  };
+  for (const [context, totalBytes] of Object.entries(firstViewportPathBytes)) {
+    assert.ok(totalBytes <= 1_800_000, `${context} first-viewport images exceed 1,800,000 bytes`);
+  }
+
+  return {
+    brandBytes,
+    docsAvatarBytes,
+    firstViewportPathBytes,
+    savedBrandBytes: docsAvatarBytes - brandBytes
+  };
+}
+
 function verifyStatic(root = defaultRoot) {
+  const homepageBrand = verifyHomepageBrandAssets(root);
   const required = [
     'dist/index.html',
     'dist/docs.html',
@@ -229,6 +290,11 @@ function verifyStatic(root = defaultRoot) {
   assert.ok(!home.toLowerCase().includes('cdn.jsdelivr.net'), 'dist/index.html uses jsDelivr');
 
   const document = new JSDOM(home).window.document;
+  assert.equal(
+    document.querySelector('link[rel~="icon"]')?.getAttribute('href'),
+    HOMEPAGE_BRAND_SOURCE,
+    'Production homepage favicon does not use the hoodie asset'
+  );
   const remoteScripts = [...document.querySelectorAll('script[src]')]
     .map(script => script.getAttribute('src'))
     .filter(source => /^(?:https?:)?\/\//i.test(source));
@@ -239,6 +305,15 @@ function verifyStatic(root = defaultRoot) {
     .filter(name => name.endsWith('.js'))
     .map(name => fs.readFileSync(path.join(root, 'dist/assets', name), 'utf8'))
     .join('\n');
+  assert.ok(!javascript.includes('mascot-avatar.png'), 'Production homepage bundle loads docs avatar');
+  assert.ok(javascript.includes(HOMEPAGE_BRAND_SOURCE), 'Production bundle misses hoodie brand asset');
+
+  const builtBrandPath = path.join(root, 'dist', HOMEPAGE_BRAND_SOURCE.slice(1));
+  assert.ok(fs.existsSync(builtBrandPath), 'Production homepage brand asset is missing');
+  assert.ok(
+    fs.statSync(builtBrandPath).size <= HOMEPAGE_BRAND_LIMIT,
+    `Production homepage brand exceeds ${HOMEPAGE_BRAND_LIMIT} bytes`
+  );
 
   for (const marker of ['Your coding agents. Within reach.', '让你的编程智能体，随时触手可及。']) {
     assert.ok(javascript.includes(marker), `Missing localized bundle marker: ${marker}`);
@@ -252,7 +327,15 @@ function verifyStatic(root = defaultRoot) {
   assert.equal(packageJson.dependencies['@gsap/react'], '2.1.2', '@gsap/react must remain fixed and local');
 
   const imageCount = verifyNonHeroImageMetadata(root);
-  console.log(`Verified ${required.length} production files and ${imageCount} non-Hero JSX images`);
+  const firstViewportSummary = Object.entries(homepageBrand.firstViewportPathBytes)
+    .map(([context, bytes]) => `${context}=${bytes}`)
+    .join(', ');
+  console.log(
+    `Verified ${required.length} production files, ${imageCount} non-Hero JSX images, `
+    + `${homepageBrand.brandBytes}-byte homepage brand, `
+    + `first-viewport paths (${firstViewportSummary}) `
+    + `(saves ${homepageBrand.savedBrandBytes} bytes versus docs avatar)`
+  );
 }
 
 module.exports = {
@@ -260,6 +343,7 @@ module.exports = {
   extractJsxOpeningTags,
   jsxAttributes,
   jsxAttributeNames,
+  verifyHomepageBrandAssets,
   verifyNonHeroImageMetadata,
   verifyStatic
 };

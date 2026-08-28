@@ -128,6 +128,7 @@ it('breathes only the coarse static mascot and disables that motion by preferenc
   const reduced = block(css.slice(lastReducedMotion), /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/);
   expect(rule(".mascot-look[data-mode='coarse']")).toMatch(/animation:\s*mascot-breathe/);
   expect(rule(".mascot-look[data-mode='coarse']", reduced)).toMatch(/animation:\s*none/);
+  expect(rule('.hero-crew img:nth-child(3)', reduced)).toMatch(/display:\s*none/);
 });
 
 it('keeps the desktop story in two columns independently of motion capability', () => {

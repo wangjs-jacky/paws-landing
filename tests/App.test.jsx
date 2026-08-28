@@ -36,6 +36,22 @@ it('exposes stable hero media and terminal layout slots', () => {
   expect(hero.querySelector('.mascot-stage')).not.toBeInTheDocument();
 });
 
+it('uses the lightweight hoodie asset for homepage brand images', () => {
+  const { container } = render(<App />);
+  const brandImages = [
+    container.querySelector('.brand img'),
+    container.querySelector('.story-scene-mascot img'),
+    container.querySelector('.footer-brand img')
+  ];
+
+  for (const image of brandImages) {
+    expect(image).toHaveAttribute('src', '/assets/mascots/hoodie.png');
+    expect(image).toHaveAttribute('width', '512');
+    expect(image).toHaveAttribute('height', '512');
+    expect(image).toHaveAttribute('loading', 'lazy');
+  }
+});
+
 it('renders a control-free supported-agent marquee', () => {
   render(<App />);
   const marquee = screen.getByRole('region', { name: content.en.labels.agentMarquee });

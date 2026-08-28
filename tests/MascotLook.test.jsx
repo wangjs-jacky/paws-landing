@@ -87,6 +87,7 @@ afterEach(() => {
 
 async function loadAtlas() {
   const atlas = imageInstances[0];
+  expect(atlas).toBeDefined();
   await act(async () => atlas.onload());
   return atlas;
 }
@@ -98,6 +99,17 @@ function setVisible(surface, isIntersecting) {
 }
 
 describe('MascotLook pointer lifecycle', () => {
+  it('defers the static fallback while the fine-pointer atlas is loading', async () => {
+    render(<Harness />);
+
+    expect(imageInstances).toHaveLength(1);
+    expect(screen.getByRole('img', { name: 'Paws mascot' })).not.toHaveAttribute('src');
+
+    await loadAtlas();
+
+    expect(screen.getByRole('img', { name: 'Paws mascot' })).not.toHaveAttribute('src');
+  });
+
   it('keeps the high-resolution atlas on a single-frame logical canvas', async () => {
     render(<Harness />);
     await loadAtlas();
@@ -242,13 +254,14 @@ it.each([
   render(<Harness />);
   const surface = screen.getByTestId('pointer-surface');
   vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
-  await loadAtlas();
   setVisible(surface, true);
 
   fireEvent.pointerMove(surface, { clientX: 100 });
 
+  expect(imageInstances).toHaveLength(0);
   expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-mode', mode);
   expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-ready', 'false');
+  expect(screen.getByRole('img', { name: 'Paws mascot' })).toHaveAttribute('src', '/fallback.png');
   expect(window.requestAnimationFrame).not.toHaveBeenCalled();
 });
 

@@ -1329,6 +1329,7 @@ html[data-theme='light'] .dot-field-fallback {
 @media (prefers-reduced-motion: reduce) {
   .mascot-look[data-mode='coarse'] { animation: none; }
   .mascot-look img { transition: none; }
+  .hero-crew img:nth-child(3) { display: none; }
   .agent-marquee__track { width: 100%; animation: none; }
   .agent-marquee__duplicate { display: none; }
   .spotlight-card::before { display: none; }

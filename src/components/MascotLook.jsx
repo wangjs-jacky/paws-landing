@@ -39,6 +39,8 @@ export default function MascotLook({
   const [atlasFailed, setAtlasFailed] = useState(false);
   const [preferences, setPreferences] = useState(readPreferences);
 
+  const shouldLoadAtlas = preferences.fine && !preferences.reduced;
+  const usesStaticFallback = !shouldLoadAtlas || atlasFailed;
   const interactive = atlasReady && !atlasFailed && !preferences.reduced && preferences.fine;
   const mode = preferences.reduced
     ? 'reduced'
@@ -67,6 +69,15 @@ export default function MascotLook({
   }, []);
 
   useEffect(() => {
+    if (!shouldLoadAtlas) {
+      atlasRef.current = null;
+      contextRef.current = null;
+      failAtlasRef.current = null;
+      setAtlasReady(false);
+      setAtlasFailed(false);
+      return undefined;
+    }
+
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) {
@@ -130,7 +141,7 @@ export default function MascotLook({
       contextRef.current = null;
       failAtlasRef.current = null;
     };
-  }, [atlasSrc, centerFrame, columns, rows]);
+  }, [atlasSrc, centerFrame, columns, rows, shouldLoadAtlas]);
 
   useEffect(() => {
     const surface = pointerSurfaceRef.current;
@@ -253,7 +264,7 @@ export default function MascotLook({
       data-mode={mode}
     >
       <canvas ref={canvasRef} aria-hidden="true" />
-      <img src={fallbackSrc} alt={alt} />
+      <img src={usesStaticFallback ? fallbackSrc : undefined} alt={alt} />
     </div>
   );
 }

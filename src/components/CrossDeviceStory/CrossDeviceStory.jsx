@@ -64,10 +64,10 @@ export default function CrossDeviceStory({ language, activeSceneOverride }) {
         <ConnectionFlow focus={state.focus} status={state.sessionStatus} />
         <div className="story-scene-mascot" aria-hidden="true">
           <img
-            src="/assets/mascot-avatar.png"
+            src="/assets/mascots/hoodie.png"
             alt=""
-            width="1254"
-            height="1254"
+            width="512"
+            height="512"
             loading="lazy"
             decoding="async"
           />
