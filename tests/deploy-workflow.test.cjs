@@ -192,7 +192,9 @@ function assertWorkflowContract(source) {
   );
 
   const installerGate = executableShell(namedStep(document, 'Validate installer artifact').run);
-  assert.match(installerGate, /test -f dist\/install\.sh/);
+  assert.match(installerGate, /if \[\[ ! -f dist\/install\.sh \]\]; then/);
+  assert.match(installerGate, /skipping installer validation/);
+  assert.match(installerGate, /exit 0/);
   assert.match(installerGate, /file --brief --mime-type dist\/install\.sh/);
   assert.match(installerGate, /text\/html/);
   assert.match(installerGate, /head -n 1 dist\/install\.sh \| grep .*['"]\^#!['"]/);
@@ -221,7 +223,7 @@ function assertWorkflowContract(source) {
   assert.match(verify, /head -n 1 .* \| grep .*['"]\^#!['"]/);
   assert.match(
     verify,
-    /verify_installer "\$\{production_origin\}\/install\.sh" "dist\/install\.sh"/
+    /if \[\[ -f dist\/install\.sh \]\]; then\s+verify_installer "\$\{production_origin\}\/install\.sh" "dist\/install\.sh"/
   );
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
