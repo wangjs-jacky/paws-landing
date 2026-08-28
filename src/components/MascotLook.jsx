@@ -3,7 +3,7 @@ import { easeFrame, pointerRatio, ratioToFrame } from './react-bits/mascotFrameM
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const FINE_POINTER_QUERY = '(pointer: fine)';
-const ATLAS_CELL_SIZE = 768;
+const ATLAS_CELL_SIZE = 1024;
 
 function readPreferences() {
   if (typeof window === 'undefined' || !window.matchMedia) {
@@ -39,16 +39,17 @@ export default function MascotLook({
   const [atlasFailed, setAtlasFailed] = useState(false);
   const [preferences, setPreferences] = useState(readPreferences);
 
-  const shouldLoadAtlas = preferences.fine && !preferences.reduced;
+  // Some in-app browsers report a coarse primary pointer even when a mouse is
+  // available. Reduced-motion remains the only hard opt-out; pointer events
+  // themselves determine whether the atlas is scrubbed.
+  const shouldLoadAtlas = !preferences.reduced;
   const usesStaticFallback = !shouldLoadAtlas || atlasFailed;
-  const interactive = atlasReady && !atlasFailed && !preferences.reduced && preferences.fine;
+  const interactive = atlasReady && !atlasFailed && !preferences.reduced;
   const mode = preferences.reduced
     ? 'reduced'
-    : !preferences.fine
-      ? 'coarse'
-      : interactive
-        ? 'interactive'
-        : 'fallback';
+    : interactive
+      ? 'interactive'
+      : 'fallback';
 
   useEffect(() => {
     if (!window.matchMedia) return undefined;
@@ -86,6 +87,7 @@ export default function MascotLook({
     }
 
     let active = true;
+    let resizeObserver;
     const atlas = new Image();
     atlasRef.current = atlas;
     contextRef.current = context;
@@ -109,22 +111,39 @@ export default function MascotLook({
           fail();
           return;
         }
-        canvas.width = frameWidth;
-        canvas.height = frameHeight;
-        const sourceX = (centerFrame % columns) * frameWidth;
-        const sourceY = Math.floor(centerFrame / columns) * frameHeight;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(
-          atlas,
-          sourceX,
-          sourceY,
-          frameWidth,
-          frameHeight,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
+        const drawCurrentFrame = () => {
+          if (!active) return;
+          const rect = mascotRef.current?.getBoundingClientRect();
+          const dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+          const targetSize = rect?.width > 0
+            ? Math.min(frameWidth, Math.max(1, Math.ceil(rect.width * dpr)))
+            : frameWidth;
+          if (canvas.width !== targetSize || canvas.height !== targetSize) {
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+          }
+          const frameValue = currentFrameRef.current;
+          const sourceX = (Math.round(frameValue) % columns) * frameWidth;
+          const sourceY = Math.floor(Math.round(frameValue) / columns) * frameHeight;
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(
+            atlas,
+            sourceX,
+            sourceY,
+            frameWidth,
+            frameHeight,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+        };
+
+        drawCurrentFrame();
+        if ('ResizeObserver' in window) {
+          resizeObserver = new ResizeObserver(drawCurrentFrame);
+          if (mascotRef.current) resizeObserver.observe(mascotRef.current);
+        }
         setAtlasReady(true);
       } catch {
         fail();
@@ -140,6 +159,7 @@ export default function MascotLook({
       atlasRef.current = null;
       contextRef.current = null;
       failAtlasRef.current = null;
+      resizeObserver?.disconnect();
     };
   }, [atlasSrc, centerFrame, columns, rows, shouldLoadAtlas]);
 
@@ -208,7 +228,9 @@ export default function MascotLook({
     const handlePointerMove = event => {
       if (!visibleRef.current || !interactive) return;
       const rect = surface.getBoundingClientRect();
-      targetFrameRef.current = ratioToFrame(pointerRatio(event.clientX, rect), frameCount);
+      const measuredMascotRect = mascotRef.current?.getBoundingClientRect();
+      const mascotRect = measuredMascotRect?.width > 0 ? measuredMascotRect : rect;
+      targetFrameRef.current = ratioToFrame(pointerRatio(event.clientX, mascotRect), frameCount);
       const rawTranslation = rect.height
         ? ((event.clientY - rect.top) / rect.height - 0.5) * 8
         : 0;

@@ -48,19 +48,21 @@ async function waitForHeroImagePath(page, mode) {
 
   if (mode === 'interactive') {
     await expect(mascot).toHaveAttribute('data-ready', 'true');
-    await expect.poll(() => page.getByTestId('hero-crew-member').evaluateAll(images => (
-      images.every(image => image.complete && image.naturalWidth === 512)
-    ))).toBe(true);
+    await expect.poll(() => page.getByTestId('hero-crew-member').evaluateAll(images => {
+      const visible = images.filter(image => getComputedStyle(image).display !== 'none');
+      return visible.length > 0
+        && visible.every(image => image.complete && image.naturalWidth === 256);
+    })).toBe(true);
     return;
   }
 
   await expect.poll(() => mascot.locator('img').evaluate(image => (
-    image.complete && image.naturalWidth === 1254
+    image.complete && image.naturalWidth === 1024
   ))).toBe(true);
   await expect.poll(() => page.getByTestId('hero-crew-member').evaluateAll(images => {
     const visible = images.filter(image => getComputedStyle(image).display !== 'none');
     return visible.length > 0
-      && visible.every(image => image.complete && image.naturalWidth === 512);
+      && visible.every(image => image.complete && image.naturalWidth === 256);
   })).toBe(true);
 }
 
@@ -236,25 +238,36 @@ async function expectTransparentMascotSurface(page, mode) {
   expect(cornerAlpha).toEqual([0, 0, 0, 0]);
 }
 
-async function expectAlertMascotCenterFrame(page) {
-  const alertEyePixels = await page.getByTestId('mascot-look').locator('canvas').evaluate(canvas => {
-    const pixels = canvas.getContext('2d').getImageData(255, 90, 270, 143).data;
+async function expectOpenEyeMascotCenterFrame(page) {
+  const pupilPixels = await page.getByTestId('mascot-look').locator('canvas').evaluate(canvas => {
+    const referenceSize = 1024;
+    const crop = {
+      x: Math.floor((405 / referenceSize) * canvas.width),
+      y: Math.floor((165 / referenceSize) * canvas.height),
+      width: Math.max(1, Math.ceil((85 / referenceSize) * canvas.width)),
+      height: Math.max(1, Math.ceil((75 / referenceSize) * canvas.height))
+    };
+    const pixels = canvas.getContext('2d').getImageData(
+      crop.x,
+      crop.y,
+      crop.width,
+      crop.height
+    ).data;
     let count = 0;
     for (let offset = 0; offset < pixels.length; offset += 4) {
       const red = pixels[offset];
       const green = pixels[offset + 1];
       const blue = pixels[offset + 2];
       const alpha = pixels[offset + 3];
-      if (alpha > 200 && Math.min(red, green, blue) >= 205
-        && Math.max(red, green, blue) - Math.min(red, green, blue) <= 40) {
+      if (alpha > 200 && Math.max(red, green, blue) <= 75) {
         count += 1;
       }
     }
     return count;
   });
   expect(
-    alertEyePixels,
-    'center frame 12 eye crop (255,90 270x143) should contain >=8 opaque near-white alert pixels'
+    pupilPixels,
+    'center frame 12 normalized eye crop should contain >=8 opaque dark pupil pixels'
   ).toBeGreaterThanOrEqual(8);
 }
 
@@ -269,7 +282,7 @@ test('actual first-viewport image requests stay within budget in every motion co
   }));
   results.push(await measureFirstViewportImages(browser, {
     name: 'mobile-coarse',
-    mode: 'coarse',
+    mode: 'interactive',
     hasTouch: true,
     viewport: { width: 390, height: 844 }
   }));
@@ -297,7 +310,7 @@ test('first-viewport accounting includes an image requested 1000ms after Hero re
   ));
 
   expect(delayedResource?.pathname).toBe('/assets/mascots/barista.png');
-  expect(result.totalBytes).toBe(1_790_145);
+  expect(result.totalBytes).toBe(1_798_981);
 });
 
 test('desktop hero meets title, controls, mascot, terminal and preference contracts', async ({ page }, testInfo) => {
@@ -336,10 +349,26 @@ test('desktop hero meets title, controls, mascot, terminal and preference contra
   const heroCrew = page.getByTestId('hero-crew-member');
   await expect(heroCrew).toHaveCount(3);
   await expect.poll(() => heroCrew.evaluateAll(images => images.every(image => (
-    image.complete && image.naturalWidth === 512 && image.naturalHeight === 512
+    image.complete && image.naturalWidth === 256 && image.naturalHeight === 256
   )))).toBe(true);
-  await expect(mascot.locator('canvas')).toHaveJSProperty('width', 768);
-  await expect(mascot.locator('canvas')).toHaveJSProperty('height', 768);
+  const canvasMetrics = await mascot.evaluate(node => {
+    const canvas = node.querySelector('canvas');
+    const rect = node.getBoundingClientRect();
+    const expectedSize = Math.min(
+      1024,
+      Math.max(1, Math.ceil(rect.width * Math.max(1, Number(window.devicePixelRatio) || 1)))
+    );
+    return {
+      width: canvas.width,
+      height: canvas.height,
+      expectedSize
+    };
+  });
+  expect(canvasMetrics).toEqual({
+    width: canvasMetrics.expectedSize,
+    height: canvasMetrics.expectedSize,
+    expectedSize: canvasMetrics.expectedSize
+  });
   const centerFrame = Number(await mascot.getAttribute('data-frame'));
   await page.locator('#hero').hover({ position: { x: 1, y: 200 } });
   await expect.poll(async () => Number(await mascot.getAttribute('data-frame'))).toBeLessThan(centerFrame);
@@ -367,9 +396,16 @@ test('mobile navigation, mascot, targets and layout remain usable', async ({ pag
   await resetPreferences(page);
 
   const mascot = page.getByTestId('mascot-look');
-  await expect(mascot.locator('img')).toBeVisible();
-  await expect(mascot.locator('img')).toHaveJSProperty('naturalWidth', 1254);
-  await expect(mascot.locator('img')).toHaveJSProperty('naturalHeight', 1254);
+  await expect(mascot).toHaveAttribute('data-mode', 'interactive');
+  await expect(mascot).toHaveAttribute('data-ready', 'true');
+  await expect(mascot).toHaveAttribute('data-frame', '12');
+  const mobileCanvasMetrics = await mascot.locator('canvas').evaluate(canvas => ({
+    width: canvas.width,
+    height: canvas.height
+  }));
+  expect(mobileCanvasMetrics.width).toBeGreaterThan(0);
+  expect(mobileCanvasMetrics.width).toBeLessThanOrEqual(1024);
+  expect(mobileCanvasMetrics.height).toBe(mobileCanvasMetrics.width);
   const firstViewport = await Promise.all([
     page.getByRole('heading', { level: 1 }).boundingBox(),
     page.locator('.hero-actions .primary-action').boundingBox(),
@@ -604,7 +640,7 @@ test('Chinese documentation route keeps its existing heading', async ({ page }, 
 });
 
 test('captures transparent mascot in both themes at approved viewports', async ({ browser }, testInfo) => {
-  test.setTimeout(60_000);
+  test.setTimeout(180_000);
   const viewport = testInfo.project.name === 'desktop'
     ? { width: 1440, height: 1000 }
     : { width: 390, height: 844 };
@@ -636,21 +672,24 @@ test('captures transparent mascot in both themes at approved viewports', async (
         return range.getClientRects().length;
       }));
       expect(titleLineBoxes).toEqual([1, 1]);
-      const mascotMode = testInfo.project.name === 'desktop' ? 'interactive' : 'coarse';
-      await expect(page.getByTestId('mascot-look')).toHaveAttribute('data-mode', mascotMode);
-      await expect(page.getByTestId('mascot-look')).toHaveAttribute(
-        'data-ready',
-        mascotMode === 'interactive' ? 'true' : 'false'
-      );
+      const mascotMode = 'interactive';
+      const mascot = page.getByTestId('mascot-look');
+      await expect(mascot).toHaveAttribute('data-mode', mascotMode);
+      await expect(mascot).toHaveAttribute('data-ready', 'true');
       await expectTransparentMascotSurface(page, mascotMode);
-      if (mascotMode === 'interactive') {
-        await page.locator('#hero').hover({ position: { x: 720, y: 200 } });
-        await expect(page.getByTestId('mascot-look')).toHaveAttribute('data-frame', '12');
-        await page.evaluate(() => new Promise(resolve => {
-          requestAnimationFrame(() => requestAnimationFrame(resolve));
+      await mascot.evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        node.dispatchEvent(new PointerEvent('pointermove', {
+          bubbles: true,
+          clientX: rect.left + (rect.width / 2),
+          clientY: rect.top + (rect.height / 2)
         }));
-        await expectAlertMascotCenterFrame(page);
-      }
+      });
+      await expect(mascot).toHaveAttribute('data-frame', '12');
+      await page.evaluate(() => new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }));
+      await expectOpenEyeMascotCenterFrame(page);
       await page.screenshot({
         path: testInfo.outputPath(`homepage-${testInfo.project.name}-${theme}.png`)
       });

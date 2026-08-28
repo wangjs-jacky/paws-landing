@@ -47,6 +47,7 @@ function flushAnimationFrames(limit = 80) {
 
 let imageInstances;
 let observerInstances;
+let resizeObserverInstances;
 let rafCallbacks;
 let nextRafId;
 let context;
@@ -54,14 +55,15 @@ let context;
 beforeEach(() => {
   imageInstances = [];
   observerInstances = [];
+  resizeObserverInstances = [];
   rafCallbacks = new Map();
   nextRafId = 1;
   context = { clearRect: vi.fn(), drawImage: vi.fn() };
   HTMLCanvasElement.prototype.getContext.mockReturnValue(context);
 
   window.Image = vi.fn(function MockImage() {
-    this.naturalWidth = 4608;
-    this.naturalHeight = 3072;
+    this.naturalWidth = 6144;
+    this.naturalHeight = 4096;
     this.decode = vi.fn().mockResolvedValue(undefined);
     imageInstances.push(this);
   });
@@ -70,6 +72,12 @@ beforeEach(() => {
     this.observe = vi.fn(target => { this.target = target; });
     this.disconnect = vi.fn();
     observerInstances.push(this);
+  });
+  window.ResizeObserver = vi.fn(function MockResizeObserver(callback) {
+    this.callback = callback;
+    this.observe = vi.fn(target => { this.target = target; });
+    this.disconnect = vi.fn();
+    resizeObserverInstances.push(this);
   });
   window.requestAnimationFrame = vi.fn(callback => {
     const id = nextRafId;
@@ -113,16 +121,35 @@ describe('MascotLook pointer lifecycle', () => {
     expect(screen.getByRole('img', { name: 'Paws mascot' })).toBe(mascot);
   });
 
-  it('keeps the high-resolution atlas on a single-frame logical canvas', async () => {
+  it('uses a DPR-aware canvas backed by 1024px source cells', async () => {
     render(<Harness />);
+    const mascot = screen.getByTestId('mascot-look');
+    vi.spyOn(mascot, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 300, height: 300
+    });
+    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
     await loadAtlas();
 
-    const canvas = screen.getByTestId('mascot-look').querySelector('canvas');
-    expect(canvas).toHaveAttribute('width', '768');
-    expect(canvas).toHaveAttribute('height', '768');
+    const canvas = mascot.querySelector('canvas');
+    expect(canvas).toHaveAttribute('width', '600');
+    expect(canvas).toHaveAttribute('height', '600');
     expect(context.drawImage).toHaveBeenCalledWith(
-      imageInstances[0], 0, 1536, 768, 768, 0, 0, 768, 768
+      imageInstances[0], 0, 2048, 1024, 1024, 0, 0, 600, 600
     );
+  });
+
+  it('caps a large Retina canvas at the native atlas cell size', async () => {
+    render(<Harness />);
+    const mascot = screen.getByTestId('mascot-look');
+    vi.spyOn(mascot, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 520, height: 520
+    });
+    Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 3 });
+    await loadAtlas();
+
+    const canvas = mascot.querySelector('canvas');
+    expect(canvas).toHaveAttribute('width', '1024');
+    expect(canvas).toHaveAttribute('height', '1024');
   });
 
   it('draws the edge frame for a visible pointer at the right edge', async () => {
@@ -138,8 +165,23 @@ describe('MascotLook pointer lifecycle', () => {
 
     expect(mascot).toHaveAttribute('data-frame', '23');
     expect(context.drawImage).toHaveBeenLastCalledWith(
-      imageInstances[0], 3840, 2304, 768, 768, 0, 0, 768, 768
+      imageInstances[0], 5120, 3072, 1024, 1024, 0, 0, 1024, 1024
     );
+  });
+
+  it('maps pointer yaw around the mascot itself instead of the full hero surface', async () => {
+    render(<Harness />);
+    const surface = screen.getByTestId('pointer-surface');
+    const mascot = screen.getByTestId('mascot-look');
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 1000, height: 600 });
+    vi.spyOn(mascot, 'getBoundingClientRect').mockReturnValue({ left: 600, top: 100, width: 300, height: 300 });
+    await loadAtlas();
+    setVisible(surface, true);
+
+    fireEvent.pointerMove(surface, { clientX: 600, clientY: 250 });
+    flushAnimationFrames();
+
+    expect(mascot).toHaveAttribute('data-frame', '0');
   });
 
   it('publishes clamped pointer Y translation for the mascot and sibling satellites', async () => {
@@ -235,7 +277,7 @@ it('keeps the static fallback visible when atlas decoding fails', async () => {
   expect(window.requestAnimationFrame).not.toHaveBeenCalled();
 });
 
-it('keeps the static fallback visible when atlas cells are not 768 pixels', async () => {
+it('keeps the static fallback visible when atlas cells are not 1024 pixels', async () => {
   render(<Harness />);
   const atlas = imageInstances[0];
   atlas.naturalWidth = 3072;
@@ -249,11 +291,8 @@ it('keeps the static fallback visible when atlas cells are not 768 pixels', asyn
   expect(context.drawImage).not.toHaveBeenCalled();
 });
 
-it.each([
-  ['reduced motion', { reduced: true, fine: true }, 'reduced'],
-  ['a coarse pointer', { reduced: false, fine: false }, 'coarse']
-])('uses a static mascot with no RAF for %s', async (_label, media, mode) => {
-  installMatchMedia(media);
+it('uses a static mascot with no RAF for reduced motion', async () => {
+  installMatchMedia({ reduced: true, fine: true });
   render(<Harness />);
   const surface = screen.getByTestId('pointer-surface');
   vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
@@ -262,10 +301,29 @@ it.each([
   fireEvent.pointerMove(surface, { clientX: 100 });
 
   expect(imageInstances).toHaveLength(0);
-  expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-mode', mode);
+  expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-mode', 'reduced');
   expect(screen.getByTestId('mascot-look')).toHaveAttribute('data-ready', 'false');
   expect(screen.getByRole('img', { name: 'Paws mascot' })).toHaveAttribute('src', '/fallback.png');
   expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+});
+
+it('loads and scrubs the atlas even when the in-app browser reports a coarse pointer', async () => {
+  installMatchMedia({ reduced: false, fine: false });
+  render(<Harness />);
+  const surface = screen.getByTestId('pointer-surface');
+  const mascot = screen.getByTestId('mascot-look');
+  vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+  vi.spyOn(mascot, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+
+  expect(imageInstances).toHaveLength(1);
+  await loadAtlas();
+  setVisible(surface, true);
+  fireEvent.pointerMove(surface, { clientX: 100, clientY: 50 });
+  flushAnimationFrames();
+
+  expect(mascot).toHaveAttribute('data-mode', 'interactive');
+  expect(mascot).toHaveAttribute('data-ready', 'true');
+  expect(mascot).toHaveAttribute('data-frame', '23');
 });
 
 it('cleans hero listeners, observer, RAF, media listeners, and image callbacks on unmount', async () => {

@@ -50,11 +50,11 @@ export default function Hero({ copy, language, theme }) {
                 key={id}
                 data-testid="hero-crew-member"
                 data-crew-id={id}
-                src={`/assets/mascots/${id}.png`}
+                src={`/assets/hero-crew/${id}.webp`}
                 alt=""
                 aria-hidden="true"
-                width="512"
-                height="512"
+                width="256"
+                height="256"
                 decoding="async"
                 loading="lazy"
               />

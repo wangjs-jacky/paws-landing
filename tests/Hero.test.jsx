@@ -86,15 +86,15 @@ it('presents the cross-device outcome, product roles and decorative Paws Crew', 
     const crew = screen.getAllByTestId('hero-crew-member');
     expect(crew).toHaveLength(3);
     expect(crew.map(image => image.getAttribute('src'))).toEqual([
-      '/assets/mascots/astro.png',
-      '/assets/mascots/ninja.png',
-      '/assets/mascots/scientist.png'
+      '/assets/hero-crew/astro.webp',
+      '/assets/hero-crew/ninja.webp',
+      '/assets/hero-crew/scientist.webp'
     ]);
     crew.forEach(image => {
       expect(image).toHaveAttribute('alt', '');
       expect(image).toHaveAttribute('aria-hidden', 'true');
-      expect(image).toHaveAttribute('width', '512');
-      expect(image).toHaveAttribute('height', '512');
+      expect(image).toHaveAttribute('width', '256');
+      expect(image).toHaveAttribute('height', '256');
       expect(image).toHaveAttribute('decoding', 'async');
       expect(image).toHaveAttribute('loading', 'lazy');
     });

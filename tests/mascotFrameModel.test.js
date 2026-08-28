@@ -30,6 +30,10 @@ describe('ratioToFrame', () => {
 });
 
 describe('easeFrame', () => {
+  it('uses a responsive default for direct mouse tracking', () => {
+    expect(easeFrame(0, 23)).toBeCloseTo(8.74);
+  });
+
   it('moves one easing step toward the target', () => {
     expect(easeFrame(0, 23, 0.25)).toBeCloseTo(5.75);
   });

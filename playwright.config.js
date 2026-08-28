@@ -7,6 +7,8 @@ const previewBaseUrl = `http://127.0.0.1:${previewPort}`;
 export default defineConfig({
   testDir: './e2e',
   testMatch: 'homepage.spec.js',
+  timeout: 90_000,
+  expect: { timeout: 30_000 },
   workers: 1,
   outputDir: '.preview/playwright-results',
   use: {

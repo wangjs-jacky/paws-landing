@@ -4,7 +4,8 @@ set -eu
 
 usage() {
   echo "Usage: $0 INPUT.mp4 OUTPUT.webp START_SECONDS SOURCE_DURATION_SECONDS" >&2
-  echo "The source segment is normalized to 4.00 seconds; atlas frame 12 must pass the open-eye highlight check." >&2
+  echo "Set MASCOT_FRAME_TIMES to exactly 24 comma-separated timestamps to build a reordered left-to-right atlas." >&2
+  echo "Without MASCOT_FRAME_TIMES the source segment is normalized to 4.00 seconds; atlas frame 12 must pass the open-eye highlight check." >&2
   exit 2
 }
 
@@ -20,6 +21,7 @@ output=$2
 start_seconds=$3
 duration_seconds=$4
 normalized_duration=4.00
+frame_times=${MASCOT_FRAME_TIMES:-}
 
 [ -f "$input" ] || fail "input video not found: $input"
 
@@ -70,12 +72,37 @@ trap cleanup EXIT INT TERM
 
 retime_factor=$(awk -v normalized="$normalized_duration" -v source="$duration_seconds" 'BEGIN { printf "%.6f", normalized / source }')
 
-ffmpeg -v error \
-  -ss "$start_seconds" \
-  -i "$input" \
-  -vf "trim=duration=${duration_seconds},setpts=(${normalized_duration}/${duration_seconds})*(PTS-STARTPTS),fps=6,chromakey=0x00ff00:0.18:0.08,scale=768:768:force_original_aspect_ratio=decrease:flags=lanczos,pad=768:768:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba" \
-  -frames:v 24 \
-  "$temp_dir/frame-%02d.png"
+if [ -n "$frame_times" ]; then
+  frame_time_count=$(printf '%s\n' "$frame_times" | awk -F, '{print NF}')
+  [ "$frame_time_count" -eq 24 ] || fail "expected exactly 24 comma-separated frame times, found $frame_time_count"
+
+  saved_ifs=$IFS
+  IFS=,
+  set -- $frame_times
+  IFS=$saved_ifs
+  frame_index=1
+  for frame_time do
+    awk -v value="$frame_time" 'BEGIN {
+      valid = value ~ /^([0-9]+([.][0-9]*)?|[.][0-9]+)$/
+      exit !(valid && value + 0 >= 0)
+    }' || fail "frame timestamp must be a non-negative number: $frame_time"
+    frame_number=$(printf '%02d' "$frame_index")
+    ffmpeg -v error \
+      -ss "$frame_time" \
+      -i "$input" \
+      -vf "chromakey=0x2acf58:0.18:0.08,scale=1024:1024:force_original_aspect_ratio=decrease:flags=lanczos,pad=1024:1024:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba" \
+      -frames:v 1 \
+      "$temp_dir/frame-$frame_number.png"
+    frame_index=$((frame_index + 1))
+  done
+else
+  ffmpeg -v error \
+    -ss "$start_seconds" \
+    -i "$input" \
+    -vf "trim=duration=${duration_seconds},setpts=(${normalized_duration}/${duration_seconds})*(PTS-STARTPTS),fps=6,chromakey=0x2acf58:0.18:0.08,scale=1024:1024:force_original_aspect_ratio=decrease:flags=lanczos,pad=1024:1024:(ow-iw)/2:(oh-ih)/2:color=0x00000000,format=rgba" \
+    -frames:v 24 \
+    "$temp_dir/frame-%02d.png"
+fi
 
 frame_count=$(find "$temp_dir" -name 'frame-*.png' -type f | wc -l | tr -d ' ')
 [ "$frame_count" -eq 24 ] || fail "expected 24 extracted frames, found $frame_count"
@@ -92,13 +119,15 @@ import sys
 from PIL import Image
 
 DESPILL_GREEN_DOMINANCE_THRESHOLD = 16
+ALPHA_TRANSPARENT_THRESHOLD = 16
+ALPHA_OPAQUE_THRESHOLD = 96
 CENTER_FRAME_NUMBER = 13
-EYE_CROP = (255, 90, 525, 233)
-EYE_HIGHLIGHT_MIN_CHANNEL = 205
-EYE_HIGHLIGHT_MAX_SPREAD = 40
-EYE_HIGHLIGHT_MIN_PIXELS = 8
+EYE_CROP = (405, 165, 490, 240)
+EYE_DARK_MAX_CHANNEL = 75
+EYE_PUPIL_MIN_PIXELS = 100
 frame_directory = Path(sys.argv[1])
 changed = 0
+remapped_alpha = 0
 
 for frame_path in sorted(frame_directory.glob("frame-*.png")):
     with Image.open(frame_path) as source:
@@ -106,9 +135,21 @@ for frame_path in sorted(frame_directory.glob("frame-*.png")):
 
     cleaned = []
     for red, green, blue, alpha in image.getdata():
-        if alpha == 0:
+        if alpha <= ALPHA_TRANSPARENT_THRESHOLD:
             cleaned.append((0, 0, 0, 0))
             continue
+
+        original_alpha = alpha
+        if alpha >= ALPHA_OPAQUE_THRESHOLD:
+            alpha = 255
+        else:
+            alpha = round(
+                (alpha - ALPHA_TRANSPARENT_THRESHOLD)
+                * 255
+                / (ALPHA_OPAQUE_THRESHOLD - ALPHA_TRANSPARENT_THRESHOLD)
+            )
+        if alpha != original_alpha:
+            remapped_alpha += 1
 
         neutral_anchor = max(red, blue)
         if green - neutral_anchor > DESPILL_GREEN_DOMINANCE_THRESHOLD:
@@ -122,26 +163,27 @@ for frame_path in sorted(frame_directory.glob("frame-*.png")):
 center_path = frame_directory / f"frame-{CENTER_FRAME_NUMBER:02d}.png"
 with Image.open(center_path) as center_source:
     center = center_source.convert("RGBA").crop(EYE_CROP)
-center_eye_highlights = sum(
+center_eye_pupil_pixels = sum(
     1
     for red, green, blue, alpha in center.getdata()
     if alpha > 200
-    and min(red, green, blue) >= EYE_HIGHLIGHT_MIN_CHANNEL
-    and max(red, green, blue) - min(red, green, blue) <= EYE_HIGHLIGHT_MAX_SPREAD
+    and max(red, green, blue) <= EYE_DARK_MAX_CHANNEL
 )
-if center_eye_highlights < EYE_HIGHLIGHT_MIN_PIXELS:
+if center_eye_pupil_pixels < EYE_PUPIL_MIN_PIXELS:
     raise SystemExit(
-        "build-mascot-atlas: center frame open-eye proxy failed "
-        f"(crop={EYE_CROP}, highlights={center_eye_highlights}, "
-        f"required={EYE_HIGHLIGHT_MIN_PIXELS})"
+        "build-mascot-atlas: center frame open-eye pupil proxy failed "
+        f"(crop={EYE_CROP}, pupil_pixels={center_eye_pupil_pixels}, "
+        f"required={EYE_PUPIL_MIN_PIXELS})"
     )
 
 print(
     f"green_dominance_threshold={DESPILL_GREEN_DOMINANCE_THRESHOLD},"
     f"changed_pixels={changed},"
+    f"alpha_thresholds={ALPHA_TRANSPARENT_THRESHOLD}/{ALPHA_OPAQUE_THRESHOLD},"
+    f"remapped_alpha_pixels={remapped_alpha},"
     f"center_eye_crop={EYE_CROP},"
-    f"center_eye_highlights={center_eye_highlights},"
-    f"center_eye_required={EYE_HIGHLIGHT_MIN_PIXELS}"
+    f"center_eye_pupil_pixels={center_eye_pupil_pixels},"
+    f"center_eye_required={EYE_PUPIL_MIN_PIXELS}"
 )
 PY
 )
@@ -162,7 +204,7 @@ if ffmpeg -hide_banner -encoders 2>/dev/null | grep -q '[[:space:]]libwebp[[:spa
     -i "$temp_atlas_png" \
     -frames:v 1 \
     -c:v libwebp \
-    -quality 82 \
+    -quality 84 \
     -compression_level 6 \
     -pix_fmt yuva420p \
     "$temp_output"
@@ -183,7 +225,7 @@ if not features.check("webp"):
 source = Path(sys.argv[1])
 destination = Path(sys.argv[2])
 with Image.open(source) as image:
-    image.convert("RGBA").save(destination, format="WEBP", quality=82, method=6)
+    image.convert("RGBA").save(destination, format="WEBP", quality=84, method=6)
 PY
 fi
 
@@ -193,7 +235,7 @@ atlas_metadata=$(ffprobe -v error -select_streams v:0 -show_entries stream=width
 atlas_width=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $1}')
 atlas_height=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $2}')
 atlas_format=$(printf '%s\n' "$atlas_metadata" | awk -F, '{print $3}')
-[ "$atlas_width" -eq 4608 ] && [ "$atlas_height" -eq 3072 ] || fail "unexpected atlas dimensions: ${atlas_width}x${atlas_height}"
+[ "$atlas_width" -eq 6144 ] && [ "$atlas_height" -eq 4096 ] || fail "unexpected atlas dimensions: ${atlas_width}x${atlas_height}"
 case "$atlas_format" in
   *a*) ;;
   *) fail "atlas is missing alpha: $atlas_format" ;;
@@ -222,4 +264,4 @@ atlas_bytes=$(wc -c < "$temp_output" | tr -d ' ')
 [ "$atlas_bytes" -le 3145728 ] || fail "atlas exceeds 3,145,728 bytes: $atlas_bytes"
 
 mv "$temp_output" "$output"
-echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 768px cells, chromakey 0x00ff00:0.18:0.08, despill $despill_result, WebP quality 82, $alpha_counts, $atlas_bytes bytes"
+echo "Built $output: source ${start_seconds}s+${duration_seconds}s, retime ${retime_factor}x to ${normalized_duration}s, 24 frames, 6x4, 1024px cells, chromakey 0x2acf58:0.18:0.08, despill $despill_result, WebP quality 84, $alpha_counts, $atlas_bytes bytes"

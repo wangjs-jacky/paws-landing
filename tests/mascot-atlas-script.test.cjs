@@ -24,17 +24,19 @@ test('mascot atlas builder applies reproducible green despill before tiling', ()
   assert.notEqual(despill, -1);
   assert.notEqual(script.indexOf('green - neutral_anchor > DESPILL_GREEN_DOMINANCE_THRESHOLD'), -1);
   assert.notEqual(script.indexOf('green = max(0, neutral_anchor - 1)'), -1);
+  assert.notEqual(script.indexOf('ALPHA_TRANSPARENT_THRESHOLD = 16'), -1);
+  assert.notEqual(script.indexOf('ALPHA_OPAQUE_THRESHOLD = 96'), -1);
+  assert.notEqual(script.indexOf('alpha = 255'), -1);
   assert.ok(despill < tile);
 });
 
 test('mascot atlas builder rejects a closed-eye center frame', () => {
   for (const marker of [
     'CENTER_FRAME_NUMBER = 13',
-    'EYE_CROP = (255, 90, 525, 233)',
-    'EYE_HIGHLIGHT_MIN_CHANNEL = 205',
-    'EYE_HIGHLIGHT_MAX_SPREAD = 40',
-    'EYE_HIGHLIGHT_MIN_PIXELS = 8',
-    'center frame open-eye proxy failed'
+    'EYE_CROP = (405, 165, 490, 240)',
+    'EYE_DARK_MAX_CHANNEL = 75',
+    'EYE_PUPIL_MIN_PIXELS = 100',
+    'center frame open-eye pupil proxy failed'
   ]) {
     assert.ok(script.includes(marker), marker);
   }
@@ -43,16 +45,18 @@ test('mascot atlas builder rejects a closed-eye center frame', () => {
 test('mascot atlas builder keeps the fixed runtime asset contract', () => {
   for (const marker of [
     'normalized_duration=4.00',
+    'MASCOT_FRAME_TIMES',
+    'expected exactly 24 comma-separated frame times',
     'fps=6',
     '-frames:v 24',
-    'chromakey=0x00ff00:0.18:0.08',
-    'scale=768:768',
-    'pad=768:768',
+    'chromakey=0x2acf58:0.18:0.08',
+    'scale=1024:1024',
+    'pad=1024:1024',
     'tile=6x4',
-    '4608',
-    '3072',
-    '768px cells',
-    'quality=82',
+    '6144',
+    '4096',
+    '1024px cells',
+    'quality=84',
     '3145728'
   ]) {
     assert.ok(script.includes(marker), marker);

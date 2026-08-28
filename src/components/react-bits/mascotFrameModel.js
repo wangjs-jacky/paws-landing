@@ -9,6 +9,6 @@ export function ratioToFrame(ratio, frameCount) {
   return Math.round(((clamp(ratio, -1, 1) + 1) / 2) * (frameCount - 1));
 }
 
-export function easeFrame(current, target, factor = 0.22) {
+export function easeFrame(current, target, factor = 0.38) {
   return Math.abs(target - current) < 0.05 ? target : current + (target - current) * factor;
 }
