@@ -44,6 +44,41 @@ describe('cross-device story content', () => {
     expect(findEmptyCollections(storyContent.zh)).toEqual([]);
   });
 
+  it('provides every product-demo field and activity label in both locales', () => {
+    expect(storyContent.en.consoles.labels).toEqual({
+      product: 'Paws',
+      browser: 'paws · web',
+      pcWeb: 'PC WEB',
+      app: 'APP',
+      sessions: 'Sessions',
+      machine: 'Machine',
+      project: 'Project',
+      agent: 'Agent',
+      session: 'Session',
+      workspace: 'workspace',
+      activity: 'Agent activity',
+      skill: 'Skill',
+      tool: 'Tool',
+      subagent: 'Subagent'
+    });
+    expect(storyContent.zh.consoles.labels).toEqual({
+      product: 'Paws',
+      browser: 'paws · web',
+      pcWeb: 'PC Web',
+      app: 'App',
+      sessions: '会话',
+      machine: '机器',
+      project: '项目',
+      agent: '智能体',
+      session: '会话',
+      workspace: '工作目录',
+      activity: '智能体活动',
+      skill: '技能',
+      tool: '工具',
+      subagent: '子智能体'
+    });
+  });
+
   it('includes OpenClaw in the bilingual architecture agent list', () => {
     expect(storyContent.en.architecture.nodes.agents).toBe('Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP');
     expect(storyContent.zh.architecture.nodes.agents).toBe('Codex / Claude Code / Gemini / OpenCode / OpenClaw / ACP');

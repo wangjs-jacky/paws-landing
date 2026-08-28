@@ -44,13 +44,13 @@ function WorkspaceSidebar({ state, copy }) {
     <div className="pc-console__sidebar">
       <div className="pc-console__brand">
         <span className="pc-console__brand-mark"><MarkIcon /></span>
-        <span>Paws</span>
+        <span>{copy.consoles.labels.product}</span>
       </div>
       <button className="pc-console__new-session" type="button" disabled aria-label={copy.scenes[0].title}>
         <span aria-hidden="true">＋</span>
         <span>{copy.scenes[0].number}</span>
       </button>
-      <div className="pc-console__nav-label" aria-hidden="true">Sessions</div>
+      <div className="pc-console__nav-label" aria-hidden="true">{copy.consoles.labels.sessions}</div>
       <div className="pc-console__session-link" data-active={String(state.sceneId !== 'start')}>
         <span className="pc-console__session-glyph" aria-hidden="true">›_</span>
         <span>
@@ -70,16 +70,16 @@ function WorkspaceSidebar({ state, copy }) {
 
 function ComposePanel({ state, copy, scene }) {
   const controls = [
-    { kind: 'machine', label: 'Machine', value: copy.consoles.machine, meta: copy.consoles.online },
-    { kind: 'project', label: 'Project', value: copy.consoles.project, meta: 'workspace' },
-    { kind: 'agent', label: 'Agent', value: copy.consoles.agent, meta: 'GPT-5' }
+    { kind: 'machine', label: copy.consoles.labels.machine, value: copy.consoles.machine, meta: copy.consoles.online },
+    { kind: 'project', label: copy.consoles.labels.project, value: copy.consoles.project, meta: copy.consoles.labels.workspace },
+    { kind: 'agent', label: copy.consoles.labels.agent, value: copy.consoles.agent, meta: 'GPT-5' }
   ];
 
   return (
     <div className="pc-console__main pc-console__main--compose">
       <header className="pc-console__topbar">
         <div>
-          <span className="console-kicker">PC WEB</span>
+          <span className="console-kicker">{copy.consoles.labels.pcWeb}</span>
           <h3>{scene.title}</h3>
         </div>
         <span className="console-status-chip" data-status={state.sessionStatus}>
@@ -124,17 +124,11 @@ function ComposePanel({ state, copy, scene }) {
   );
 }
 
-const ACTIVITY_LABELS = {
-  skill: 'Skill',
-  tool: 'Tool',
-  subagent: 'Subagent'
-};
-
-function ActivityList({ toolStates }) {
+function ActivityList({ toolStates, copy }) {
   if (toolStates.length === 0) return null;
 
   return (
-    <div className="pc-console__activity" aria-label="Agent activity">
+    <div className="pc-console__activity" aria-label={copy.consoles.labels.activity}>
       {toolStates.map(toolState => {
         const [kind, phase] = toolState.split('-');
         return (
@@ -143,8 +137,8 @@ function ActivityList({ toolStates }) {
               {phase === 'complete' ? '✓' : '↻'}
             </span>
             <span>
-              <strong>{ACTIVITY_LABELS[kind]}</strong>
-              <small>{phase === 'complete' ? 'complete' : 'running'}</small>
+              <strong>{copy.consoles.labels[kind]}</strong>
+              <small>{phase === 'complete' ? copy.consoles.complete : copy.consoles.running}</small>
             </span>
             <i />
           </div>
@@ -182,7 +176,7 @@ function SessionPanel({ state, copy, scene }) {
           <span className="pc-console__avatar pc-console__avatar--agent"><MarkIcon /></span>
           <div className="pc-console__response">
             <p>{scene.body}</p>
-            <ActivityList toolStates={state.toolStates} />
+            <ActivityList toolStates={state.toolStates} copy={copy} />
             {state.permission && (
               <div className="pc-console__permission" data-status={state.permission.status}>
                 <span className="pc-console__permission-icon" aria-hidden="true">
@@ -223,7 +217,7 @@ export default function PcConsoleDemo({ state, copy }) {
     >
       <div className="pc-console__chrome" aria-hidden="true">
         <i /><i /><i />
-        <span>paws · web</span>
+        <span>{copy.consoles.labels.browser}</span>
         <b>⌁</b>
       </div>
       <div className="pc-console__app">

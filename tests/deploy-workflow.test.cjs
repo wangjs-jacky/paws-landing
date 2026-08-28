@@ -88,6 +88,14 @@ function assertExactSteps(document) {
   );
 }
 
+function assertProductionRefGuard(document) {
+  assert.equal(
+    document.getIn(['jobs', 'deploy', 'if']),
+    "github.ref == 'refs/heads/main'",
+    'deploy job must allow only the main branch ref'
+  );
+}
+
 function namedStep(document, name) {
   const step = deploySteps(document).find(candidate => candidate.name === name);
   assert.ok(step, `Missing workflow step: ${name}`);
@@ -153,6 +161,7 @@ function assertWorkflowContract(source) {
   assert.ok(Object.hasOwn(workflow, 'on'), 'workflow must expose an on mapping');
   assertWatchedPaths(document);
   assertExactSteps(document);
+  assertProductionRefGuard(document);
   assertSecretScope(document);
 
   assert.equal(namedStep(document, 'Check out repository').uses, 'actions/checkout@v4');
@@ -211,6 +220,19 @@ function assertWorkflowContract(source) {
 
 test('production deploy is structurally gated before Cloudflare publication', () => {
   assertWorkflowContract(workflowSource);
+});
+
+test('workflow dispatch from a non-main ref cannot publish as production main', () => {
+  const unguardedDispatchDocument = parseWorkflow(workflowSource);
+  unguardedDispatchDocument.setIn(
+    ['jobs', 'deploy', 'if'],
+    "github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+  );
+
+  assert.throws(
+    () => assertWorkflowContract(unguardedDispatchDocument.toString()),
+    /deploy job must allow only the main branch ref/
+  );
 });
 
 test('YAML comments cannot fake watched paths or executable steps', () => {

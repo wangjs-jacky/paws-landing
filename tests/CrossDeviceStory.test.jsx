@@ -430,6 +430,60 @@ describe('cross-device product demonstrations', () => {
     expectDemoButtonsToBeDisabled(mobile);
   });
 
+  it('renders localized Chinese labels throughout the shared PC demo', () => {
+    const zhCopy = getStoryContent('zh');
+    const startState = buildConsoleState('start', zhCopy);
+    const { rerender } = render(<PcConsoleDemo state={startState} copy={zhCopy} />);
+    const pc = screen.getByTestId('pc-console');
+
+    expect(pc.querySelector('.pc-console__brand')).toHaveTextContent('Paws');
+    expect(pc.querySelector('.pc-console__chrome')).toHaveTextContent('paws · web');
+    expect(pc.querySelector('.pc-console__nav-label')).toHaveTextContent('会话');
+    expect(pc.querySelector('[data-kind="machine"] small')).toHaveTextContent('机器');
+    expect(pc.querySelector('[data-kind="project"] small')).toHaveTextContent('项目');
+    expect(pc.querySelector('[data-kind="agent"] small')).toHaveTextContent('智能体');
+    expect(pc.querySelector('[data-kind="project"] .pc-console__selector-meta')).toHaveTextContent('工作目录');
+
+    const watchState = buildConsoleState('watch', zhCopy);
+    rerender(<PcConsoleDemo state={watchState} copy={zhCopy} />);
+
+    const activity = pc.querySelector('.pc-console__activity');
+    expect(activity).toHaveAccessibleName('智能体活动');
+    expect(within(activity).getByText('技能')).toBeVisible();
+    expect(within(activity).getByText('工具')).toBeVisible();
+    expect(within(activity).getByText('子智能体')).toBeVisible();
+    expect(within(activity).getByText('已完成')).toBeVisible();
+    expect(within(activity).getAllByText('运行中')).toHaveLength(2);
+  });
+
+  it('renders localized Chinese labels in the shared coarse and reduced-motion evidence', () => {
+    motionMocks.desktop = false;
+    render(<CrossDeviceStory language="zh" />);
+
+    const startEvidence = document.querySelector('[data-static-scene="start"]');
+    const startPc = startEvidence.querySelector('[data-static-surface="pc"]');
+    const startApp = startEvidence.querySelector('[data-static-surface="mobile"]');
+    expect(startPc.querySelector('.story-static-console__header')).toHaveTextContent('PC Web');
+    expect(startApp.querySelector('.story-static-console__header')).toHaveTextContent('App');
+    expect([...startPc.querySelectorAll('dt')].map(label => label.textContent)).toEqual([
+      '机器',
+      '项目',
+      '智能体',
+      '会话'
+    ]);
+    expect([...startApp.querySelectorAll('dt')].map(label => label.textContent)).toEqual([
+      '会话',
+      '智能体'
+    ]);
+
+    const watchEvidence = document.querySelector('[data-static-scene="watch"]');
+    const activity = watchEvidence.querySelector('[data-static-surface="pc"] .story-static-console__activity');
+    expect(activity).toHaveAccessibleName('智能体活动');
+    expect(within(activity).getByText('技能')).toBeVisible();
+    expect(within(activity).getByText('工具')).toBeVisible();
+    expect(within(activity).getByText('子智能体')).toBeVisible();
+  });
+
   it('shows visible skill, tool and subagent activity while the session runs', () => {
     const { pc, mobile } = renderDemos('watch');
 

@@ -28,6 +28,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy production site
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

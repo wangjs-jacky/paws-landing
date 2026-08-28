@@ -1,11 +1,5 @@
 import ConnectionFlow from './ConnectionFlow';
 
-const ACTIVITY_LABELS = {
-  skill: 'Skill',
-  tool: 'Tool',
-  subagent: 'Subagent'
-};
-
 function sessionStatusLabel(state, copy) {
   if (state.sessionStatus === 'approval-pending') return copy.consoles.approvalPending;
   if (state.sessionStatus === 'complete') return copy.consoles.complete;
@@ -18,14 +12,14 @@ function StaticConsoleSurface({ kind, state, copy, scene }) {
   const isPc = kind === 'pc';
   const facts = isPc
     ? [
-        ['Machine', copy.consoles.machine],
-        ['Project', copy.consoles.project],
-        ['Agent', copy.consoles.agent],
-        ['Session', state.sessionId]
+        [copy.consoles.labels.machine, copy.consoles.machine],
+        [copy.consoles.labels.project, copy.consoles.project],
+        [copy.consoles.labels.agent, copy.consoles.agent],
+        [copy.consoles.labels.session, state.sessionId]
       ]
     : [
-        ['Session', state.sessionId],
-        ['Agent', copy.consoles.agent]
+        [copy.consoles.labels.session, state.sessionId],
+        [copy.consoles.labels.agent, copy.consoles.agent]
       ];
 
   return (
@@ -36,10 +30,10 @@ function StaticConsoleSurface({ kind, state, copy, scene }) {
       data-status={state.sessionStatus}
       data-focus={String(focused)}
       role="group"
-      aria-label={isPc ? copy.consoles.pcSummary[state.sceneId] : `App · ${scene.title}`}
+      aria-label={isPc ? copy.consoles.pcSummary[state.sceneId] : `${copy.consoles.labels.app} · ${scene.title}`}
     >
       <header className="story-static-console__header">
-        <span>{isPc ? 'PC WEB' : 'APP'}</span>
+        <span>{isPc ? copy.consoles.labels.pcWeb : copy.consoles.labels.app}</span>
         <strong data-status={state.sessionStatus}><i />{sessionStatusLabel(state, copy)}</strong>
       </header>
       <p className="story-static-console__scene">{scene.title}</p>
@@ -52,12 +46,12 @@ function StaticConsoleSurface({ kind, state, copy, scene }) {
         ))}
       </dl>
       {state.toolStates.length > 0 && (
-        <ul className="story-static-console__activity" aria-label="Agent activity">
+        <ul className="story-static-console__activity" aria-label={copy.consoles.labels.activity}>
           {state.toolStates.map(toolState => {
             const [tool, phase] = toolState.split('-');
             return (
               <li data-phase={phase} key={toolState}>
-                <span>{ACTIVITY_LABELS[tool]}</span>
+                <span>{copy.consoles.labels[tool]}</span>
                 <i aria-hidden="true">{phase === 'complete' ? '✓' : '◐'}</i>
               </li>
             );

@@ -14,6 +14,22 @@ export const storyContent = {
       { id: 'handoff', number: '04', title: 'Continue the same session', body: 'Move between App and PC Web without copying the conversation.' }
     ],
     consoles: {
+      labels: {
+        product: 'Paws',
+        browser: 'paws · web',
+        pcWeb: 'PC WEB',
+        app: 'APP',
+        sessions: 'Sessions',
+        machine: 'Machine',
+        project: 'Project',
+        agent: 'Agent',
+        session: 'Session',
+        workspace: 'workspace',
+        activity: 'Agent activity',
+        skill: 'Skill',
+        tool: 'Tool',
+        subagent: 'Subagent'
+      },
       machine: 'Mac mini',
       project: 'paws',
       agent: 'Codex',
@@ -99,6 +115,22 @@ export const storyContent = {
       { id: 'handoff', number: '04', title: '同一个会话，跨端接力', body: 'App 与 PC Web 共享同一条消息时间线。' }
     ],
     consoles: {
+      labels: {
+        product: 'Paws',
+        browser: 'paws · web',
+        pcWeb: 'PC Web',
+        app: 'App',
+        sessions: '会话',
+        machine: '机器',
+        project: '项目',
+        agent: '智能体',
+        session: '会话',
+        workspace: '工作目录',
+        activity: '智能体活动',
+        skill: '技能',
+        tool: '工具',
+        subagent: '子智能体'
+      },
       machine: 'Mac mini',
       project: 'paws',
       agent: 'Codex',
