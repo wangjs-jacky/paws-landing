@@ -26,7 +26,8 @@ export const content = {
       daemonPill: 'Daemon · Runs locally',
       mascotAlt: 'Paws marmot mascot',
       primary: 'Get started',
-      secondary: 'View on GitHub'
+      secondary: 'View on GitHub',
+      androidApk: 'Download Android APK'
     },
     terminal: {
       title: 'paws — live session',
@@ -100,7 +101,8 @@ export const content = {
       daemonPill: 'Daemon · 本机运行',
       mascotAlt: 'Paws 土拨鼠吉祥物',
       primary: '开始使用',
-      secondary: '查看 GitHub'
+      secondary: '查看 GitHub',
+      androidApk: '下载 Android APK'
     },
     terminal: {
       title: 'paws — 实时会话',
