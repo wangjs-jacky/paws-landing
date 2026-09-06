@@ -108,6 +108,26 @@ it('presents the cross-device outcome, product roles and decorative Paws Crew', 
   }
 });
 
+it('offers the verified production Android APK directly from the hero', () => {
+  const originalObserver = window.IntersectionObserver;
+  window.IntersectionObserver = vi.fn(function MockIntersectionObserver() {
+    this.observe = vi.fn();
+    this.disconnect = vi.fn();
+  });
+
+  try {
+    render(<Hero copy={content.en} language="en" theme="dark" />);
+
+    expect(screen.getByRole('link', { name: 'Download Android APK' })).toHaveAttribute(
+      'href',
+      'https://github.com/wangjs-jacky/happy/releases/download/android-v1.7.1-runtimes23-24-3906949b/paws-production-v1.7.1-runtime24-3906949b-arm64.apk'
+    );
+  } finally {
+    if (originalObserver) window.IntersectionObserver = originalObserver;
+    else delete window.IntersectionObserver;
+  }
+});
+
 it.each([
   ['en', {
     outcome: 'Start on App or PC Web, stay with the same live session, and answer permission requests away from your desk.',

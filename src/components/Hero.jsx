@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { docsHref, INSTALL_COMMAND } from '../app/siteConstants';
+import { ANDROID_APK, docsHref, INSTALL_COMMAND } from '../app/siteConstants';
 import MascotLook from './MascotLook';
 import TerminalDemo from './TerminalDemo';
 import DotField from './react-bits/DotField';
@@ -33,6 +33,13 @@ export default function Hero({ copy, language, theme }) {
           </ul>
           <div className="hero-actions">
             <a className="primary-action" href={docsHref(language, '#quick-start')}>{copy.hero.primary}</a>
+            <a
+              className="secondary-action"
+              href={ANDROID_APK.href}
+              title={`Paws ${ANDROID_APK.version} · production runtime ${ANDROID_APK.runtime} · ${ANDROID_APK.revision}`}
+            >
+              {copy.hero.androidApk}
+            </a>
             <a className="secondary-action" href="https://github.com/wangjs-jacky/happy">{copy.hero.secondary}</a>
           </div>
         </div>

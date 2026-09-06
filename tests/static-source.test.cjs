@@ -51,6 +51,20 @@ test('Vite public directory owns the documentation routes', () => {
   }
 });
 
+test('both documentation languages download the verified production Android APK', () => {
+  const expected = 'https://github.com/wangjs-jacky/happy/releases/download/android-v1.7.1-runtimes23-24-3906949b/paws-production-v1.7.1-runtime24-3906949b-arm64.apk';
+
+  for (const relative of ['public/docs.html', 'public/docs/zh-CN.html']) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    const document = new JSDOM(source).window.document;
+    const link = [...document.querySelectorAll('a')]
+      .find(anchor => /Android APK/i.test(anchor.textContent));
+
+    assert.ok(link, `${relative} must expose an Android APK download`);
+    assert.equal(link.href, expected, `${relative} must target the production APK`);
+  }
+});
+
 test('the React entry replaces the static homepage', () => {
   assert.equal(fs.existsSync(path.join(root, 'index.html')), true);
   assert.equal(fs.existsSync(path.join(root, 'src/main.jsx')), true);
