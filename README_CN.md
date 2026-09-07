@@ -2,9 +2,9 @@
 
 > **Paws** 的产品落地页 —— 在手机上远程操控你电脑上的编程智能体。土拨鼠吉祥物、深色终端风、开源。
 
-**🔗 线上地址：** https://paws-landing-eo4.pages.dev
+**🔗 线上地址：** https://paws.rodeo
 
-**📚 中文文档：** https://paws-landing-eo4.pages.dev/docs/zh-CN
+**📚 中文文档：** https://paws.rodeo/docs/zh-CN
 
 [English](./README.md) | 中文
 

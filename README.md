@@ -2,9 +2,9 @@
 
 > Product landing page for **Paws** — control the AI coding agents running on your computer, right from your phone. Marmot mascot, dark terminal aesthetic, open source.
 
-**🔗 Live:** https://paws-landing-eo4.pages.dev
+**🔗 Live:** https://paws.rodeo
 
-**📚 Docs:** [English](https://paws-landing-eo4.pages.dev/docs) · [中文](https://paws-landing-eo4.pages.dev/docs/zh-CN)
+**📚 Docs:** [English](https://paws.rodeo/docs) · [中文](https://paws.rodeo/docs/zh-CN)
 
 English | [中文](./README_CN.md)
 
